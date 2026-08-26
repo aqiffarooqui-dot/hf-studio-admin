@@ -3,7 +3,7 @@ import {
   Crown, Settings, Save, Lock, Plus, Trash2, ToggleLeft, ToggleRight, 
   Percent, Tag, Volume2, Car, Sparkles, RefreshCw, CheckCircle2, 
   Phone, Instagram, Palette, Type, Gift, MapPin, Eye, Sliders, Layers, 
-  Image as ImageIcon, Upload, Video, Film, Play, ExternalLink
+  Image as ImageIcon, Upload, Video, Film, Play, ExternalLink, Sun, Moon
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig } from './firebase';
 
@@ -11,15 +11,15 @@ const DEFAULT_CONFIG = {
   adminPin: "8760",
   studioName: "HUSNA FAROOQUI",
   artistTagline: "Celebrity & Bridal Makeup Artist",
-  profilePhotoType: "image", // 'image' | 'instagram'
+  profilePhotoType: "image",
   profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80",
   whatsappNumber: "919997210876",
   instagramHandle: "husna_farooqui_makeup",
   baseLocation: "Okhla / Jamia Nagar, New Delhi",
 
   theme: {
-    fontFamily: "sans", // 'sans', 'outfit', 'comic', 'serif', 'cormorant', 'cinzel', 'montserrat'
-    colorTheme: "liquid_glass", // 'liquid_glass', 'one_ui_9', 'google_minimal', 'gold_rose', 'champagne', 'emerald', 'violet'
+    fontFamily: "sans",
+    colorTheme: "liquid_glass",
     defaultMode: "dark"
   },
 
@@ -97,10 +97,11 @@ const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
 export default function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
-  const [activeTab, setActiveTab] = useState('gallery');
+  const [activeTab, setActiveTab] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -128,7 +129,7 @@ export default function AdminApp() {
     setStatusMsg('');
     try {
       await updateLiveConfig(draft);
-      setStatusMsg('🎉 All media, reels, themes, fonts, profile photo & rates synced live!');
+      setStatusMsg('🎉 All changes, white slips, profile photo & themes updated live!');
     } catch (err) {
       setStatusMsg('❌ Error saving changes: ' + err.message);
     } finally {
@@ -164,16 +165,23 @@ export default function AdminApp() {
     }
   };
 
+  // Admin Theme Classes
+  const adminBgClass = isAdminDarkMode ? "bg-[#030712] text-[#f8fafc]" : "bg-[#f4f6fa] text-[#0f172a]";
+  const adminCardBg = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border-white/10" : "bg-white border-slate-200 shadow-md";
+  const adminInnerCard = isAdminDarkMode ? "bg-black/40 border-white/10" : "bg-slate-50 border-slate-200";
+  const adminInputBg = isAdminDarkMode ? "bg-black/40 border-white/20 text-white" : "bg-white border-slate-300 text-slate-900";
+  const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#030712] text-[#f8fafc] flex items-center justify-center p-4 font-sans">
-        <form onSubmit={handleLogin} className="max-w-sm w-full bg-white/[0.04] backdrop-blur-3xl border border-white/10 p-8 rounded-3xl text-center space-y-5 shadow-2xl">
+      <div className={`min-h-screen ${adminBgClass} flex items-center justify-center p-4 font-sans`}>
+        <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-3xl text-center space-y-5 shadow-2xl border ${adminCardBg}`}>
           <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto border border-cyan-500/20">
             <Lock className="w-7 h-7" />
           </div>
           <div>
             <h2 className="text-xl font-bold">{draft.studioName || "HUSNA FAROOQUI"}</h2>
-            <p className="text-xs text-slate-400 mt-1">Master Studio Management Console</p>
+            <p className={`text-xs ${adminMuted} mt-1`}>Master Studio Management Console</p>
           </div>
           <input
             type="password"
@@ -181,9 +189,9 @@ export default function AdminApp() {
             placeholder="Enter Admin PIN"
             value={pinInput}
             onChange={(e) => setPinInput(e.target.value)}
-            className="w-full text-center text-lg tracking-widest bg-black/40 border border-white/20 rounded-2xl p-3 text-cyan-400 font-mono focus:outline-none focus:border-cyan-400"
+            className={`w-full text-center text-lg tracking-widest rounded-2xl p-3 text-cyan-500 font-mono focus:outline-none border ${adminInputBg}`}
           />
-          {pinError && <p className="text-xs text-rose-400 font-medium">{pinError}</p>}
+          {pinError && <p className="text-xs text-rose-500 font-medium">{pinError}</p>}
           <button type="submit" className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition-all">
             Unlock Master Dashboard
           </button>
@@ -193,40 +201,53 @@ export default function AdminApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] text-[#f8fafc] font-sans pb-20">
+    <div className={`min-h-screen ${adminBgClass} font-sans pb-20 transition-colors duration-300`}>
       
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#080d1e]/80 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-8 py-4">
+      {/* Header with Day/Night Switch */}
+      <header className={`sticky top-0 z-40 backdrop-blur-2xl border-b px-4 sm:px-8 py-4 ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/80 border-slate-200 shadow-sm'}`}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center border border-cyan-500/20">
               <Crown className="w-5 h-5" />
             </div>
             <div>
               <h1 className="text-base font-bold">{draft.studioName || "HUSNA FAROOQUI"} Console</h1>
-              <p className="text-[11px] text-slate-400">Live Firebase Synced Admin Console</p>
+              <p className={`text-[11px] ${adminMuted}`}>Live Firebase Synced Admin Console</p>
             </div>
           </div>
-          <button onClick={() => setIsAuthenticated(false)} className="text-xs text-rose-400 hover:underline font-bold">
-            Lock Portal
-          </button>
+          
+          <div className="flex items-center gap-3">
+            {/* Day / Night Theme Toggle for Admin */}
+            <button
+              type="button"
+              onClick={() => setIsAdminDarkMode(prev => !prev)}
+              className={`p-2.5 rounded-2xl border transition-all active:scale-90 flex items-center justify-center ${isAdminDarkMode ? 'bg-white/10 border-white/20 text-amber-400' : 'bg-white border-slate-300 text-slate-700 shadow-sm'}`}
+              title={isAdminDarkMode ? "Switch to Day Mode" : "Switch to Night Mode"}
+            >
+              {isAdminDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+            </button>
+
+            <button onClick={() => setIsAuthenticated(false)} className="text-xs text-rose-500 hover:underline font-bold">
+              Lock
+            </button>
+          </div>
         </div>
       </header>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
 
         {statusMsg && (
-          <div className="p-4 rounded-2xl bg-white/[0.04] border border-cyan-500/40 text-xs font-bold text-cyan-400 text-center animate-fade-in shadow-lg">
+          <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/40 text-xs font-bold text-cyan-500 text-center animate-fade-in shadow-lg">
             {statusMsg}
           </div>
         )}
 
         {/* Navigation Tabs */}
-        <div className="flex overflow-x-auto gap-2 border-b border-white/10 pb-3">
+        <div className="flex overflow-x-auto gap-2 border-b pb-3 border-slate-200/40 dark:border-white/10">
           {[
-            { id: 'gallery', label: '📸 Transformations & Reels Studio' },
             { id: 'profile', label: '📱 Profile Photo & Contact' },
-            { id: 'theme', label: '🎨 Liquid Glass & Fonts' },
+            { id: 'gallery', label: '📸 Transformations & Reels' },
+            { id: 'theme', label: '🎨 Themes & Fonts' },
             { id: 'coupons', label: '🏷️ Promo Coupons' },
             { id: 'floating', label: '🎈 Floating Banner' },
             { id: 'toggles', label: '🎛️ Guest Discount' },
@@ -240,7 +261,7 @@ export default function AdminApp() {
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
                 activeTab === tab.id
                   ? 'bg-cyan-500 text-neutral-950 font-bold shadow-lg shadow-cyan-500/20'
-                  : 'bg-white/[0.04] text-slate-400 hover:text-white border border-white/5'
+                  : `${adminMuted} hover:text-cyan-500 bg-white/5 border border-slate-200/40 dark:border-white/5`
               }`}
             >
               {tab.label}
@@ -250,17 +271,133 @@ export default function AdminApp() {
 
         <form onSubmit={handleSave} className="space-y-6">
 
-          {/* TAB 1: TRANSFORMATIONS & REELS STUDIO */}
+          {/* TAB 1: PROFILE PHOTO & SOCIALS */}
+          {activeTab === 'profile' && (
+            <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+              
+              <div className={`space-y-3 p-4 rounded-2xl border ${adminInnerCard}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4" /> Profile Photo Mode
+                  </span>
+                  
+                  <div className="inline-flex p-1 rounded-xl bg-slate-200 dark:bg-white/10 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setDraft({ ...draft, profilePhotoType: 'image' })}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${draft.profilePhotoType !== 'instagram' ? 'bg-cyan-500 text-neutral-950 shadow' : `${adminMuted}`}`}
+                    >
+                      Image URL / Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDraft({ ...draft, profilePhotoType: 'instagram' })}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${draft.profilePhotoType === 'instagram' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow' : `${adminMuted}`}`}
+                    >
+                      Instagram Profile Photo
+                    </button>
+                  </div>
+                </div>
+
+                {draft.profilePhotoType === 'instagram' ? (
+                  <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-400">
+                    📸 <strong>Instagram Auto-Sync Active:</strong> Your profile photo is automatically pulled from <strong>@{draft.instagramHandle || 'husna_farooqui_makeup'}</strong> via direct proxy.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-neutral-800 border-2 border-cyan-400 shrink-0 shadow-lg">
+                        <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 w-full space-y-1">
+                        <label className={`block text-[11px] font-semibold ${adminMuted}`}>Direct Image Link</label>
+                        <input
+                          type="text"
+                          value={draft.profileImage || ''}
+                          onChange={(e) => setDraft({ ...draft, profileImage: e.target.value })}
+                          placeholder="https://images.unsplash.com/..."
+                          className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-200/40 dark:border-white/10">
+                      <label className="px-3.5 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-500 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 border border-cyan-500/30 transition">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Image File</span>
+                        <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
+                      </label>
+                      <span className={`text-[11px] ${adminMuted}`}>Upload directly from device (auto-converts)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-xs font-bold mb-1.5 ${adminMuted}`}>Studio Display Title</label>
+                  <input
+                    type="text"
+                    value={draft.studioName || ''}
+                    onChange={(e) => setDraft({ ...draft, studioName: e.target.value })}
+                    className={`w-full p-3 rounded-2xl text-xs font-bold border ${adminInputBg}`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold mb-1.5 ${adminMuted}`}>Artist Tagline / Subtitle</label>
+                  <input
+                    type="text"
+                    value={draft.artistTagline || ''}
+                    onChange={(e) => setDraft({ ...draft, artistTagline: e.target.value })}
+                    className={`w-full p-3 rounded-2xl text-xs border ${adminInputBg}`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold mb-1.5 ${adminMuted}`}>WhatsApp Number (with 91 code)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 919997210876"
+                    value={draft.whatsappNumber || ''}
+                    onChange={(e) => setDraft({ ...draft, whatsappNumber: e.target.value.replace(/[^0-9]/g, '') })}
+                    className={`w-full p-3 rounded-2xl font-mono text-cyan-500 text-xs font-bold border ${adminInputBg}`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-xs font-bold mb-1.5 ${adminMuted}`}>Instagram Username (without @)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. husna_farooqui_makeup"
+                    value={draft.instagramHandle || ''}
+                    onChange={(e) => setDraft({ ...draft, instagramHandle: e.target.value.replace(/^@/, '') })}
+                    className={`w-full p-3 rounded-2xl font-mono text-pink-500 text-xs font-bold border ${adminInputBg}`}
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className={`block text-xs font-bold mb-1.5 ${adminMuted}`}>Base Studio Location / Address</label>
+                  <input
+                    type="text"
+                    value={draft.baseLocation || ''}
+                    onChange={(e) => setDraft({ ...draft, baseLocation: e.target.value })}
+                    className={`w-full p-3 rounded-2xl text-xs border ${adminInputBg}`}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: TRANSFORMATIONS & REELS */}
           {activeTab === 'gallery' && (
-            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-5">
+            <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
               <div className="flex justify-between items-center">
                 <div>
-                  <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <h3 className="font-bold text-xs uppercase text-cyan-500 flex items-center gap-1.5">
                     <Film className="w-4 h-4" /> Transformations Media & Reels Studio
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Add/replace client makeover photos, direct video clips (`.mp4`), or Instagram Reel links
-                  </p>
+                  <p className={`text-xs ${adminMuted} mt-0.5`}>Add/edit makeover photos, direct videos, or Instagram Reel links</p>
                 </div>
                 <button
                   type="button"
@@ -286,16 +423,16 @@ export default function AdminApp() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 {(draft.galleryPhotos || []).map((item, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                  <div key={idx} className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-cyan-400 font-mono">Media Card #{idx + 1}</span>
+                      <span className="text-xs font-bold text-cyan-500 font-mono">Media Card #{idx + 1}</span>
                       <button
                         type="button"
                         onClick={() => {
                           const copy = draft.galleryPhotos.filter((_, i) => i !== idx);
                           setDraft({ ...draft, galleryPhotos: copy });
                         }}
-                        className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg"
+                        className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -303,7 +440,7 @@ export default function AdminApp() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[10px] text-slate-400 mb-1">Media Type</label>
+                        <label className={`block text-[10px] mb-1 ${adminMuted}`}>Media Type</label>
                         <select
                           value={item.type || 'image'}
                           onChange={(e) => {
@@ -311,7 +448,7 @@ export default function AdminApp() {
                             copy[idx] = { ...copy[idx], type: e.target.value };
                             setDraft({ ...draft, galleryPhotos: copy });
                           }}
-                          className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold"
+                          className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
                         >
                           <option value="image">🖼️ Image Photo</option>
                           <option value="video">🎥 Direct Video (.mp4)</option>
@@ -320,7 +457,7 @@ export default function AdminApp() {
                       </div>
 
                       <div>
-                        <label className="block text-[10px] text-slate-400 mb-1">Tag Subtitle</label>
+                        <label className={`block text-[10px] mb-1 ${adminMuted}`}>Tag Subtitle</label>
                         <input
                           type="text"
                           value={item.sub || ''}
@@ -330,13 +467,13 @@ export default function AdminApp() {
                             setDraft({ ...draft, galleryPhotos: copy });
                           }}
                           placeholder="e.g. Dewy Finish"
-                          className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs"
+                          className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-1">Card Title</label>
+                      <label className={`block text-[10px] mb-1 ${adminMuted}`}>Card Title</label>
                       <input
                         type="text"
                         value={item.title || ''}
@@ -346,12 +483,12 @@ export default function AdminApp() {
                           setDraft({ ...draft, galleryPhotos: copy });
                         }}
                         placeholder="e.g. Royal Bridal Look"
-                        className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white"
+                        className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-1">Media URL / Reel Link</label>
+                      <label className={`block text-[10px] mb-1 ${adminMuted}`}>Media URL / Reel Link</label>
                       <input
                         type="text"
                         value={item.url || ''}
@@ -360,18 +497,18 @@ export default function AdminApp() {
                           copy[idx] = { ...copy[idx], url: e.target.value };
                           setDraft({ ...draft, galleryPhotos: copy });
                         }}
-                        placeholder="https://... or Instagram Reel link"
-                        className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-cyan-300"
+                        placeholder="https://... or Reel link"
+                        className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-500 border ${adminInputBg}`}
                       />
                     </div>
 
-                    <div className="flex items-center gap-2 pt-1 border-t border-white/10">
-                      <label className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 border border-white/10 transition">
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-200/40 dark:border-white/10">
+                      <label className="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-500 text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 border border-cyan-500/30 transition">
                         <Upload className="w-3.5 h-3.5" />
                         <span>Upload File</span>
                         <input type="file" accept="image/*,video/*" onChange={(e) => handleGalleryMediaUpload(e, idx)} className="hidden" />
                       </label>
-                      <span className="text-[10px] text-slate-400">Upload direct photo/video from phone</span>
+                      <span className={`text-[10px] ${adminMuted}`}>Upload directly from device</span>
                     </div>
                   </div>
                 ))}
@@ -379,135 +516,17 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 2: PROFILE PHOTO & SOCIALS */}
-          {activeTab === 'profile' && (
-            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-6">
-              
-              <div className="space-y-3 p-4 rounded-2xl bg-black/40 border border-white/10">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4" /> Profile Photo Mode
-                  </span>
-                  
-                  <div className="inline-flex p-1 rounded-xl bg-white/10 border border-white/10 gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setDraft({ ...draft, profilePhotoType: 'image' })}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${draft.profilePhotoType !== 'instagram' ? 'bg-cyan-500 text-neutral-950' : 'text-slate-400'}`}
-                    >
-                      Image URL / Upload
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDraft({ ...draft, profilePhotoType: 'instagram' })}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${draft.profilePhotoType === 'instagram' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'text-slate-400'}`}
-                    >
-                      Instagram Profile Photo
-                    </button>
-                  </div>
-                </div>
-
-                {draft.profilePhotoType === 'instagram' ? (
-                  <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-300">
-                    📸 <strong>Instagram Auto-Sync Active:</strong> Your profile photo is automatically pulled from <strong>@{draft.instagramHandle || 'husna_farooqui_makeup'}</strong>.
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-neutral-800 border-2 border-cyan-400 shrink-0 shadow-lg">
-                        <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Preview" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 w-full space-y-1">
-                        <label className="block text-[11px] text-slate-400 font-semibold">Direct Image Link</label>
-                        <input
-                          type="text"
-                          value={draft.profileImage || ''}
-                          onChange={(e) => setDraft({ ...draft, profileImage: e.target.value })}
-                          placeholder="https://images.unsplash.com/..."
-                          className="w-full p-2.5 rounded-xl bg-black/40 border border-white/20 text-xs font-mono text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                      <label className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 border border-white/20 transition">
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Upload Image File</span>
-                        <input type="file" accept="image/*" onChange={handleImageFileUpload} className="hidden" />
-                      </label>
-                      <span className="text-[11px] text-slate-400">Directly upload any JPG/PNG from your phone or PC</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Studio Display Title</label>
-                  <input
-                    type="text"
-                    value={draft.studioName || ''}
-                    onChange={(e) => setDraft({ ...draft, studioName: e.target.value })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Artist Tagline / Subtitle</label>
-                  <input
-                    type="text"
-                    value={draft.artistTagline || ''}
-                    onChange={(e) => setDraft({ ...draft, artistTagline: e.target.value })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">WhatsApp Number (with 91 country code)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 919997210876"
-                    value={draft.whatsappNumber || ''}
-                    onChange={(e) => setDraft({ ...draft, whatsappNumber: e.target.value.replace(/[^0-9]/g, '') })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 font-mono text-cyan-400 text-xs font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Instagram Username (without @)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. husna_farooqui_makeup"
-                    value={draft.instagramHandle || ''}
-                    onChange={(e) => setDraft({ ...draft, instagramHandle: e.target.value.replace(/^@/, '') })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 font-mono text-pink-400 text-xs font-bold"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-400 mb-1.5">Base Studio Location / Address</label>
-                  <input
-                    type="text"
-                    value={draft.baseLocation || ''}
-                    onChange={(e) => setDraft({ ...draft, baseLocation: e.target.value })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: LIQUID GLASS, ONE UI 9 & FONTS */}
+          {/* TAB 3: THEMES & FONTS */}
           {activeTab === 'theme' && (
-            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-6">
-              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+            <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+              <h3 className="font-bold text-xs uppercase text-cyan-500 flex items-center gap-1.5">
                 <Palette className="w-4 h-4" /> Visual Design, Fonts & App Skin
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-cyan-400" /> Color Theme & Aesthetics
+                  <label className={`block text-xs font-bold mb-2 flex items-center gap-1.5 ${adminMuted}`}>
+                    <Layers className="w-3.5 h-3.5 text-cyan-500" /> Color Theme & Aesthetics
                   </label>
                   <select
                     value={draft.theme?.colorTheme || 'liquid_glass'}
@@ -515,7 +534,7 @@ export default function AdminApp() {
                       ...draft,
                       theme: { ...draft.theme, colorTheme: e.target.value }
                     })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs font-bold text-cyan-400"
+                    className={`w-full p-3 rounded-2xl text-xs font-bold text-cyan-500 border ${adminInputBg}`}
                   >
                     <option value="liquid_glass">💎 Liquid Glass iOS (Ultra Frosted Glassmorphism)</option>
                     <option value="one_ui_9">✨ Samsung One UI 9 (Warm Gold Squircles)</option>
@@ -528,8 +547,8 @@ export default function AdminApp() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                    <Type className="w-3.5 h-3.5 text-amber-400" /> Typography & Font Family
+                  <label className={`block text-xs font-bold mb-2 flex items-center gap-1.5 ${adminMuted}`}>
+                    <Type className="w-3.5 h-3.5 text-amber-500" /> Typography & Font Family
                   </label>
                   <select
                     value={draft.theme?.fontFamily || 'sans'}
@@ -537,7 +556,7 @@ export default function AdminApp() {
                       ...draft,
                       theme: { ...draft.theme, fontFamily: e.target.value }
                     })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs font-bold text-amber-400"
+                    className={`w-full p-3 rounded-2xl text-xs font-bold text-amber-500 border ${adminInputBg}`}
                   >
                     <option value="sans">Plus Jakarta Sans (Samsung One UI 9 / Android)</option>
                     <option value="outfit">Outfit (iOS & Liquid Glass Minimal)</option>
@@ -550,14 +569,14 @@ export default function AdminApp() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-2">Default Theme Mode</label>
+                  <label className={`block text-xs font-bold mb-2 ${adminMuted}`}>Default Customer Theme Mode</label>
                   <select
                     value={draft.theme?.defaultMode || 'dark'}
                     onChange={(e) => setDraft({
                       ...draft,
                       theme: { ...draft.theme, defaultMode: e.target.value }
                     })}
-                    className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs font-bold text-white"
+                    className={`w-full p-3 rounded-2xl text-xs font-bold border ${adminInputBg}`}
                   >
                     <option value="dark">🌙 Dark Mode (Night Glass)</option>
                     <option value="light">☀️ Light Mode (Clean Pearl Minimal)</option>
@@ -569,9 +588,9 @@ export default function AdminApp() {
 
           {/* TAB 4: PROMO COUPONS */}
           {activeTab === 'coupons' && (
-            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-4">
+            <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <h3 className="font-bold text-xs uppercase text-cyan-500 flex items-center gap-1.5">
                   <Tag className="w-4 h-4" /> Promotional Coupon Manager
                 </h3>
                 <button
@@ -597,10 +616,10 @@ export default function AdminApp() {
 
               <div className="space-y-3">
                 {Object.entries(draft.validCoupons || {}).map(([code, cData]) => (
-                  <div key={code} className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                  <div key={code} className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
                     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
                       <div className="w-full sm:w-1/4">
-                        <label className="block text-[10px] text-slate-400 mb-1">Coupon Code</label>
+                        <label className={`block text-[10px] mb-1 ${adminMuted}`}>Coupon Code</label>
                         <input
                           type="text"
                           value={code}
@@ -612,27 +631,27 @@ export default function AdminApp() {
                             updated[newCode] = oldVal;
                             setDraft({ ...draft, validCoupons: updated });
                           }}
-                          className="w-full p-2 rounded-xl bg-white/5 border border-white/10 font-mono font-bold text-cyan-400 text-xs"
+                          className={`w-full p-2 rounded-xl font-mono font-bold text-cyan-500 text-xs border ${adminInputBg}`}
                         />
                       </div>
 
                       <div className="w-full sm:w-1/3 flex gap-2">
                         <div className="w-1/2">
-                          <label className="block text-[10px] text-slate-400 mb-1">Type</label>
+                          <label className={`block text-[10px] mb-1 ${adminMuted}`}>Type</label>
                           <select
                             value={cData.type}
                             onChange={(e) => setDraft({
                               ...draft,
                               validCoupons: { ...draft.validCoupons, [code]: { ...cData, type: e.target.value } }
                             })}
-                            className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold"
+                            className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
                           >
                             <option value="percent">% Percent Off</option>
                             <option value="flat">₹ Flat Amount</option>
                           </select>
                         </div>
                         <div className="w-1/2">
-                          <label className="block text-[10px] text-slate-400 mb-1">Value</label>
+                          <label className={`block text-[10px] mb-1 ${adminMuted}`}>Value</label>
                           <input
                             type="number"
                             value={cData.value}
@@ -640,13 +659,13 @@ export default function AdminApp() {
                               ...draft,
                               validCoupons: { ...draft.validCoupons, [code]: { ...cData, value: Number(e.target.value) } }
                             })}
-                            className="w-full p-2 rounded-xl bg-white/5 border border-white/10 font-mono text-xs font-bold text-cyan-400"
+                            className={`w-full p-2 rounded-xl font-mono text-xs font-bold text-cyan-500 border ${adminInputBg}`}
                           />
                         </div>
                       </div>
 
                       <div className="w-full sm:w-1/4">
-                        <label className="block text-[10px] text-slate-400 mb-1">Redemption Limit</label>
+                        <label className={`block text-[10px] mb-1 ${adminMuted}`}>Redemption Limit</label>
                         <select
                           value={cData.maxUses ?? 1}
                           onChange={(e) => setDraft({
@@ -656,7 +675,7 @@ export default function AdminApp() {
                               [code]: { ...cData, maxUses: e.target.value === 'unlimited' ? 'unlimited' : Number(e.target.value) }
                             }
                           })}
-                          className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs"
+                          className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
                         >
                           <option value={1}>1 Time (Single Use)</option>
                           <option value={2}>2 Times</option>
@@ -672,14 +691,14 @@ export default function AdminApp() {
                           delete updated[code];
                           setDraft({ ...draft, validCoupons: updated });
                         }}
-                        className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl"
+                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-1">Promo Label</label>
+                      <label className={`block text-[10px] mb-1 ${adminMuted}`}>Promo Label</label>
                       <input
                         type="text"
                         value={cData.label || ''}
@@ -687,7 +706,7 @@ export default function AdminApp() {
                           ...draft,
                           validCoupons: { ...draft.validCoupons, [code]: { ...cData, label: e.target.value } }
                         })}
-                        className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white"
+                        className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
                       />
                     </div>
                   </div>
@@ -698,16 +717,16 @@ export default function AdminApp() {
 
           {/* TAB 5: FLOATING BANNER */}
           {activeTab === 'floating' && (
-            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-4">
+            <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-sm text-cyan-400">Floating Bottom Offer Widget</h3>
-                  <p className="text-xs text-slate-400">Toggle bottom floating pill</p>
+                  <h3 className="font-bold text-sm text-cyan-500">Floating Bottom Offer Widget</h3>
+                  <p className={`text-xs ${adminMuted}`}>Toggle bottom floating pill</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, enabled: !draft.floatingBanner?.enabled } })}
-                  className={`p-2 rounded-xl flex items-center gap-2 font-bold text-xs ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
+                  className={`p-2 rounded-xl flex items-center gap-2 font-bold text-xs ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-500 border border-rose-500/40'}`}
                 >
                   {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                   <span>{draft.floatingBanner?.enabled !== false ? 'ACTIVE' : 'DISABLED'}</span>
@@ -716,16 +735,16 @@ export default function AdminApp() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Tag</label>
-                  <input type="text" value={draft.floatingBanner?.tag || ''} onChange={(e) => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, tag: e.target.value } })} className="w-full p-2.5 rounded-xl bg-black/40 border border-white/20 text-xs font-bold text-cyan-400" />
+                  <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Tag</label>
+                  <input type="text" value={draft.floatingBanner?.tag || ''} onChange={(e) => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, tag: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold text-cyan-500 border ${adminInputBg}`} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Code</label>
-                  <input type="text" value={draft.floatingBanner?.code || ''} onChange={(e) => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, code: e.target.value.toUpperCase() } })} className="w-full p-2.5 rounded-xl bg-black/40 border border-white/20 text-xs font-mono font-bold" />
+                  <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Code</label>
+                  <input type="text" value={draft.floatingBanner?.code || ''} onChange={(e) => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, code: e.target.value.toUpperCase() } })} className={`w-full p-2.5 rounded-xl text-xs font-mono font-bold border ${adminInputBg}`} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-400 mb-1">Title</label>
-                  <input type="text" value={draft.floatingBanner?.title || ''} onChange={(e) => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, title: e.target.value } })} className="w-full p-2.5 rounded-xl bg-black/40 border border-white/20 text-xs" />
+                  <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Title</label>
+                  <input type="text" value={draft.floatingBanner?.title || ''} onChange={(e) => setDraft({ ...draft, floatingBanner: { ...draft.floatingBanner, title: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs border ${adminInputBg}`} />
                 </div>
               </div>
             </div>
@@ -733,16 +752,16 @@ export default function AdminApp() {
 
           {/* TAB 6: GUEST DISCOUNT */}
           {activeTab === 'toggles' && (
-            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-4">
+            <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-sm text-cyan-400">Extra Family Guest Discount</h3>
-                  <p className="text-xs text-slate-400">Toggle extra guest savings</p>
+                  <h3 className="font-bold text-sm text-cyan-500">Extra Family Guest Discount</h3>
+                  <p className={`text-xs ${adminMuted}`}>Toggle extra guest savings</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setDraft({ ...draft, guestDiscount: { ...draft.guestDiscount, enabled: !draft.guestDiscount?.enabled } })}
-                  className={`p-2 rounded-xl flex items-center gap-2 font-bold text-xs ${draft.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
+                  className={`p-2 rounded-xl flex items-center gap-2 font-bold text-xs ${draft.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-500 border border-rose-500/40'}`}
                 >
                   {draft.guestDiscount?.enabled !== false ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                   <span>{draft.guestDiscount?.enabled !== false ? 'ACTIVE' : 'DISABLED'}</span>
@@ -750,7 +769,7 @@ export default function AdminApp() {
               </div>
 
               {draft.guestDiscount?.enabled !== false && (
-                <div className="flex items-center gap-3 pt-3 border-t border-white/10">
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-200/40 dark:border-white/10">
                   <label className="text-xs font-bold">Discount %:</label>
                   <input
                     type="number"
@@ -758,9 +777,9 @@ export default function AdminApp() {
                     max="80"
                     value={draft.guestDiscount?.discountPercent ?? 15}
                     onChange={(e) => setDraft({ ...draft, guestDiscount: { ...draft.guestDiscount, discountPercent: Number(e.target.value) } })}
-                    className="w-20 p-2 rounded-xl bg-black/40 border border-white/20 text-cyan-400 font-mono font-bold text-xs"
+                    className={`w-20 p-2 rounded-xl text-cyan-500 font-mono font-bold text-xs border ${adminInputBg}`}
                   />
-                  <span className="font-bold text-cyan-400 text-xs">% OFF</span>
+                  <span className="font-bold text-cyan-500 text-xs">% OFF</span>
                 </div>
               )}
             </div>
@@ -769,12 +788,12 @@ export default function AdminApp() {
           {/* TAB 7: PRICES */}
           {activeTab === 'prices' && (
             <div className="space-y-6">
-              <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
-                <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
+              <div className={`p-5 rounded-3xl border space-y-3 ${adminCardBg}`}>
+                <h3 className="font-bold text-xs uppercase text-cyan-500">👑 International Luxury Vanity Kit (₹)</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {partyPackages.concat(bridalPackages).map((pkgKey) => (
                     <div key={pkgKey}>
-                      <label className="block text-[11px] mb-1 capitalize text-slate-400">{pkgKey.replace(/_/g, ' ')}</label>
+                      <label className={`block text-[11px] mb-1 capitalize ${adminMuted}`}>{pkgKey.replace(/_/g, ' ')}</label>
                       <input
                         type="number"
                         value={draft.pricingByKit.international[pkgKey]}
@@ -785,19 +804,19 @@ export default function AdminApp() {
                             international: { ...draft.pricingByKit.international, [pkgKey]: Number(e.target.value) }
                           }
                         })}
-                        className="w-full p-2.5 rounded-xl bg-black/40 border border-white/20 font-mono text-cyan-400 text-xs"
+                        className={`w-full p-2.5 rounded-xl font-mono text-cyan-500 text-xs border ${adminInputBg}`}
                       />
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
-                <h3 className="font-bold text-xs uppercase text-rose-400">✨ Premium Drugstore & HD Kit (₹)</h3>
+              <div className={`p-5 rounded-3xl border space-y-3 ${adminCardBg}`}>
+                <h3 className="font-bold text-xs uppercase text-rose-500">✨ Premium Drugstore & HD Kit (₹)</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {partyPackages.concat(bridalPackages).map((pkgKey) => (
                     <div key={pkgKey}>
-                      <label className="block text-[11px] mb-1 capitalize text-slate-400">{pkgKey.replace(/_/g, ' ')}</label>
+                      <label className={`block text-[11px] mb-1 capitalize ${adminMuted}`}>{pkgKey.replace(/_/g, ' ')}</label>
                       <input
                         type="number"
                         value={draft.pricingByKit.drugstore[pkgKey]}
@@ -808,7 +827,7 @@ export default function AdminApp() {
                             drugstore: { ...draft.pricingByKit.drugstore, [pkgKey]: Number(e.target.value) }
                           }
                         })}
-                        className="w-full p-2.5 rounded-xl bg-black/40 border border-white/20 font-mono text-cyan-400 text-xs"
+                        className={`w-full p-2.5 rounded-xl font-mono text-cyan-500 text-xs border ${adminInputBg}`}
                       />
                     </div>
                   ))}
@@ -819,8 +838,8 @@ export default function AdminApp() {
 
           {/* TAB 8: ANNOUNCEMENTS */}
           {activeTab === 'announcements' && (
-            <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
-              <h3 className="font-bold text-xs uppercase text-cyan-400">📢 Announcement Lines</h3>
+            <div className={`p-5 rounded-3xl border space-y-3 ${adminCardBg}`}>
+              <h3 className="font-bold text-xs uppercase text-cyan-500">📢 Announcement Lines</h3>
               {draft.announcements.map((line, idx) => (
                 <input
                   key={idx}
@@ -831,19 +850,19 @@ export default function AdminApp() {
                     copy[idx] = e.target.value;
                     setDraft({ ...draft, announcements: copy });
                   }}
-                  className="w-full p-3 rounded-2xl bg-black/40 border border-white/20 text-xs text-white"
+                  className={`w-full p-3 rounded-2xl text-xs border ${adminInputBg}`}
                 />
               ))}
             </div>
           )}
 
-          {/* TAB 9: TRAVEL FEES */}
+          {/* TAB 9: CONVENIENCE */}
           {activeTab === 'convenience' && (
-            <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
-              <h3 className="font-bold text-xs uppercase text-cyan-400">🚗 Convenience Travel Fees</h3>
+            <div className={`p-5 rounded-3xl border space-y-3 ${adminCardBg}`}>
+              <h3 className="font-bold text-xs uppercase text-cyan-500">🚗 Convenience Travel Fees</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(draft.convenienceZones).map(([zoneKey, zData]) => (
-                  <div key={zoneKey} className="p-3 rounded-2xl bg-black/40 border border-white/20 flex justify-between items-center">
+                  <div key={zoneKey} className={`p-3 rounded-2xl border flex justify-between items-center ${adminInnerCard}`}>
                     <span className="text-xs truncate max-w-[200px]">{zData.name}</span>
                     <input
                       type="number"
@@ -855,7 +874,7 @@ export default function AdminApp() {
                           [zoneKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
-                      className="w-24 p-2 rounded-xl bg-white/5 border border-white/10 font-mono text-cyan-400 font-bold text-xs text-right"
+                      className={`w-24 p-2 rounded-xl font-mono text-cyan-500 font-bold text-xs text-right border ${adminInputBg}`}
                     />
                   </div>
                 ))}
@@ -863,7 +882,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* Save Button */}
+          {/* Master Save Button */}
           <button
             type="submit"
             disabled={isSaving}
