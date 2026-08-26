@@ -3,9 +3,11 @@ import {
   Crown, Settings, Save, Lock, Plus, Trash2, ToggleLeft, ToggleRight, 
   Percent, Tag, Volume2, Car, Sparkles, RefreshCw, CheckCircle2, 
   Phone, Instagram, Palette, Type, Gift, MapPin, Eye, Sliders, Layers, 
-  Image as ImageIcon, Upload, Video, Film, Play, ExternalLink, Sun, Moon
+  Image as ImageIcon, Upload, Video, Film, Play, ExternalLink, Sun, Moon,
+  CalendarCheck, User, Clock, Check, X
 } from 'lucide-react';
-import { fetchLiveConfig, updateLiveConfig } from './firebase';
+import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const DEFAULT_CONFIG = {
   adminPin: "8760",
@@ -101,9 +103,10 @@ export default function AdminApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('bookings');
   const [isSaving, setIsSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
+  const [bookingsList, setBookingsList] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -111,6 +114,22 @@ export default function AdminApp() {
       setDraft(data);
     }
     load();
+  }, []);
+
+  // Real-Time Bookings Listener from Firebase
+  useEffect(() => {
+    try {
+      const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setBookingsList(list);
+      }, (err) => {
+        console.warn("Bookings listener:", err);
+      });
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn("Firestore bookings load error:", e);
+    }
   }, []);
 
   const handleLogin = (e) => {
@@ -129,11 +148,51 @@ export default function AdminApp() {
     setStatusMsg('');
     try {
       await updateLiveConfig(draft);
-      setStatusMsg('🎉 All changes, white slips, profile photo & themes updated live!');
+      setStatusMsg('🎉 All settings, media, coupons & rates pushed live!');
     } catch (err) {
       setStatusMsg('❌ Error saving changes: ' + err.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // ✅ 1-Click Accept & Send Confirmation WhatsApp Message
+  const handleAcceptBooking = async (booking) => {
+    try {
+      // 1. Update status in database
+      const bookingRef = doc(db, "bookings", booking.id);
+      await updateDoc(bookingRef, { status: "confirmed" });
+
+      // 2. Open Free WhatsApp with Official Confirmation Message
+      const clientPhoneClean = String(booking.clientPhone).replace(/[^0-9]/g, '');
+      const fullPhone = clientPhoneClean.startsWith('91') ? clientPhoneClean : `91${clientPhoneClean}`;
+
+      const confirmMessage = 
+        `🎉 *APPOINTMENT CONFIRMED - ${draft.studioName || "HUSNA FAROOQUI MAKEUP STUDIO"}* 🎉\n\n` +
+        `Dear *${booking.clientName}*,\n` +
+        `We are thrilled to confirm your VIP booking appointment!\n\n` +
+        `📅 *Confirmed Date:* ${booking.eventDate}\n` +
+        `💄 *Package:* ${booking.packageName}\n` +
+        `💎 *Vanity Kit:* ${booking.kitType}\n` +
+        `📍 *Location Zone:* ${booking.zoneName}\n` +
+        `🏠 *Venue:* ${booking.venueAddress}\n` +
+        `💰 *Estimated Total:* ₹${booking.totalAmount?.toLocaleString('en-IN')}\n\n` +
+        `Our team will reach out prior to the date for final schedule coordination.\n\n` +
+        `_For queries: +${draft.whatsappNumber}_`;
+
+      window.open(`https://api.whatsapp.com/send?phone=${fullPhone}&text=${encodeURIComponent(confirmMessage)}`, '_blank');
+    } catch (err) {
+      alert("Error confirming booking: " + err.message);
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    if (confirm("Are you sure you want to delete this booking record?")) {
+      try {
+        await deleteDoc(doc(db, "bookings", bookingId));
+      } catch (err) {
+        alert("Error deleting: " + err.message);
+      }
     }
   };
 
@@ -165,7 +224,6 @@ export default function AdminApp() {
     }
   };
 
-  // Admin Theme Classes
   const adminBgClass = isAdminDarkMode ? "bg-[#030712] text-[#f8fafc]" : "bg-[#f4f6fa] text-[#0f172a]";
   const adminCardBg = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border-white/10" : "bg-white border-slate-200 shadow-md";
   const adminInnerCard = isAdminDarkMode ? "bg-black/40 border-white/10" : "bg-slate-50 border-slate-200";
@@ -217,7 +275,6 @@ export default function AdminApp() {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* Day / Night Theme Toggle for Admin */}
             <button
               type="button"
               onClick={() => setIsAdminDarkMode(prev => !prev)}
@@ -245,6 +302,7 @@ export default function AdminApp() {
         {/* Navigation Tabs */}
         <div className="flex overflow-x-auto gap-2 border-b pb-3 border-slate-200/40 dark:border-white/10">
           {[
+            { id: 'bookings', label: `📋 Live Bookings (${bookingsList.length})` },
             { id: 'profile', label: '📱 Profile Photo & Contact' },
             { id: 'gallery', label: '📸 Transformations & Reels' },
             { id: 'theme', label: '🎨 Themes & Fonts' },
@@ -269,12 +327,90 @@ export default function AdminApp() {
           ))}
         </div>
 
+        {/* TAB: LIVE INCOMING BOOKINGS (WITH 1-CLICK ACCEPT CONFIRMATION) */}
+        {activeTab === 'bookings' && (
+          <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-500 flex items-center gap-1.5">
+                  <CalendarCheck className="w-4 h-4" /> Incoming Appointments & Bookings
+                </h3>
+                <p className={`text-xs ${adminMuted} mt-0.5`}>
+                  Manage bookings received from clients in real-time. Accept to send instant confirmation on client's WhatsApp.
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-500 border border-cyan-500/30 px-3 py-1 rounded-xl">
+                {bookingsList.length} Total Bookings
+              </span>
+            </div>
+
+            {bookingsList.length === 0 ? (
+              <div className="text-center py-12 text-xs text-slate-400">
+                ✨ No incoming bookings yet. New bookings submitted by clients will appear here instantly!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {bookingsList.map((item) => (
+                  <div key={item.id} className={`p-5 rounded-3xl border space-y-4 ${adminInnerCard}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${item.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'}`}>
+                          {item.status === 'confirmed' ? '✅ Confirmed' : '⏳ Pending Review'}
+                        </span>
+                        <h4 className="font-bold text-base text-white mt-2 flex items-center gap-1.5">
+                          <User className="w-4 h-4 text-cyan-400" />
+                          <span>{item.clientName}</span>
+                        </h4>
+                        <p className="text-xs text-slate-300 font-mono mt-0.5">📞 {item.clientPhone}</p>
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteBooking(item.id)}
+                        className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-xl"
+                        title="Delete Record"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs border-t border-b border-white/10 py-3">
+                      <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-amber-400 font-mono">{item.eventDate}</strong></div>
+                      <div className="flex justify-between"><span className={adminMuted}>Package:</span><span className="font-semibold text-right">{item.packageName}</span></div>
+                      <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span className="text-right">{item.kitType}</span></div>
+                      <div className="flex justify-between"><span className={adminMuted}>Zone:</span><span>{item.zoneName}</span></div>
+                      <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="text-right truncate max-w-[200px]">{item.venueAddress}</span></div>
+                      {item.appliedCoupon && item.appliedCoupon !== 'None' && (
+                        <div className="flex justify-between text-emerald-400 font-semibold"><span>Coupon:</span><span>{item.appliedCoupon}</span></div>
+                      )}
+                      <div className="flex justify-between pt-1 border-t border-white/5 font-bold text-sm">
+                        <span>Total Investment:</span>
+                        <span className="text-cyan-400 font-mono">₹{item.totalAmount?.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptBooking(item)}
+                        className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>{item.status === 'confirmed' ? 'Resend WhatsApp Confirmation' : 'Accept & Confirm (WhatsApp)'}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <form onSubmit={handleSave} className="space-y-6">
 
           {/* TAB 1: PROFILE PHOTO & SOCIALS */}
           {activeTab === 'profile' && (
             <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
-              
               <div className={`space-y-3 p-4 rounded-2xl border ${adminInnerCard}`}>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-cyan-500 uppercase tracking-wider flex items-center gap-1.5">
