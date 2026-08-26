@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Crown, Settings, Save, Lock, Plus, Trash2, ToggleLeft, ToggleRight, 
   Percent, Tag, Volume2, Car, Sparkles, RefreshCw, CheckCircle2, 
-  Phone, Instagram, Palette, Type, Gift, MapPin, Eye, Sliders
+  Phone, Instagram, Palette, Type, Gift, MapPin, Eye, Sliders, Layers
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig } from './firebase';
 
@@ -16,16 +16,14 @@ const DEFAULT_CONFIG = {
 
   // Theme & Appearance
   theme: {
-    fontFamily: "serif", // 'serif', 'cormorant', 'cinzel', 'sans', 'montserrat'
-    colorTheme: "gold_rose", // 'gold_rose', 'champagne', 'emerald', 'violet'
+    fontFamily: "serif", // 'serif', 'cormorant', 'cinzel', 'sans', 'outfit', 'montserrat'
+    colorTheme: "gold_rose", // 'gold_rose', 'google_minimal', 'liquid_glass', 'champagne', 'emerald', 'violet'
     defaultMode: "dark" // 'dark' | 'light'
   },
 
-  // Feature Toggles
   showOfferSection: true,
   enableDiscountsAndCoupons: true,
   
-  // Floating Banner Config
   floatingBanner: {
     enabled: true,
     tag: "SPECIAL WEDDING OFFER",
@@ -34,7 +32,6 @@ const DEFAULT_CONFIG = {
     actionText: "Apply Offer"
   },
 
-  // Guest Discount Control
   guestDiscount: {
     enabled: true,
     discountPercent: 15
@@ -94,7 +91,7 @@ export default function AdminApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('theme');
   const [isSaving, setIsSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -122,7 +119,7 @@ export default function AdminApp() {
     setStatusMsg('');
     try {
       await updateLiveConfig(draft);
-      setStatusMsg('🎉 All studio changes, themes, banners & rates updated live on Main App!');
+      setStatusMsg('🎉 All studio themes, fonts, coupons & rates pushed live in real-time!');
     } catch (err) {
       setStatusMsg('❌ Error saving changes: ' + err.message);
     } finally {
@@ -138,7 +135,7 @@ export default function AdminApp() {
             <Lock className="w-7 h-7" />
           </div>
           <div>
-            <h2 className="text-xl font-bold font-serif">{draft.studioName || "Husna Farooqui"}</h2>
+            <h2 className="text-xl font-bold">{draft.studioName || "HUSNA FAROOQUI"}</h2>
             <p className="text-xs text-[#8e95a5] mt-1">Master Studio Management Console</p>
           </div>
           <input
@@ -169,7 +166,7 @@ export default function AdminApp() {
               <Crown className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold font-serif">{draft.studioName || "Husna Farooqui"} Control</h1>
+              <h1 className="text-base font-bold">{draft.studioName || "HUSNA FAROOQUI"} Console</h1>
               <p className="text-[11px] text-[#8e95a5]">Live Firebase Synced Admin Console</p>
             </div>
           </div>
@@ -190,12 +187,12 @@ export default function AdminApp() {
         {/* Navigation Tabs */}
         <div className="flex overflow-x-auto gap-2 border-b border-[#232730] pb-3">
           {[
-            { id: 'profile', label: '📱 Contact & Socials' },
-            { id: 'floating', label: '🎈 Floating Offer Studio' },
-            { id: 'theme', label: '🎨 Fonts & Branding' },
-            { id: 'toggles', label: '🎛️ Guest Discount & Toggles' },
+            { id: 'theme', label: '🎨 Themes & Fonts' },
+            { id: 'coupons', label: '🏷️ Promo Coupons Studio' },
+            { id: 'floating', label: '🎈 Floating Banner' },
+            { id: 'toggles', label: '🎛️ Guest Discount' },
+            { id: 'profile', label: '📱 Profile & Socials' },
             { id: 'prices', label: '💄 Package Rates' },
-            { id: 'coupons', label: '🏷️ Promo Coupons' },
             { id: 'announcements', label: '📢 Top Announcements' },
             { id: 'convenience', label: '🚗 Travel Fees' }
           ].map(tab => (
@@ -215,81 +212,240 @@ export default function AdminApp() {
 
         <form onSubmit={handleSave} className="space-y-6">
 
-          {/* TAB 1: CONTACT & SOCIAL PROFILE */}
-          {activeTab === 'profile' && (
-            <div className="p-6 rounded-3xl bg-[#14171f] border border-[#232730] space-y-5">
+          {/* TAB 1: THEMES, FONTS & BRANDING (NEW GOOGLE MINIMAL + LIQUID GLASS) */}
+          {activeTab === 'theme' && (
+            <div className="p-6 rounded-3xl bg-[#14171f] border border-[#232730] space-y-6">
               <h3 className="font-bold text-xs uppercase text-amber-400 flex items-center gap-1.5">
-                <Phone className="w-4 h-4" /> Studio Identity & Booking Routing
+                <Palette className="w-4 h-4" /> Visual Design, Fonts & App Skin
               </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                {/* Theme Selector */}
                 <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Studio Display Title</label>
-                  <input
-                    type="text"
-                    value={draft.studioName || ''}
-                    onChange={(e) => setDraft({ ...draft, studioName: e.target.value })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold"
-                  />
+                  <label className="block text-xs font-semibold text-[#8e95a5] mb-2 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-amber-400" /> Color Theme & Aesthetics
+                  </label>
+                  <select
+                    value={draft.theme?.colorTheme || 'gold_rose'}
+                    onChange={(e) => setDraft({
+                      ...draft,
+                      theme: { ...draft.theme, colorTheme: e.target.value }
+                    })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold text-amber-400"
+                  >
+                    <option value="gold_rose">👑 Royal Gold & Rose Radiance</option>
+                    <option value="google_minimal">🔵 Google Minimalist (Material You Clean)</option>
+                    <option value="liquid_glass">💎 Liquid Glass iOS (Frosted Glassmorphism)</option>
+                    <option value="champagne">🥂 Champagne Gold & Warm Amber</option>
+                    <option value="emerald">💚 Emerald Luxe & Velvet Gold</option>
+                    <option value="violet">🔮 Midnight Orchid & Electric Rose</option>
+                  </select>
                 </div>
 
+                {/* Font Selector */}
                 <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Artist Tagline / Subtitle</label>
-                  <input
-                    type="text"
-                    value={draft.artistTagline || ''}
-                    onChange={(e) => setDraft({ ...draft, artistTagline: e.target.value })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs"
-                  />
+                  <label className="block text-xs font-semibold text-[#8e95a5] mb-2 flex items-center gap-1.5">
+                    <Type className="w-3.5 h-3.5 text-cyan-400" /> Typography & Font Family
+                  </label>
+                  <select
+                    value={draft.theme?.fontFamily || 'serif'}
+                    onChange={(e) => setDraft({
+                      ...draft,
+                      theme: { ...draft.theme, fontFamily: e.target.value }
+                    })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold text-cyan-400"
+                  >
+                    <option value="serif">Playfair Display (Royal Serif)</option>
+                    <option value="sans">Plus Jakarta Sans (Google / One UI Modern)</option>
+                    <option value="outfit">Outfit (iOS & Liquid Glass Minimal)</option>
+                    <option value="cormorant">Cormorant Garamond (Haute Couture Luxury)</option>
+                    <option value="cinzel">Cinzel (Signature Roman Bridal)</option>
+                    <option value="montserrat">Montserrat (Clean Editorial Sans)</option>
+                  </select>
                 </div>
 
+                {/* Default Mode */}
                 <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">WhatsApp Booking Number (with 91 country code)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 919997210876"
-                    value={draft.whatsappNumber || ''}
-                    onChange={(e) => setDraft({ ...draft, whatsappNumber: e.target.value.replace(/[^0-9]/g, '') })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] font-mono text-amber-400 text-xs font-bold"
-                  />
+                  <label className="block text-xs font-semibold text-[#8e95a5] mb-2">Default Theme Mode</label>
+                  <select
+                    value={draft.theme?.defaultMode || 'dark'}
+                    onChange={(e) => setDraft({
+                      ...draft,
+                      theme: { ...draft.theme, defaultMode: e.target.value }
+                    })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold text-[#f2f4f8]"
+                  >
+                    <option value="dark">🌙 Dark Mode (Night Minimal)</option>
+                    <option value="light">☀️ Light Mode (Clean Pearl Minimal)</option>
+                  </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Instagram Username (without @)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. husna_farooqui_makeup"
-                    value={draft.instagramHandle || ''}
-                    onChange={(e) => setDraft({ ...draft, instagramHandle: e.target.value.replace(/^@/, '') })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] font-mono text-pink-400 text-xs font-bold"
-                  />
+              {/* Theme Live Badge */}
+              <div className="p-4 rounded-2xl bg-[#0f1117] border border-[#282d38] flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>Active Live Combination: <strong>{draft.theme?.colorTheme}</strong> with <strong>{draft.theme?.fontFamily}</strong></span>
                 </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Base Studio Location / Address</label>
-                  <input
-                    type="text"
-                    value={draft.baseLocation || ''}
-                    onChange={(e) => setDraft({ ...draft, baseLocation: e.target.value })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Admin Security PIN</label>
-                  <input
-                    type="password"
-                    maxLength={6}
-                    value={draft.adminPin || '8760'}
-                    onChange={(e) => setDraft({ ...draft, adminPin: e.target.value })}
-                    className="w-36 p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] font-mono text-amber-400 text-xs font-bold tracking-widest"
-                  />
-                </div>
+                <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded text-[11px]">Real-Time Sync Ready</span>
               </div>
             </div>
           )}
 
-          {/* TAB 2: FLOATING OFFER BANNER STUDIO */}
+          {/* TAB 2: PROMO COUPONS STUDIO (FULL EDITING OF NAME, PRICE & LIMITS) */}
+          {activeTab === 'coupons' && (
+            <div className="p-6 rounded-3xl bg-[#14171f] border border-[#232730] space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-bold text-xs uppercase text-amber-400 flex items-center gap-1.5">
+                    <Tag className="w-4 h-4" /> Promotional Coupon Manager
+                  </h3>
+                  <p className="text-xs text-[#8e95a5] mt-0.5">Edit coupon codes, percentage off, flat amounts, usage limits and labels</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const code = prompt("Enter new Coupon Code (e.g. WEDDING20):");
+                    if (code) {
+                      const clean = code.trim().toUpperCase();
+                      setDraft({
+                        ...draft,
+                        validCoupons: {
+                          ...draft.validCoupons,
+                          [clean]: { type: "percent", value: 10, label: "Special Promotional Offer", maxUses: 1 }
+                        }
+                      });
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-amber-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 shadow"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add New Coupon
+                </button>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                {Object.entries(draft.validCoupons || {}).map(([code, cData]) => (
+                  <div key={code} className="p-4 rounded-2xl bg-[#0f1117] border border-[#282d38] space-y-3">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                      
+                      {/* Coupon Code Name */}
+                      <div className="w-full sm:w-1/4">
+                        <label className="block text-[10px] text-[#8e95a5] mb-1">Coupon Code (Tap to Edit)</label>
+                        <input
+                          type="text"
+                          value={code}
+                          onChange={(e) => {
+                            const newCode = e.target.value.toUpperCase();
+                            const updated = { ...draft.validCoupons };
+                            const oldVal = updated[code];
+                            delete updated[code];
+                            updated[newCode] = oldVal;
+                            setDraft({ ...draft, validCoupons: updated });
+                          }}
+                          className="w-full p-2 rounded-xl bg-[#14171f] border border-[#282d38] font-mono font-bold text-amber-400 text-xs"
+                        />
+                      </div>
+
+                      {/* Discount Type & Value */}
+                      <div className="w-full sm:w-1/3 flex gap-2">
+                        <div className="w-1/2">
+                          <label className="block text-[10px] text-[#8e95a5] mb-1">Type</label>
+                          <select
+                            value={cData.type}
+                            onChange={(e) => setDraft({
+                              ...draft,
+                              validCoupons: {
+                                ...draft.validCoupons,
+                                [code]: { ...cData, type: e.target.value }
+                              }
+                            })}
+                            className="w-full p-2 rounded-xl bg-[#14171f] border border-[#282d38] text-xs font-bold"
+                          >
+                            <option value="percent">% Percent Off</option>
+                            <option value="flat">₹ Flat Amount</option>
+                          </select>
+                        </div>
+                        <div className="w-1/2">
+                          <label className="block text-[10px] text-[#8e95a5] mb-1">Value ({cData.type === 'percent' ? '%' : '₹'})</label>
+                          <input
+                            type="number"
+                            value={cData.value}
+                            onChange={(e) => setDraft({
+                              ...draft,
+                              validCoupons: {
+                                ...draft.validCoupons,
+                                [code]: { ...cData, value: Number(e.target.value) }
+                              }
+                            })}
+                            className="w-full p-2 rounded-xl bg-[#14171f] border border-[#282d38] font-mono text-xs font-bold text-amber-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Usage Limit */}
+                      <div className="w-full sm:w-1/4">
+                        <label className="block text-[10px] text-[#8e95a5] mb-1">Redemption Limit</label>
+                        <select
+                          value={cData.maxUses ?? 1}
+                          onChange={(e) => setDraft({
+                            ...draft,
+                            validCoupons: {
+                              ...draft.validCoupons,
+                              [code]: { 
+                                ...cData, 
+                                maxUses: e.target.value === 'unlimited' ? 'unlimited' : Number(e.target.value) 
+                              }
+                            }
+                          })}
+                          className="w-full p-2 rounded-xl bg-[#14171f] border border-[#282d38] text-xs"
+                        >
+                          <option value={1}>1 Time (Single Use)</option>
+                          <option value={2}>2 Times</option>
+                          <option value={5}>5 Times</option>
+                          <option value={10}>10 Times</option>
+                          <option value="unlimited">♾️ Unlimited</option>
+                        </select>
+                      </div>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = { ...draft.validCoupons };
+                          delete updated[code];
+                          setDraft({ ...draft, validCoupons: updated });
+                        }}
+                        className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl self-end sm:self-center"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Human Friendly Label */}
+                    <div>
+                      <label className="block text-[10px] text-[#8e95a5] mb-1">Promo Label (Shown to Customer on Apply)</label>
+                      <input
+                        type="text"
+                        value={cData.label || ''}
+                        onChange={(e) => setDraft({
+                          ...draft,
+                          validCoupons: {
+                            ...draft.validCoupons,
+                            [code]: { ...cData, label: e.target.value }
+                          }
+                        })}
+                        placeholder="e.g. 10% Limited Wedding Season Offer"
+                        className="w-full p-2 rounded-xl bg-[#14171f] border border-[#282d38] text-xs text-[#f2f4f8]"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: FLOATING OFFER BANNER STUDIO */}
           {activeTab === 'floating' && (
             <div className="p-6 rounded-3xl bg-[#14171f] border border-amber-500/30 space-y-5">
               <div className="flex items-center justify-between">
@@ -297,7 +453,7 @@ export default function AdminApp() {
                   <h3 className="font-bold text-sm text-amber-400 flex items-center gap-1.5">
                     <Gift className="w-4 h-4" /> Floating Bottom Promo Widget
                   </h3>
-                  <p className="text-xs text-[#8e95a5] mt-0.5">Control the high-converting offer card floating at the bottom-right</p>
+                  <p className="text-xs text-[#8e95a5] mt-0.5">Control the high-converting offer card floating at bottom-right</p>
                 </div>
                 <button
                   type="button"
@@ -371,73 +527,9 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 3: THEME, FONTS & BRANDING */}
-          {activeTab === 'theme' && (
-            <div className="p-6 rounded-3xl bg-[#14171f] border border-[#232730] space-y-6">
-              <h3 className="font-bold text-xs uppercase text-amber-400 flex items-center gap-1.5">
-                <Palette className="w-4 h-4" /> Live Theme & Font Customizer
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-2 flex items-center gap-1">
-                    <Type className="w-3.5 h-3.5" /> Luxury Font Family
-                  </label>
-                  <select
-                    value={draft.theme?.fontFamily || 'serif'}
-                    onChange={(e) => setDraft({
-                      ...draft,
-                      theme: { ...draft.theme, fontFamily: e.target.value }
-                    })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold text-amber-400"
-                  >
-                    <option value="serif">Playfair Display (Royal Serif)</option>
-                    <option value="cormorant">Cormorant Garamond (Haute Couture)</option>
-                    <option value="cinzel">Cinzel Luxe (Signature Bridal)</option>
-                    <option value="sans">Plus Jakarta Sans (Modern Clean)</option>
-                    <option value="montserrat">Montserrat (Editorial Minimal)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-2">Accent Color Palette</label>
-                  <select
-                    value={draft.theme?.colorTheme || 'gold_rose'}
-                    onChange={(e) => setDraft({
-                      ...draft,
-                      theme: { ...draft.theme, colorTheme: e.target.value }
-                    })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold text-rose-400"
-                  >
-                    <option value="gold_rose">👑 Royal Gold & Rose Radiance</option>
-                    <option value="champagne">🥂 Champagne Gold & Warm Amber</option>
-                    <option value="emerald">💎 Emerald Luxe & Velvet Gold</option>
-                    <option value="violet">🔮 Midnight Orchid & Electric Rose</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-[#8e95a5] mb-2">Default Theme Mode</label>
-                  <select
-                    value={draft.theme?.defaultMode || 'dark'}
-                    onChange={(e) => setDraft({
-                      ...draft,
-                      theme: { ...draft.theme, defaultMode: e.target.value }
-                    })}
-                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold text-[#f2f4f8]"
-                  >
-                    <option value="dark">🌙 Dark Mode (One UI Night)</option>
-                    <option value="light">☀️ Light Mode (Pure Minimal Pearl)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: GUEST DISCOUNT & FEATURE TOGGLES */}
+          {/* TAB 4: GUEST DISCOUNT & MASTER TOGGLES */}
           {activeTab === 'toggles' && (
             <div className="space-y-4">
-              
               <div className="p-5 rounded-3xl bg-[#14171f] border border-amber-500/30 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -514,7 +606,70 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 5: PACKAGE RATES */}
+          {/* TAB 5: PROFILE & SOCIALS */}
+          {activeTab === 'profile' && (
+            <div className="p-6 rounded-3xl bg-[#14171f] border border-[#232730] space-y-5">
+              <h3 className="font-bold text-xs uppercase text-amber-400 flex items-center gap-1.5">
+                <Phone className="w-4 h-4" /> Studio Identity & Booking Routing
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Studio Display Title</label>
+                  <input
+                    type="text"
+                    value={draft.studioName || ''}
+                    onChange={(e) => setDraft({ ...draft, studioName: e.target.value })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Artist Tagline / Subtitle</label>
+                  <input
+                    type="text"
+                    value={draft.artistTagline || ''}
+                    onChange={(e) => setDraft({ ...draft, artistTagline: e.target.value })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">WhatsApp Booking Number (with 91 country code)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 919997210876"
+                    value={draft.whatsappNumber || ''}
+                    onChange={(e) => setDraft({ ...draft, whatsappNumber: e.target.value.replace(/[^0-9]/g, '') })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] font-mono text-amber-400 text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Instagram Username (without @)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. husna_farooqui_makeup"
+                    value={draft.instagramHandle || ''}
+                    onChange={(e) => setDraft({ ...draft, instagramHandle: e.target.value.replace(/^@/, '') })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] font-mono text-pink-400 text-xs font-bold"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-[#8e95a5] mb-1.5">Base Studio Location / Address</label>
+                  <input
+                    type="text"
+                    value={draft.baseLocation || ''}
+                    onChange={(e) => setDraft({ ...draft, baseLocation: e.target.value })}
+                    className="w-full p-3 rounded-2xl bg-[#0f1117] border border-[#282d38] text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: PACKAGE RATES */}
           {activeTab === 'prices' && (
             <div className="space-y-6">
               <div className="p-5 rounded-3xl bg-[#14171f] border border-amber-500/30 space-y-3">
@@ -561,81 +716,6 @@ export default function AdminApp() {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB 6: COUPONS */}
-          {activeTab === 'coupons' && (
-            <div className="p-5 rounded-3xl bg-[#14171f] border border-[#232730] space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-xs uppercase text-amber-400">🏷️ Active Promotional Coupons</h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const code = prompt("Enter Coupon Code (e.g. FESTIVE25):");
-                    if (code) {
-                      const clean = code.trim().toUpperCase();
-                      setDraft({
-                        ...draft,
-                        validCoupons: {
-                          ...draft.validCoupons,
-                          [clean]: { type: "percent", value: 10, label: "Special Offer", maxUses: 1 }
-                        }
-                      });
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-amber-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add Code
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {Object.entries(draft.validCoupons).map(([code, cData]) => (
-                  <div key={code} className="p-3.5 rounded-2xl bg-[#0f1117] border border-[#282d38] flex flex-col sm:flex-row gap-3 items-center justify-between">
-                    <span className="font-mono font-bold text-amber-400 text-sm">{code}</span>
-                    <div className="flex gap-2">
-                      <select
-                        value={cData.type}
-                        onChange={(e) => setDraft({
-                          ...draft,
-                          validCoupons: {
-                            ...draft.validCoupons,
-                            [code]: { ...cData, type: e.target.value }
-                          }
-                        })}
-                        className="p-2 rounded-xl bg-[#14171f] border border-[#282d38] text-xs"
-                      >
-                        <option value="percent">% Off</option>
-                        <option value="flat">₹ Flat</option>
-                      </select>
-                      <input
-                        type="number"
-                        value={cData.value}
-                        onChange={(e) => setDraft({
-                          ...draft,
-                          validCoupons: {
-                            ...draft.validCoupons,
-                            [code]: { ...cData, value: Number(e.target.value) }
-                          }
-                        })}
-                        className="w-20 p-2 rounded-xl bg-[#14171f] border border-[#282d38] font-mono text-xs"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updated = { ...draft.validCoupons };
-                        delete updated[code];
-                        setDraft({ ...draft, validCoupons: updated });
-                      }}
-                      className="text-rose-400 hover:bg-rose-500/10 p-2 rounded-xl"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
               </div>
             </div>
           )}
@@ -693,7 +773,7 @@ export default function AdminApp() {
             className="w-full py-4 bg-gradient-to-r from-amber-500 via-rose-500 to-amber-500 text-neutral-950 font-bold text-sm rounded-2xl shadow-xl hover:opacity-95 transition flex items-center justify-center gap-2"
           >
             <Save className="w-5 h-5" />
-            <span>{isSaving ? 'Syncing to Firebase...' : 'Publish All Changes Live to Customer App'}</span>
+            <span>{isSaving ? 'Syncing to Firebase...' : 'Push All Changes Live to Customer App'}</span>
           </button>
 
         </form>
