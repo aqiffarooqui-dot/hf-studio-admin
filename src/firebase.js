@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { initializeFirestore, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDrf7qAcl7lnvVNI3yQUXsdRRnNEqfsxt8",
@@ -11,8 +11,29 @@ const firebaseConfig = {
 };
 
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-export const db = getFirestore(app);
 
+// 🔥 Auto-detect Long Polling to bypass adblockers & websocket blocking
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+  useFetchStreams: false
+});
+
+// Realtime Listener
+export function subscribeToLiveConfig(defaultConfig, callback) {
+  const docRef = doc(db, "app_settings", "live_config");
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      callback({ ...defaultConfig, ...docSnap.data() });
+    } else {
+      callback(defaultConfig);
+    }
+  }, (err) => {
+    console.warn("Firestore sync error:", err);
+    callback(defaultConfig);
+  });
+}
+
+// Fetch (Admin load)
 export async function fetchLiveConfig(defaultConfig) {
   try {
     const docRef = doc(db, "app_settings", "live_config");
@@ -22,12 +43,14 @@ export async function fetchLiveConfig(defaultConfig) {
     }
     return defaultConfig;
   } catch (err) {
-    console.error("Fetch failed:", err);
+    console.error("Fetch error:", err);
     return defaultConfig;
   }
 }
 
+// Save (Admin push)
 export async function updateLiveConfig(newConfig) {
   const docRef = doc(db, "app_settings", "live_config");
-  await setDoc(docRef, newConfig, { merge: true });
+  const cleanData = JSON.parse(JSON.stringify(newConfig));
+  await setDoc(docRef, cleanData, { merge: true });
 }
