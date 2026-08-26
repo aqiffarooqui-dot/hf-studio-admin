@@ -3,12 +3,12 @@ import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
 // ⚠️ Paste your same Firebase keys here so it syncs with the main app
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDrf7qAcl7lnvVNI3yQUXsdRRnNEqfsxt8",
+  authDomain: "hf-makeup-backend.firebaseapp.com",
+  projectId: "hf-makeup-backend",
+  storageBucket: "hf-makeup-backend.firebasestorage.app",
+  messagingSenderId: "1034643523470",
+  appId: "1:1034643523470:web:26c99d9d59f2d679f586df"
 };
 
 const app = initializeApp(firebaseConfig);
