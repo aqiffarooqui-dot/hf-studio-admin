@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Crown, Settings, Save, Lock, Plus, Trash2, ToggleLeft, ToggleRight, 
   Percent, Tag, Volume2, Car, Sparkles, RefreshCw, CheckCircle2, 
-  Phone, Instagram, Palette, Type, Gift, MapPin, Eye, Sliders, Layers, Image as ImageIcon, Upload
+  Phone, Instagram, Palette, Type, Gift, MapPin, Eye, Sliders, Layers, 
+  Image as ImageIcon, Upload, Video, Film, Play, ExternalLink
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig } from './firebase';
 
@@ -37,6 +38,13 @@ const DEFAULT_CONFIG = {
     enabled: true,
     discountPercent: 15
   },
+
+  galleryPhotos: [
+    { type: "image", title: "Royal Asian Bridal", sub: "Prestige HD Artistry", url: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&auto=format&fit=crop&q=80" },
+    { type: "image", title: "Engagement Glow", sub: "Dewy Glass Finish", url: "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=800&auto=format&fit=crop&q=80" },
+    { type: "image", title: "Cocktail Reception Glam", sub: "Smokey Eyes & Bold Lips", url: "https://images.unsplash.com/photo-1503236823255-94609f598e71?w=800&auto=format&fit=crop&q=80" },
+    { type: "image", title: "Ultra HD Party Look", sub: "Long-Wear Flawless Base", url: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&auto=format&fit=crop&q=80" }
+  ],
 
   announcements: [
     "✨ 100% Genuine Certified Luxury Cosmetics • Flawless HD & 16HR Finish ✨",
@@ -92,7 +100,7 @@ export default function AdminApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('gallery');
   const [isSaving, setIsSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -120,7 +128,7 @@ export default function AdminApp() {
     setStatusMsg('');
     try {
       await updateLiveConfig(draft);
-      setStatusMsg('🎉 All settings, themes, fonts, profile photo & rates synced live!');
+      setStatusMsg('🎉 All media, reels, themes, fonts, profile photo & rates synced live!');
     } catch (err) {
       setStatusMsg('❌ Error saving changes: ' + err.message);
     } finally {
@@ -134,6 +142,23 @@ export default function AdminApp() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setDraft({ ...draft, profileImage: reader.result, profilePhotoType: 'image' });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleGalleryMediaUpload = (e, index) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const copy = [...(draft.galleryPhotos || [])];
+        copy[index] = {
+          ...copy[index],
+          url: reader.result,
+          type: file.type.startsWith('video') ? 'video' : 'image'
+        };
+        setDraft({ ...draft, galleryPhotos: copy });
       };
       reader.readAsDataURL(file);
     }
@@ -182,7 +207,7 @@ export default function AdminApp() {
               <p className="text-[11px] text-slate-400">Live Firebase Synced Admin Console</p>
             </div>
           </div>
-          <button onClick={() => setIsAuthenticated(false)} className="text-xs text-rose-400 hover:underline">
+          <button onClick={() => setIsAuthenticated(false)} className="text-xs text-rose-400 hover:underline font-bold">
             Lock Portal
           </button>
         </div>
@@ -199,9 +224,10 @@ export default function AdminApp() {
         {/* Navigation Tabs */}
         <div className="flex overflow-x-auto gap-2 border-b border-white/10 pb-3">
           {[
+            { id: 'gallery', label: '📸 Transformations & Reels Studio' },
             { id: 'profile', label: '📱 Profile Photo & Contact' },
             { id: 'theme', label: '🎨 Liquid Glass & Fonts' },
-            { id: 'coupons', label: '🏷️ Promo Coupons Studio' },
+            { id: 'coupons', label: '🏷️ Promo Coupons' },
             { id: 'floating', label: '🎈 Floating Banner' },
             { id: 'toggles', label: '🎛️ Guest Discount' },
             { id: 'prices', label: '💄 Package Rates' },
@@ -224,7 +250,136 @@ export default function AdminApp() {
 
         <form onSubmit={handleSave} className="space-y-6">
 
-          {/* TAB 1: PROFILE PHOTO & SOCIALS */}
+          {/* TAB 1: TRANSFORMATIONS & REELS STUDIO */}
+          {activeTab === 'gallery' && (
+            <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-5">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                    <Film className="w-4 h-4" /> Transformations Media & Reels Studio
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Add/replace client makeover photos, direct video clips (`.mp4`), or Instagram Reel links
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraft({
+                      ...draft,
+                      galleryPhotos: [
+                        ...(draft.galleryPhotos || []),
+                        {
+                          type: "image",
+                          title: "New Transformation Look",
+                          sub: "Signature Makeover",
+                          url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80"
+                        }
+                      ]
+                    });
+                  }}
+                  className="px-3 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 shadow active:scale-95"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add New Media
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                {(draft.galleryPhotos || []).map((item, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-cyan-400 font-mono">Media Card #{idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const copy = draft.galleryPhotos.filter((_, i) => i !== idx);
+                          setDraft({ ...draft, galleryPhotos: copy });
+                        }}
+                        className="p-1.5 text-rose-400 hover:bg-rose-500/10 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-slate-400 mb-1">Media Type</label>
+                        <select
+                          value={item.type || 'image'}
+                          onChange={(e) => {
+                            const copy = [...draft.galleryPhotos];
+                            copy[idx] = { ...copy[idx], type: e.target.value };
+                            setDraft({ ...draft, galleryPhotos: copy });
+                          }}
+                          className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold"
+                        >
+                          <option value="image">🖼️ Image Photo</option>
+                          <option value="video">🎥 Direct Video (.mp4)</option>
+                          <option value="instagram_reel">📸 Instagram Reel Link</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] text-slate-400 mb-1">Tag Subtitle</label>
+                        <input
+                          type="text"
+                          value={item.sub || ''}
+                          onChange={(e) => {
+                            const copy = [...draft.galleryPhotos];
+                            copy[idx] = { ...copy[idx], sub: e.target.value };
+                            setDraft({ ...draft, galleryPhotos: copy });
+                          }}
+                          placeholder="e.g. Dewy Finish"
+                          className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 mb-1">Card Title</label>
+                      <input
+                        type="text"
+                        value={item.title || ''}
+                        onChange={(e) => {
+                          const copy = [...draft.galleryPhotos];
+                          copy[idx] = { ...copy[idx], title: e.target.value };
+                          setDraft({ ...draft, galleryPhotos: copy });
+                        }}
+                        placeholder="e.g. Royal Bridal Look"
+                        className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-bold text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-slate-400 mb-1">Media URL / Reel Link</label>
+                      <input
+                        type="text"
+                        value={item.url || ''}
+                        onChange={(e) => {
+                          const copy = [...draft.galleryPhotos];
+                          copy[idx] = { ...copy[idx], url: e.target.value };
+                          setDraft({ ...draft, galleryPhotos: copy });
+                        }}
+                        placeholder="https://... or Instagram Reel link"
+                        className="w-full p-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-cyan-300"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1 border-t border-white/10">
+                      <label className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 border border-white/10 transition">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload File</span>
+                        <input type="file" accept="image/*,video/*" onChange={(e) => handleGalleryMediaUpload(e, idx)} className="hidden" />
+                      </label>
+                      <span className="text-[10px] text-slate-400">Upload direct photo/video from phone</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: PROFILE PHOTO & SOCIALS */}
           {activeTab === 'profile' && (
             <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-6">
               
@@ -234,7 +389,6 @@ export default function AdminApp() {
                     <ImageIcon className="w-4 h-4" /> Profile Photo Mode
                   </span>
                   
-                  {/* Photo Source Switch */}
                   <div className="inline-flex p-1 rounded-xl bg-white/10 border border-white/10 gap-1">
                     <button
                       type="button"
@@ -343,7 +497,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 2: LIQUID GLASS, ONE UI 9 & EXPANDED FONTS */}
+          {/* TAB 3: LIQUID GLASS, ONE UI 9 & FONTS */}
           {activeTab === 'theme' && (
             <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-6">
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -413,7 +567,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 3: PROMO COUPONS */}
+          {/* TAB 4: PROMO COUPONS */}
           {activeTab === 'coupons' && (
             <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-4">
               <div className="flex justify-between items-center">
@@ -542,7 +696,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 4: FLOATING BANNER */}
+          {/* TAB 5: FLOATING BANNER */}
           {activeTab === 'floating' && (
             <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-4">
               <div className="flex items-center justify-between">
@@ -577,7 +731,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 5: GUEST DISCOUNT */}
+          {/* TAB 6: GUEST DISCOUNT */}
           {activeTab === 'toggles' && (
             <div className="p-6 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-4">
               <div className="flex items-center justify-between">
@@ -612,7 +766,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 6: PRICES */}
+          {/* TAB 7: PRICES */}
           {activeTab === 'prices' && (
             <div className="space-y-6">
               <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
@@ -663,7 +817,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 7: ANNOUNCEMENTS */}
+          {/* TAB 8: ANNOUNCEMENTS */}
           {activeTab === 'announcements' && (
             <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
               <h3 className="font-bold text-xs uppercase text-cyan-400">📢 Announcement Lines</h3>
@@ -683,7 +837,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* TAB 8: CONVENIENCE */}
+          {/* TAB 9: TRAVEL FEES */}
           {activeTab === 'convenience' && (
             <div className="p-5 rounded-3xl bg-white/[0.04] backdrop-blur-3xl border border-white/10 space-y-3">
               <h3 className="font-bold text-xs uppercase text-cyan-400">🚗 Convenience Travel Fees</h3>
@@ -709,7 +863,7 @@ export default function AdminApp() {
             </div>
           )}
 
-          {/* Master Save Button */}
+          {/* Save Button */}
           <button
             type="submit"
             disabled={isSaving}
