@@ -1,7 +1,6 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
-// ⚠️ Paste your same Firebase keys here so it syncs with the main app
 const firebaseConfig = {
   apiKey: "AIzaSyDrf7qAcl7lnvVNI3yQUXsdRRnNEqfsxt8",
   authDomain: "hf-makeup-backend.firebaseapp.com",
@@ -11,7 +10,7 @@ const firebaseConfig = {
   appId: "1:1034643523470:web:26c99d9d59f2d679f586df"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 export async function fetchLiveConfig(defaultConfig) {
@@ -30,5 +29,5 @@ export async function fetchLiveConfig(defaultConfig) {
 
 export async function updateLiveConfig(newConfig) {
   const docRef = doc(db, "app_settings", "live_config");
-  await setDoc(docRef, newConfig);
+  await setDoc(docRef, newConfig, { merge: true });
 }
