@@ -212,17 +212,17 @@ const PRE_ADDED_REJECTION_REASONS = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
+// 📁 Merged Package Management Folder + Other Folders
 const ADMIN_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
+  { id: 'packages_master', label: 'Package Management (Images & Titles)', icon: Layers, desc: 'Manage package photos, names and descriptions per kit' },
+  { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos (20MB)' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, desc: 'Edit bottom offer pill & auto-hide rules' },
   { id: 'coupons', label: 'Promo Coupons & Timers', icon: Tag, desc: 'Manage discount codes, timers & active status' },
-  { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos (20MB)' },
-  { id: 'kit_images', label: 'Package Images (Luxury vs HD)', icon: ImageIcon, desc: 'Upload distinct visuals for each vanity kit' },
-  { id: 'packages_text', label: 'Package Titles & Descriptions', icon: Type, desc: 'Edit look names and descriptions per kit' },
-  { id: 'toggles_master', label: 'Master Feature Toggles', icon: SlidersHorizontal, desc: 'Enable/disable logo, sections & features' },
+  { id: 'toggles_master', label: 'Master Feature Toggles', icon: SlidersHorizontal, desc: 'Enable/disable logo, profile & features' },
   { id: 'traffic_logs', label: 'Visitor Logs & Traffic', icon: Activity, desc: 'Track real-time Instagram bio & link visits' },
   { id: 'promotions', label: 'WhatsApp Broadcast Studio', icon: Megaphone, desc: 'Send bulk promo alerts via Baileys gateway' },
   { id: 'announcements', label: 'Top Announcements Ticker', icon: Volume2, desc: 'Configure top rotating ticker announcements' },
@@ -668,28 +668,25 @@ export default function AdminApp() {
     }
   };
 
-  const handlePackageImageUpload = (e, kit, pkgKey) => {
+  const handlePackageImageUpload = async (e, kit, pkgKey) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 20971520) {
-        alert("File exceeds 20MB. Please use a smaller image.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      try {
+        const compressedBase64 = await compressImageFile(file, 800, 0.82);
         setDraft({
           ...draft,
           kitImages: {
             ...draft.kitImages,
             [kit]: {
               ...(draft.kitImages?.[kit] || {}),
-              [pkgKey]: String(reader.result)
+              [pkgKey]: compressedBase64
             }
           }
         });
-        setActionStatus(`Loaded image for ${pkgKey}. Click Save below.`);
-      };
-      reader.readAsDataURL(file);
+        setActionStatus(`Loaded optimized image for ${pkgKey}. Click Save below.`);
+      } catch (err) {
+        alert("Image processing error: " + err.message);
+      }
     }
   };
 
