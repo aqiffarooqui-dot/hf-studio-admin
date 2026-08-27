@@ -6,7 +6,7 @@ import {
   Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
   SlidersHorizontal, CheckCircle2, XCircle, Clock, Gift, AlertCircle, Calendar,
   Download, FileCheck, Hash, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon,
-  Wrench, X, MessageSquare, RotateCcw, Ban
+  Wrench, X, MessageSquare, RotateCcw, Ban, Folder, FolderOpen, ArrowLeft
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -144,6 +144,58 @@ const DEFAULT_CONFIG = {
   }
 };
 
+const THEME_STYLES = {
+  liquid_glass: {
+    accentGradient: "from-cyan-400 via-sky-300 to-indigo-400",
+    btnPrimary: "bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-neutral-950 font-bold shadow-xl shadow-cyan-500/25 border border-white/40",
+    accentText: "text-cyan-500 dark:text-cyan-400",
+    accentBorder: "border-cyan-500/40 dark:border-cyan-400/30",
+    glow: "shadow-cyan-500/30"
+  },
+  one_ui_9: {
+    accentGradient: "from-amber-400 via-rose-400 to-amber-500",
+    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md shadow-amber-500/25 border border-amber-300/40",
+    accentText: "text-amber-600 dark:text-amber-400",
+    accentBorder: "border-amber-500/30",
+    glow: "shadow-amber-500/20"
+  },
+  gold_rose: {
+    accentGradient: "from-amber-400 via-rose-400 to-amber-500",
+    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md",
+    accentText: "text-rose-600 dark:text-rose-400",
+    accentBorder: "border-rose-500/30",
+    glow: "shadow-rose-500/20"
+  },
+  google_minimal: {
+    accentGradient: "from-blue-500 via-teal-400 to-emerald-400",
+    btnPrimary: "bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md",
+    accentText: "text-blue-600 dark:text-blue-400",
+    accentBorder: "border-blue-500/30",
+    glow: "shadow-blue-500/20"
+  },
+  champagne: {
+    accentGradient: "from-amber-200 via-yellow-400 to-amber-500",
+    btnPrimary: "bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold shadow-lg shadow-amber-400/20",
+    accentText: "text-amber-600 dark:text-amber-400",
+    accentBorder: "border-amber-400/30",
+    glow: "shadow-amber-400/20"
+  },
+  emerald: {
+    accentGradient: "from-emerald-400 via-teal-300 to-emerald-500",
+    btnPrimary: "bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold shadow-lg shadow-emerald-500/20",
+    accentText: "text-emerald-600 dark:text-emerald-400",
+    accentBorder: "border-emerald-500/30",
+    glow: "shadow-emerald-500/20"
+  },
+  violet: {
+    accentGradient: "from-purple-400 via-pink-400 to-rose-400",
+    btnPrimary: "bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg shadow-purple-500/25",
+    accentText: "text-purple-600 dark:text-purple-400",
+    accentBorder: "border-purple-500/30",
+    glow: "shadow-purple-500/20"
+  }
+};
+
 const DEFAULT_TEMPLATES = [
   { id: 1, title: "Wedding Season 15% OFF", text: "✨ *Special Wedding Season Offer - Husna Farooqui* ✨\n\nBook your Signature Bridal Look this week and get *Flat 15% OFF* + complimentary lash extension!\n\nUse Code: *WEDDING15*\nBook Online: https://your-domain.com" },
   { id: 2, title: "Weekend Party Glam Flash Offer", text: "💄 *Flash Weekend Glam Offer!* 💄\n\nBook Super HD Party Makeup for 2 or more family members and get 1 Party Look at *50% OFF*!\n\nContact: +919997210876" }
@@ -161,33 +213,35 @@ const PRE_ADDED_REJECTION_REASONS = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-const ADMIN_TABS = [
-  { id: 'bookings', label: '📋 Live Bookings' },
-  { id: 'calendar_view', label: '📅 Booking Calendar' },
-  { id: 'app_maintenance', label: '🛑 App Down / Maintenance' },
-  { id: 'floating', label: '🎈 Floating Banner' },
-  { id: 'coupons', label: '🏷️ Promo Coupons' },
-  { id: 'gallery', label: '📸 Transformations (20MB)' },
-  { id: 'kit_images', label: '🖼️ Package Images' },
-  { id: 'packages_text', label: '✏️ Package Titles' },
-  { id: 'toggles_master', label: '🎛️ Master Toggles' },
-  { id: 'traffic_logs', label: '📊 Visitor Logs' },
-  { id: 'promotions', label: '📢 WhatsApp Studio' },
-  { id: 'announcements', label: '📢 Announcements' },
-  { id: 'convenience', label: '🚗 Travel Fees' },
-  { id: 'prices', label: '💄 Package Rates' },
-  { id: 'theme', label: '🎨 Themes & Fonts' },
-  { id: 'profile', label: '📱 Profile' }
+// 📁 Folder Grid Directory Cards Definition
+const ADMIN_FOLDERS = [
+  { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
+  { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
+  { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
+  { id: 'floating', label: 'Floating Promo Banner', icon: Gift, desc: 'Edit bottom offer pill & auto-hide rules' },
+  { id: 'coupons', label: 'Promo Coupons & Timers', icon: Tag, desc: 'Manage discount codes, timers & active status' },
+  { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos (20MB)' },
+  { id: 'kit_images', label: 'Package Images (Luxury vs HD)', icon: ImageIcon, desc: 'Upload distinct visuals for each vanity kit' },
+  { id: 'packages_text', label: 'Package Titles & Descriptions', icon: Type, desc: 'Edit look names and descriptions per kit' },
+  { id: 'toggles_master', label: 'Master Feature Toggles', icon: SlidersHorizontal, desc: 'Enable or disable any main app section' },
+  { id: 'traffic_logs', label: 'Visitor Logs & Traffic', icon: Activity, desc: 'Track real-time Instagram bio & link visits' },
+  { id: 'promotions', label: 'WhatsApp Broadcast Studio', icon: Megaphone, desc: 'Send bulk promo alerts via Baileys gateway' },
+  { id: 'announcements', label: 'Top Announcements Ticker', icon: Volume2, desc: 'Configure top rotating ticker announcements' },
+  { id: 'convenience', label: 'Travel Fees & Zones', icon: Car, desc: 'Edit venue travel charges per area' },
+  { id: 'prices', label: 'Package Rates Manager', icon: Percent, desc: 'Adjust rates for Luxury vs HD kit looks' },
+  { id: 'theme', label: 'Themes & Typography', icon: Palette, desc: 'Aesthetic skins, fonts & mode defaults' },
+  { id: 'profile', label: 'Studio Identity & Contact', icon: User, desc: 'Artist title, avatar & social handles' }
 ];
 
 export default function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
-  const [activeTab, setActiveTab] = useState('bookings');
+  
+  // Navigation: null = Folder Grid Directory View | String = Inside specific Folder Card
+  const [activeFolderId, setActiveFolderId] = useState(null);
   const [editingKitTab, setEditingKitTab] = useState('international');
   
-  // 🌟 Global Single Master Draft State (Preserves all tabs changes in memory)
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
@@ -195,14 +249,14 @@ export default function AdminApp() {
   const [selectedTemplateText, setSelectedTemplateText] = useState(DEFAULT_TEMPLATES[0].text);
   const [customNumbersInput, setCustomNumbersInput] = useState('');
   const [sendingPromo, setSendingPromo] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [savingSection, setSavingSection] = useState('');
   const [actionStatus, setActionStatus] = useState('');
 
-  // 🛑 Rejection Confirmation Modal State
+  // Rejection Modal State
   const [rejectModalData, setRejectModalData] = useState(null);
   const [rejectionReasonText, setRejectionReasonText] = useState(PRE_ADDED_REJECTION_REASONS[0]);
 
-  // Calendar Navigation State
+  // Calendar State
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
@@ -246,19 +300,18 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  // 💾 Global Single Save Function (Syncs all tabs simultaneously)
-  const handleGlobalSaveAll = async (e) => {
-    if (e) e.preventDefault();
-    setIsSaving(true);
+  // 💾 Per-Card Specific Save Engine (Saves individual section instantly)
+  const handleSaveSpecificCard = async (sectionName) => {
+    setSavingSection(sectionName);
     setActionStatus('');
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus('🎉 All settings across all tabs have been successfully synced live to Customer App!');
+      setActionStatus(`🎉 ${sectionName} saved & synced live successfully!`);
     } catch (err) {
-      setActionStatus('❌ Error saving: ' + err.message);
+      setActionStatus(`❌ Error saving ${sectionName}: ${err.message}`);
     } finally {
-      setIsSaving(false);
+      setSavingSection('');
     }
   };
 
@@ -302,7 +355,6 @@ export default function AdminApp() {
     }
   };
 
-  // 🛑 Execute Rejection with Comment & Optional WhatsApp Alert
   const handleConfirmRejection = async () => {
     if (!rejectModalData) return;
     try {
@@ -311,7 +363,6 @@ export default function AdminApp() {
         rejectionReason: rejectionReasonText
       });
 
-      // Send polite rejection notice via Baileys if online
       const rejectMsg = 
         `Dear *${rejectModalData.clientName}*,\n\n` +
         `Thank you for your booking request (#${rejectModalData.bookingNumber || 'HF-BOOKING'}) for *${rejectModalData.eventDate}* with *HUSNA FAROOQUI*.\n\n` +
@@ -332,121 +383,147 @@ export default function AdminApp() {
     }
   };
 
+  // 📄 Dynamic Status-Aware Slip Generator (Accepted, Pending, Rejected + Rejection Note)
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
     canvas.width = 1080;
-    canvas.height = 1680;
+    canvas.height = 1720;
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1080, 1680);
+    ctx.fillRect(0, 0, 1080, 1720);
 
     const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
     bgGrad.addColorStop(0, '#ffffff');
     bgGrad.addColorStop(1, '#f8fafc');
     ctx.fillStyle = bgGrad;
-    ctx.fillRect(20, 20, 1040, 1640);
+    ctx.fillRect(20, 20, 1040, 1680);
 
-    ctx.strokeStyle = '#b48a3c';
+    const isRejected = b.status === 'rejected';
+    const isConfirmed = b.status === 'confirmed';
+
+    ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#b48a3c');
     ctx.lineWidth = 6;
-    ctx.strokeRect(36, 36, 1008, 1608);
+    ctx.strokeRect(36, 36, 1008, 1648);
 
     ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(48, 48, 984, 1584);
+    ctx.strokeRect(48, 48, 984, 1624);
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#996515';
     ctx.font = 'bold 52px serif';
-    ctx.fillText('HUSNA FAROOQUI', 540, 125);
+    ctx.fillText('HUSNA FAROOQUI', 540, 120);
 
     ctx.fillStyle = '#be123c';
     ctx.font = '600 24px sans-serif';
-    ctx.fillText('Celebrity & Bridal Makeup Artist', 540, 170);
+    ctx.fillText('Celebrity & Bridal Makeup Artist', 540, 165);
 
     ctx.strokeStyle = 'rgba(180, 138, 60, 0.4)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(140, 205);
-    ctx.lineTo(940, 205);
+    ctx.moveTo(140, 200);
+    ctx.lineTo(940, 200);
     ctx.stroke();
 
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
     ctx.font = 'bold 28px sans-serif';
-    ctx.fillText('✨ OFFICIAL CONFIRMED APPOINTMENT SLIP ✨', 540, 255);
+    ctx.fillText(
+      isRejected 
+        ? '❌ BOOKING STATUS: DECLINED / REJECTED ❌' 
+        : (isConfirmed ? '✨ OFFICIAL CONFIRMED APPOINTMENT SLIP ✨' : '⏳ PENDING BOOKING REQUEST SLIP ⏳'), 
+      540, 
+      250
+    );
 
     const rows = [
-      { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-CONFIRMED' },
+      { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
       { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
       { label: 'CONTACT NUMBER', val: b.clientPhone || 'Not Provided' },
       { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
-      { label: 'VANITY KIT', val: b.kitType || 'Luxury Vanity' },
+      { label: 'VANITY TIER', val: b.kitType || 'Luxury Vanity' },
       { label: 'MAIN PACKAGE', val: b.packageName || 'Bridal Makeup' },
       { label: 'EXTRA GUESTS', val: `${b.extraGuestsCount || 0} Custom Guest(s) (+₹${b.extraGuestsCost || 0})` },
       { label: 'VENUE LOCATION', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
       { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' },
-      { label: 'APPLIED PROMO', val: b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0} OFF)` : 'No Promo' }
+      { label: 'APPLIED PROMO', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0} OFF)` : 'No Promo' }
     ];
 
-    let startY = 330;
+    let startY = 320;
     rows.forEach((row, idx) => {
-      ctx.fillStyle = idx === 0 ? 'rgba(16, 185, 129, 0.15)' : (idx % 2 === 0 ? 'rgba(241, 245, 249, 0.8)' : '#ffffff');
-      ctx.fillRect(80, startY - 30, 920, 62);
+      ctx.fillStyle = idx === 0 
+        ? (isRejected ? 'rgba(244, 63, 94, 0.12)' : (isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(6, 182, 212, 0.12)')) 
+        : (idx % 2 === 0 ? 'rgba(241, 245, 249, 0.8)' : '#ffffff');
+      ctx.fillRect(80, startY - 30, 920, 60);
 
       ctx.textAlign = 'left';
-      ctx.fillStyle = idx === 0 ? '#047857' : '#64748b';
-      ctx.font = idx === 0 ? 'bold 23px monospace' : 'bold 22px sans-serif';
+      ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#0284c7')) : '#64748b';
+      ctx.font = idx === 0 ? 'bold 22px monospace' : 'bold 21px sans-serif';
       ctx.fillText(row.label, 100, startY + 8);
 
-      ctx.fillStyle = idx === 0 ? '#065f46' : '#0f172a';
-      ctx.font = idx === 0 ? 'bold 25px monospace' : 'bold 23px sans-serif';
+      ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : '#0369a1')) : '#0f172a';
+      ctx.font = idx === 0 ? 'bold 24px monospace' : 'bold 22px sans-serif';
 
       let displayVal = row.val;
       while (ctx.measureText(displayVal).width > 580 && displayVal.length > 4) {
         displayVal = displayVal.substring(0, displayVal.length - 4) + '...';
       }
       ctx.fillText(displayVal, 390, startY + 8);
-      startY += 76;
+      startY += 74;
     });
 
+    // Total Amount Box
     ctx.fillStyle = '#fefce8';
-    ctx.fillRect(80, 1100, 920, 175);
+    ctx.fillRect(80, 1090, 920, 160);
     ctx.strokeStyle = '#b48a3c';
     ctx.lineWidth = 3;
-    ctx.strokeRect(80, 1100, 920, 175);
+    ctx.strokeRect(80, 1090, 920, 160);
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#854d0e';
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('FINAL CONFIRMED AMOUNT', 540, 1150);
+    ctx.fillText('TOTAL AMOUNT', 540, 1135);
 
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 64px serif';
-    ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, 1225);
+    ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, 1210);
 
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(80, 1310, 920, 130);
-    ctx.strokeStyle = 'rgba(180, 138, 60, 0.4)';
+    // Dynamic Status / Rejection Note Box
+    ctx.fillStyle = isRejected ? '#ffe4e6' : '#f8fafc';
+    ctx.fillRect(80, 1280, 920, 160);
+    ctx.strokeStyle = isRejected ? '#f43f5e' : 'rgba(180, 138, 60, 0.4)';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(80, 1310, 920, 130);
+    ctx.strokeRect(80, 1280, 920, 160);
 
-    ctx.fillStyle = '#047857';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText('✔ OFFICIAL DIGITAL VERIFICATION SEAL • MASTER ARTISTRY CONFIRMED', 540, 1355);
+    if (isRejected) {
+      ctx.fillStyle = '#be123c';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('REJECTION REASON / REMARKS:', 540, 1320);
 
-    ctx.fillStyle = '#475569';
-    ctx.font = '20px sans-serif';
-    ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1400);
+      ctx.fillStyle = '#475569';
+      ctx.font = 'italic 18px sans-serif';
+      let note = b.rejectionReason || "Slot unavailable for the requested date. Please contact studio.";
+      ctx.fillText(note.substring(0, 90), 540, 1365);
+      if (note.length > 90) ctx.fillText(note.substring(90, 180), 540, 1395);
+    } else {
+      ctx.fillStyle = isConfirmed ? '#047857' : '#0284c7';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText(isConfirmed ? '✔ OFFICIAL DIGITAL VERIFICATION SEAL • MASTER ARTISTRY CONFIRMED' : '⏳ PENDING STUDIO VERIFICATION', 540, 1340);
 
-    ctx.fillStyle = '#047857';
-    ctx.font = 'bold 18px sans-serif';
-    ctx.fillText('STATUS: OFFICIALLY CONFIRMED & SCHEDULED IN MASTER CALENDAR', 540, 1485);
+      ctx.fillStyle = '#475569';
+      ctx.font = '20px sans-serif';
+      ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1390);
+    }
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '16px sans-serif';
+    ctx.fillText(`Generated on ${new Date().toLocaleDateString()} • Verified Studio Record`, 540, 1490);
 
     const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
     const downloadLink = document.createElement('a');
-    downloadLink.download = `Confirmed_Slip_${b.bookingNumber || b.clientName}.jpg`;
+    downloadLink.download = `${isRejected ? 'Declined' : 'Confirmed'}_Slip_${b.bookingNumber || b.clientName}.jpg`;
     downloadLink.href = jpgUrl;
     downloadLink.click();
   };
@@ -469,7 +546,7 @@ export default function AdminApp() {
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} (${(file.size / 1024 / 1024).toFixed(1)}MB). Remember to click Save All Settings.`);
+        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} (${(file.size / 1024 / 1024).toFixed(1)}MB). Click 'Save This Section' below.`);
       };
       reader.readAsDataURL(file);
     }
@@ -494,7 +571,7 @@ export default function AdminApp() {
             }
           }
         });
-        setActionStatus(`Loaded image for ${pkgKey}. Remember to click Save All Settings.`);
+        setActionStatus(`Loaded image for ${pkgKey}. Click 'Save This Section' below.`);
       };
       reader.readAsDataURL(file);
     }
@@ -557,6 +634,9 @@ export default function AdminApp() {
     };
   };
 
+  const activeColorThemeKey = draft.theme?.colorTheme || 'liquid_glass';
+  const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.liquid_glass;
+
   const adminBgClass = isAdminDarkMode ? "bg-[#030712] text-[#f8fafc]" : "bg-[#f8fafc] text-[#0f172a]";
   const adminCardBg = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border border-white/[0.12] shadow-2xl text-[#f8fafc]" : "bg-white border border-slate-200 shadow-xl text-[#0f172a]";
   const adminInnerCard = isAdminDarkMode ? "bg-black/40 border border-white/10 text-[#f8fafc]" : "bg-slate-50 border border-slate-200 text-[#0f172a]";
@@ -580,16 +660,18 @@ export default function AdminApp() {
     );
   }
 
+  const activeFolderObj = ADMIN_FOLDERS.find(f => f.id === activeFolderId);
+
   return (
-    <div className={`min-h-screen ${adminBgClass} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden`}>
+    <div className={`min-h-screen ${adminBgClass} font-sans pb-24 transition-colors duration-300 relative overflow-x-hidden`}>
       
-      {/* Ambient Liquid Glow Orbs */}
+      {/* Ambient Liquid Glow Orbs (Synced with Theme) */}
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* 🛑 Rejection Confirmation Modal with Professional Quick Reasons */}
+      {/* 🛑 Rejection Confirmation Modal with 6 Professional Quick Templates */}
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className={`max-w-lg w-full rounded-3xl p-6 border shadow-2xl space-y-4 ${isAdminDarkMode ? 'bg-[#0f1424] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
@@ -606,7 +688,7 @@ export default function AdminApp() {
             </p>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-300 mb-1">Select or Type Reason for Client:</label>
+              <label className="block text-[11px] font-bold text-slate-300 mb-1">Reason for Rejection (Added to Slip & Alert):</label>
               <textarea
                 rows={3}
                 value={rejectionReasonText}
@@ -615,16 +697,15 @@ export default function AdminApp() {
               />
             </div>
 
-            {/* Quick 6 Pre-Added Reasons */}
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Response Templates:</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Pre-Added Reason Template:</span>
               <div className="grid grid-cols-1 gap-1 max-h-36 overflow-y-auto pr-1">
                 {PRE_ADDED_REJECTION_REASONS.map((reason, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setRejectionReasonText(reason)}
-                    className={`text-left p-2 rounded-xl text-[11px] border transition ${rejectionReasonText === reason ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                    className={`text-left p-2 rounded-xl text-[11px] border transition ${rejectionReasonText === reason ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-semibold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
                   >
                     • {reason}
                   </button>
@@ -645,7 +726,7 @@ export default function AdminApp() {
                 onClick={handleConfirmRejection}
                 className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg active:scale-95"
               >
-                Confirm Rejection & Notify
+                Confirm Rejection & Update Slip
               </button>
             </div>
           </div>
@@ -659,8 +740,10 @@ export default function AdminApp() {
             <Crown className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-sm sm:text-base">{draft.studioName || "HUSNA FAROOQUI"} Console</h1>
-            <p className={`text-[11px] ${adminMuted}`}>Master Studio Control Hub</p>
+            <h1 className={`font-bold text-sm sm:text-base bg-gradient-to-r ${currentTheme.accentGradient} bg-clip-text text-transparent`}>
+              {draft.studioName || "HUSNA FAROOQUI"} Console
+            </h1>
+            <p className={`text-[11px] ${adminMuted}`}>Master Directory & Configuration Center</p>
           </div>
         </div>
 
@@ -674,24 +757,28 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
-        {/* 🚀 Glass Scrollable Tabs Bar */}
-        <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200/40 dark:border-white/10 scrollbar-thin">
-          {ADMIN_TABS.map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 shadow-lg shadow-cyan-500/25 border border-white/30' 
-                    : `${adminMuted} hover:text-cyan-400 bg-white/[0.04] border border-white/5`
-                }`}
-              >
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
+        {/* Breadcrumb / Folder Back Bar */}
+        <div className="flex items-center justify-between">
+          {activeFolderId ? (
+            <button
+              onClick={() => setActiveFolderId(null)}
+              className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-bold flex items-center gap-2 text-cyan-400 border border-white/10 transition"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Directory Cards</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Folder className="w-4 h-4 text-cyan-400" />
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">Master Control Cards Directory</h3>
+            </div>
+          )}
+
+          {activeFolderObj && (
+            <span className="text-xs font-bold text-slate-400 font-mono">
+              Folder: <strong className="text-white">{activeFolderObj.label}</strong>
+            </span>
+          )}
         </div>
 
         {actionStatus && (
@@ -700,13 +787,50 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 1: LIVE BOOKINGS (ACCEPT, PENDING, REJECT + CONFLICT ALERT) */}
-        {activeTab === 'bookings' && (
+        {/* 📁 VIEW 1: INTERACTIVE FOLDER CARDS DIRECTORY GRID (WHEN NO FOLDER IS OPENED) */}
+        {!activeFolderId && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+            {ADMIN_FOLDERS.map(f => {
+              const Icon = f.icon;
+              const count = f.countKey === 'bookings' ? bookingsList.length : null;
+
+              return (
+                <div
+                  key={f.id}
+                  onClick={() => setActiveFolderId(f.id)}
+                  className={`${cardBgClass} rounded-3xl p-5 hover:scale-[1.02] active:scale-95 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-3 group`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    {count !== null && (
+                      <span className="text-xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 px-2.5 py-0.5 rounded-full">
+                        {count} Active
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <h4 className="font-bold text-sm sm:text-base group-hover:text-cyan-300 transition-colors flex items-center justify-between">
+                      <span>{f.label}</span>
+                      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </h4>
+                    <p className={`text-xs mt-1 leading-relaxed ${adminMuted}`}>{f.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 🗂️ VIEW 2: INSIDE SPECIFIC FOLDER CARD (WITH PER-CARD SAVE BUTTON) */}
+        {activeFolderId === 'bookings' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400">Incoming Customer Bookings Queue</h3>
-                <p className={`text-xs ${adminMuted}`}>Accept, hold as pending, or reject bookings with polite templates.</p>
+                <p className={`text-xs ${adminMuted}`}>Accept, hold as pending, or reject bookings with custom reason templates.</p>
               </div>
               <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
                 {bookingsList.length} Total Bookings
@@ -765,10 +889,14 @@ export default function AdminApp() {
                         <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span>{b.extraGuestsCount || 0} Custom Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span>{b.zoneName}</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
+                        {b.rejectionReason && (
+                          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-300 text-[11px]">
+                            <strong>Rejection Note:</strong> {b.rejectionReason}
+                          </div>
+                        )}
                         <div className="flex justify-between pt-1 border-t border-white/5"><span className="font-bold">Total Amount:</span><strong className="text-cyan-400 font-mono text-sm">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
                       </div>
 
-                      {/* Complete Action Buttons: WhatsApp Slip, Accept, Pending, Reject, Slip */}
                       <div className="space-y-2 pt-1">
                         <button
                           type="button"
@@ -817,7 +945,7 @@ export default function AdminApp() {
                           className="w-full py-2 bg-white/10 hover:bg-white/15 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          <span>Generate & Download Confirmed Slip (.JPG)</span>
+                          <span>Generate & Download Status Slip (.JPG)</span>
                         </button>
                       </div>
 
@@ -829,8 +957,8 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: INTERACTIVE MONTHLY CALENDAR */}
-        {activeTab === 'calendar_view' && (
+        {/* TAB 2: INTERACTIVE CALENDAR */}
+        {activeFolderId === 'calendar_view' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -928,12 +1056,12 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: APP DOWN / MAINTENANCE */}
-        {activeTab === 'app_maintenance' && (
+        {/* TAB 3: MAINTENANCE MODE */}
+        {activeFolderId === 'app_maintenance' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                <Wrench className="w-4 h-4" /> App Down & Maintenance Mode Controller
+                <Wrench className="w-4 h-4" /> App Down & Maintenance Controller
               </h3>
               <p className={`text-xs ${adminMuted} mt-0.5`}>
                 Turn on to politely lock customer app with an elegant maintenance notice during updates.
@@ -966,11 +1094,21 @@ export default function AdminApp() {
                 <span>{draft.isAppDown ? 'MAINTENANCE MODE (ON)' : 'APP IS LIVE (ACTIVE)'}</span>
               </button>
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Maintenance Mode'}
+              onClick={() => handleSaveSpecificCard('Maintenance Mode')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 4: FLOATING BANNER */}
-        {activeTab === 'floating' && (
+        {activeFolderId === 'floating' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
@@ -1081,11 +1219,21 @@ export default function AdminApp() {
                 />
               </div>
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Floating Banner'}
+              onClick={() => handleSaveSpecificCard('Floating Banner')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 5: PROMO COUPONS */}
-        {activeTab === 'coupons' && (
+        {activeFolderId === 'coupons' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
@@ -1230,11 +1378,21 @@ export default function AdminApp() {
                 );
               })}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Coupons'}
+              onClick={() => handleSaveSpecificCard('Coupons')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Coupons' ? 'Saving...' : 'Save Promo Coupons Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 6: TRANSFORMATIONS (20MB) */}
-        {activeTab === 'gallery' && (
+        {activeFolderId === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
@@ -1315,11 +1473,21 @@ export default function AdminApp() {
                 </div>
               ))}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Gallery Media'}
+              onClick={() => handleSaveSpecificCard('Gallery Media')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 7: PACKAGE IMAGES */}
-        {activeTab === 'kit_images' && (
+        {activeFolderId === 'kit_images' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1383,11 +1551,21 @@ export default function AdminApp() {
                 ))}
               </div>
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Package Images'}
+              onClick={() => handleSaveSpecificCard('Package Images')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Package Images' ? 'Saving...' : 'Save Package Images Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 8: PACKAGE TITLES & TEXT */}
-        {activeTab === 'packages_text' && (
+        {activeFolderId === 'packages_text' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
@@ -1461,11 +1639,21 @@ export default function AdminApp() {
                 );
               })}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Package Texts'}
+              onClick={() => handleSaveSpecificCard('Package Texts')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Package Texts' ? 'Saving...' : 'Save Package Titles & Texts Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 9: MASTER FEATURE TOGGLES */}
-        {activeTab === 'toggles_master' && (
+        {activeFolderId === 'toggles_master' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1509,11 +1697,21 @@ export default function AdminApp() {
                 );
               })}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Master Toggles'}
+              onClick={() => handleSaveSpecificCard('Master Toggles')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 10: VISITOR TRAFFIC LOGS */}
-        {activeTab === 'traffic_logs' && (
+        {activeFolderId === 'traffic_logs' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
@@ -1551,7 +1749,7 @@ export default function AdminApp() {
         )}
 
         {/* TAB 11: PROMOTIONS */}
-        {activeTab === 'promotions' && (
+        {activeFolderId === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
               <Megaphone className="w-4 h-4" /> WhatsApp Broadcast Studio
@@ -1575,7 +1773,7 @@ export default function AdminApp() {
         )}
 
         {/* TAB 12: TOP ANNOUNCEMENTS */}
-        {activeTab === 'announcements' && (
+        {activeFolderId === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
@@ -1617,11 +1815,21 @@ export default function AdminApp() {
                 </div>
               ))}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Announcements'}
+              onClick={() => handleSaveSpecificCard('Announcements')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 13: TRAVEL FEES */}
-        {activeTab === 'convenience' && (
+        {activeFolderId === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
@@ -1699,11 +1907,21 @@ export default function AdminApp() {
                 </div>
               ))}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Travel Fees'}
+              onClick={() => handleSaveSpecificCard('Travel Fees')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 14: RATES */}
-        {activeTab === 'prices' && (
+        {activeFolderId === 'prices' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1724,13 +1942,23 @@ export default function AdminApp() {
                 </div>
               ))}
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Package Rates'}
+              onClick={() => handleSaveSpecificCard('Package Rates')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Package Rates' ? 'Saving...' : 'Save Package Rates Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 15: THEMES & FONTS */}
-        {activeTab === 'theme' && (
+        {activeFolderId === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts</h3>
+            <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts (Synced)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Color Theme</label>
@@ -1765,11 +1993,21 @@ export default function AdminApp() {
                 </select>
               </div>
             </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Theme & Styles'}
+              onClick={() => handleSaveSpecificCard('Theme & Styles')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts Live'}</span>
+            </button>
           </div>
         )}
 
         {/* TAB 16: PROFILE */}
-        {activeTab === 'profile' && (
+        {activeFolderId === 'profile' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Profile & Identity</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1794,32 +2032,20 @@ export default function AdminApp() {
               Upload New Profile Photo File
               <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
             </label>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Studio Profile'}
+              onClick={() => handleSaveSpecificCard('Studio Profile')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile Live'}</span>
+            </button>
           </div>
         )}
 
       </div>
-
-      {/* 🚀 Floating Master Single Save Bar (Saves all tabs at once) */}
-      <div className="fixed bottom-4 left-0 right-0 z-40 px-4 sm:px-8 max-w-6xl mx-auto pointer-events-none">
-        <div className="p-2 sm:p-3 rounded-3xl bg-[#080d1e]/90 backdrop-blur-3xl border border-white/20 shadow-2xl flex items-center justify-between pointer-events-auto gap-3">
-          <div className="hidden sm:flex items-center gap-2 pl-3">
-            <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
-            <span className="text-xs font-bold text-slate-200">Global Admin Engine</span>
-            <span className="text-[11px] text-slate-400">• All tabs edits are preserved</span>
-          </div>
-
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleGlobalSaveAll}
-            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 hover:from-cyan-300 hover:to-indigo-300 text-neutral-950 font-bold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <Save className="w-4 h-4" />
-            <span>{isSaving ? 'Syncing Everything...' : 'Save All Settings Live'}</span>
-          </button>
-        </div>
-      </div>
-
     </div>
   );
 }
