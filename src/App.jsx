@@ -3,7 +3,7 @@ import {
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
-  Sliders, Palette
+  Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -38,6 +38,26 @@ const DEFAULT_CONFIG = {
   guestDiscount: {
     enabled: true,
     discountPercent: 15
+  },
+
+  // 🖼️ Kit-Specific Distinct Images
+  kitImages: {
+    international: {
+      simple_party: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80",
+      hd_party: "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=800&auto=format&fit=crop&q=80",
+      super_hd_party: "https://images.unsplash.com/photo-1503236823255-94609f598e71?w=800&auto=format&fit=crop&q=80",
+      cocktail_glam: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&auto=format&fit=crop&q=80",
+      engagement_bride: "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=800&auto=format&fit=crop&q=80",
+      royal_bridal: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&auto=format&fit=crop&q=80"
+    },
+    drugstore: {
+      simple_party: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&auto=format&fit=crop&q=80",
+      hd_party: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80",
+      super_hd_party: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?w=800&auto=format&fit=crop&q=80",
+      cocktail_glam: "https://images.unsplash.com/photo-1526045612212-70caf35c14df?w=800&auto=format&fit=crop&q=80",
+      engagement_bride: "https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=800&auto=format&fit=crop&q=80",
+      royal_bridal: "https://images.unsplash.com/photo-1617083934555-563d41f021e0?w=800&auto=format&fit=crop&q=80"
+    }
   },
 
   galleryPhotos: [
@@ -101,6 +121,19 @@ const DEFAULT_TEMPLATES = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
+const TAB_OPTIONS = [
+  { id: 'bookings', label: '📋 Live Bookings & Queue' },
+  { id: 'gallery', label: '📸 Transformations & Live Videos' },
+  { id: 'kit_images', label: '🖼️ Package Cards & Images' },
+  { id: 'promotions', label: '📢 WhatsApp Campaign Studio' },
+  { id: 'announcements', label: '📢 Top Announcements Ticker' },
+  { id: 'convenience', label: '🚗 Travel Fees & Zones' },
+  { id: 'prices', label: '💄 Package Rates Manager' },
+  { id: 'coupons', label: '🏷️ Promo Coupons' },
+  { id: 'theme', label: '🎨 Themes & Typography' },
+  { id: 'profile', label: '📱 Studio Profile & Contact' }
+];
+
 export default function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
@@ -142,15 +175,17 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
+  // 🛡️ 100% Sanitized Save to completely prevent Firestore Entity / Undefined Error
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     setIsSaving(true);
     setActionStatus('');
     try {
-      await updateLiveConfig(draft);
-      setActionStatus('🎉 All media videos, gallery & settings synced live to Main App!');
+      const cleanData = JSON.parse(JSON.stringify(draft));
+      await updateLiveConfig(cleanData);
+      setActionStatus('🎉 All media videos, announcements, travel fees & rates synced live!');
     } catch (err) {
-      setActionStatus('❌ Error: ' + err.message);
+      setActionStatus('❌ Error saving: ' + err.message);
     } finally {
       setIsSaving(false);
     }
@@ -184,17 +219,22 @@ export default function AdminApp() {
     }
   };
 
-  // 📹 Universal Media Handler (Auto Video Play + Image file parser)
+  // 📹 Clean & Sanitized Media Upload Handler
   const handleMediaUpload = (e, index) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 2500000) {
+        alert("File size is larger than 2.5MB. For smooth performance, please paste a direct video link or use a compressed clip.");
+        return;
+      }
       const isVid = file.type.startsWith('video');
       const reader = new FileReader();
       reader.onloadend = () => {
         const copy = [...(draft.galleryPhotos || [])];
         copy[index] = {
-          ...copy[index],
-          url: reader.result,
+          title: copy[index]?.title || "Signature Look",
+          sub: copy[index]?.sub || "HD Artistry",
+          url: String(reader.result),
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
@@ -267,10 +307,10 @@ export default function AdminApp() {
   }
 
   return (
-    <div className={`min-h-screen ${adminBgClass} font-sans pb-24 transition-colors duration-300`}>
+    <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300`}>
       
-      {/* Admin Header with Day/Night Switch */}
-      <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-4 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
+      {/* 💎 Header with Navigation Dropdown */}
+      <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
             <Crown className="w-5 h-5" />
@@ -291,36 +331,32 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
+        {/* 🚀 Sleek Dropdown Navigation Selector */}
+        <div className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md ${adminCardBg}`}>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <ListFilter className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Jump to Admin Section:</span>
+          </div>
+
+          <div className="relative w-full sm:w-80">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className={`w-full p-2.5 px-4 pr-10 rounded-xl text-xs font-bold border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/40 ${isAdminDarkMode ? 'bg-black/60 border-cyan-400/40 text-cyan-300' : 'bg-slate-100 border-slate-300 text-slate-900'}`}
+            >
+              {TAB_OPTIONS.map(opt => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400 pointer-events-none" />
+          </div>
+        </div>
+
         {actionStatus && (
           <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs text-center animate-fade-in shadow-lg">
             {actionStatus}
           </div>
         )}
-
-        {/* Master Nav Tabs */}
-        <div className="flex gap-2 border-b pb-3 border-slate-200/40 dark:border-white/10 overflow-x-auto">
-          {[
-            { id: 'bookings', label: `📋 Bookings (${bookingsList.length})` },
-            { id: 'gallery', label: '📸 Video & Transformations' },
-            { id: 'promotions', label: '📢 WhatsApp Promotions' },
-            { id: 'profile', label: '📱 Profile & Contact' },
-            { id: 'theme', label: '🎨 Themes & Fonts' },
-            { id: 'coupons', label: '🏷️ Promo Coupons' },
-            { id: 'prices', label: '💄 Package Rates' },
-            { id: 'announcements', label: '📢 Announcements' },
-            { id: 'convenience', label: '🚗 Travel Fees' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition active:scale-95 ${
-                activeTab === tab.id ? 'bg-cyan-500 text-neutral-950 shadow-md font-bold' : `${adminMuted} hover:text-cyan-400 bg-white/5`
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
 
         {/* TAB 1: INCOMING BOOKINGS */}
         {activeTab === 'bookings' && (
@@ -370,7 +406,7 @@ export default function AdminApp() {
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Film className="w-4 h-4" /> Media & Auto-Playing Video Studio
                 </h3>
-                <p className={`text-xs ${adminMuted}`}>Upload direct videos (.mp4, .webm, .mov) or transformation photos.</p>
+                <p className={`text-xs ${adminMuted}`}>Direct URLs (.mp4, .webm) or file uploads under 2.5MB.</p>
               </div>
               <button
                 type="button"
@@ -429,7 +465,7 @@ export default function AdminApp() {
                   </div>
 
                   <div>
-                    <label className={`block text-[10px] mb-1 ${adminMuted}`}>URL or Upload File</label>
+                    <label className={`block text-[10px] mb-1 ${adminMuted}`}>Direct URL (e.g. mp4/webm/image link)</label>
                     <input type="text" value={item.url || ''} onChange={e => {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
@@ -438,7 +474,7 @@ export default function AdminApp() {
                   </div>
 
                   <label className="block text-center py-2 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25 transition">
-                    Upload Direct Video/Image File
+                    Upload Direct Video/Image File (&lt;2.5MB)
                     <input type="file" accept="video/*,image/*" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
                 </div>
@@ -447,7 +483,67 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: PROMOTIONS */}
+        {/* TAB 3: PACKAGE IMAGES & DISTINCT CARDS */}
+        {activeTab === 'kit_images' && (
+          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+            <div>
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4" /> Separate Package Images (Luxury Kit vs HD Kit)
+              </h3>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Set different custom photos for each package under International vs Drugstore kits.</p>
+            </div>
+
+            {/* International Kit Images */}
+            <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Images</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {partyPackages.concat(bridalPackages).map(k => (
+                  <div key={k}>
+                    <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')} Image URL</label>
+                    <input
+                      type="text"
+                      value={draft.kitImages?.international?.[k] || ''}
+                      onChange={e => setDraft({
+                        ...draft,
+                        kitImages: {
+                          ...draft.kitImages,
+                          international: { ...(draft.kitImages?.international || {}), [k]: e.target.value }
+                        }
+                      })}
+                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* HD Drugstore Kit Images */}
+            <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Images</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {partyPackages.concat(bridalPackages).map(k => (
+                  <div key={k}>
+                    <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')} Image URL</label>
+                    <input
+                      type="text"
+                      value={draft.kitImages?.drugstore?.[k] || ''}
+                      onChange={e => setDraft({
+                        ...draft,
+                        kitImages: {
+                          ...draft.kitImages,
+                          drugstore: { ...(draft.kitImages?.drugstore || {}), [k]: e.target.value }
+                        }
+                      })}
+                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: PROMOTIONS */}
         {activeTab === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -471,7 +567,236 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 4: PROFILE */}
+        {/* TAB 5: TOP ANNOUNCEMENTS TICKER (FIXED) */}
+        {activeTab === 'announcements' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Volume2 className="w-4 h-4" /> Top Announcement Lines Ticker
+                </h3>
+                <p className={`text-xs ${adminMuted}`}>Edit rotating top banner messages displayed to clients.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDraft({ ...draft, announcements: [...(draft.announcements || []), "✨ New studio announcement line ✨"] })}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Line
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {(draft.announcements || []).map((line, idx) => (
+                <div key={idx} className="flex gap-2 items-center">
+                  <span className="text-xs font-mono font-bold text-cyan-400 w-6">#{idx + 1}</span>
+                  <input
+                    type="text"
+                    value={line}
+                    onChange={(e) => {
+                      const copy = [...draft.announcements];
+                      copy[idx] = e.target.value;
+                      setDraft({ ...draft, announcements: copy });
+                    }}
+                    className={`flex-1 p-3 rounded-2xl text-xs border ${adminInputBg}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) })}
+                    className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: TRAVEL FEES & CONVENIENCE ZONES (FIXED) */}
+        {activeTab === 'convenience' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Car className="w-4 h-4" /> Travel Fees & Convenience Zones
+                </h3>
+                <p className={`text-xs ${adminMuted}`}>Manage venue travel charges for customer locations.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const keyName = prompt("Enter Unique Zone Key (e.g. noida_ext):");
+                  if (keyName) {
+                    const cleanKey = keyName.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                    setDraft({
+                      ...draft,
+                      convenienceZones: {
+                        ...draft.convenienceZones,
+                        [cleanKey]: { name: "New Location Zone", fee: 500 }
+                      }
+                    });
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Zone
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
+                <div key={zKey} className={`p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 ${adminInnerCard}`}>
+                  <div className="flex-1 w-full space-y-1">
+                    <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">Zone Key: {zKey}</span>
+                    <input
+                      type="text"
+                      value={zData.name}
+                      onChange={(e) => setDraft({
+                        ...draft,
+                        convenienceZones: {
+                          ...draft.convenienceZones,
+                          [zKey]: { ...zData, name: e.target.value }
+                        }
+                      })}
+                      className={`w-full p-2.5 rounded-xl text-xs font-semibold border ${adminInputBg}`}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-xs font-bold text-slate-400">Fee (₹):</label>
+                    <input
+                      type="number"
+                      value={zData.fee}
+                      onChange={(e) => setDraft({
+                        ...draft,
+                        convenienceZones: {
+                          ...draft.convenienceZones,
+                          [zKey]: { ...zData, fee: Number(e.target.value) }
+                        }
+                      })}
+                      className={`w-28 p-2.5 rounded-xl font-mono text-cyan-400 font-bold text-xs border ${adminInputBg}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const copy = { ...draft.convenienceZones };
+                        delete copy[zKey];
+                        setDraft({ ...draft, convenienceZones: copy });
+                      }}
+                      className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 7: RATES */}
+        {activeTab === 'prices' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {partyPackages.concat(bridalPackages).map(k => (
+                <div key={k}>
+                  <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
+                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-xl font-mono text-cyan-400 text-xs border ${adminInputBg}`} />
+                </div>
+              ))}
+            </div>
+
+            <h3 className="font-bold text-xs uppercase text-rose-400 pt-4">✨ Premium HD Kit Rates (₹)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {partyPackages.concat(bridalPackages).map(k => (
+                <div key={k}>
+                  <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
+                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-xl font-mono text-rose-400 text-xs border ${adminInputBg}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8: PROMO COUPONS */}
+        {activeTab === 'coupons' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-xs uppercase text-cyan-400">Promo Coupons Manager</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  const code = prompt("Enter Coupon Code:");
+                  if (code) {
+                    const clean = code.toUpperCase().trim();
+                    setDraft({ ...draft, validCoupons: { ...draft.validCoupons, [clean]: { type: "percent", value: 10, label: "Special Offer" } } });
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs"
+              >
+                + Add Coupon
+              </button>
+            </div>
+            {Object.entries(draft.validCoupons || {}).map(([code, c]) => (
+              <div key={code} className={`p-3 rounded-2xl border flex justify-between items-center ${adminInnerCard}`}>
+                <div>
+                  <span className="font-mono text-cyan-400 font-bold text-xs">{code}</span>
+                  <p className={`text-[11px] ${adminMuted}`}>{c.type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`} • {c.label}</p>
+                </div>
+                <button onClick={() => {
+                  const copy = { ...draft.validCoupons };
+                  delete copy[code];
+                  setDraft({ ...draft, validCoupons: copy });
+                }} className="text-rose-400 p-1"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* TAB 9: THEMES & FONTS */}
+        {activeTab === 'theme' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Color Theme</label>
+                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold text-cyan-400 border ${adminInputBg}`}>
+                  <option value="liquid_glass">💎 Liquid Glass iOS</option>
+                  <option value="one_ui_9">✨ Samsung One UI 9</option>
+                  <option value="nordic_pearl">❄️ Nordic Pearl Luxury</option>
+                  <option value="sunset_rose">🌅 Sunset Rose Gold</option>
+                  <option value="emerald">💚 Emerald Luxe</option>
+                  <option value="violet">🔮 Midnight Orchid Violet</option>
+                  <option value="google_minimal">🔵 Google Minimal</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Font Family</label>
+                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold text-amber-400 border ${adminInputBg}`}>
+                  <option value="sans">Plus Jakarta Sans</option>
+                  <option value="outfit">Outfit (iOS Glass Minimal)</option>
+                  <option value="serif">Playfair Display (Royal)</option>
+                  <option value="cormorant">Cormorant Garamond</option>
+                  <option value="cinzel">Cinzel</option>
+                  <option value="montserrat">Montserrat</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Default Customer Mode</label>
+                <select value={draft.theme?.defaultMode || 'dark'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}>
+                  <option value="dark">🌙 Dark Mode</option>
+                  <option value="light">☀️ Light Mode</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 10: PROFILE */}
         {activeTab === 'profile' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Profile & Studio Identity</h3>
@@ -497,62 +822,6 @@ export default function AdminApp() {
               Upload New Profile Photo File
               <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
             </label>
-          </div>
-        )}
-
-        {/* TAB 5: THEMES & FONTS */}
-        {activeTab === 'theme' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Color Theme</label>
-                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold text-cyan-400 border ${adminInputBg}`}>
-                  <option value="liquid_glass">💎 Liquid Glass iOS (Frosted)</option>
-                  <option value="one_ui_9">✨ Samsung One UI 9 Gold</option>
-                  <option value="nordic_pearl">❄️ Nordic Pearl Luxury</option>
-                  <option value="sunset_rose">🌅 Sunset Rose Gold</option>
-                  <option value="emerald">💚 Emerald Luxe</option>
-                  <option value="violet">🔮 Midnight Orchid Violet</option>
-                  <option value="google_minimal">🔵 Google Minimal</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Font Family</label>
-                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold text-amber-400 border ${adminInputBg}`}>
-                  <option value="sans">Plus Jakarta Sans (Modern UI)</option>
-                  <option value="outfit">Outfit (iOS Glass Minimal)</option>
-                  <option value="serif">Playfair Display (Royal)</option>
-                  <option value="cormorant">Cormorant Garamond (Luxury)</option>
-                  <option value="cinzel">Cinzel (Roman Bridal)</option>
-                  <option value="montserrat">Montserrat (Editorial)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Default Customer Mode</label>
-                <select value={draft.theme?.defaultMode || 'dark'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}>
-                  <option value="dark">🌙 Dark Mode</option>
-                  <option value="light">☀️ Light Mode</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: RATES */}
-        {activeTab === 'prices' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {partyPackages.concat(bridalPackages).map(k => (
-                <div key={k}>
-                  <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit.international[k]} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-xl font-mono text-cyan-400 text-xs border ${adminInputBg}`} />
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
