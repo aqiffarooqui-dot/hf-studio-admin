@@ -200,11 +200,6 @@ const THEME_STYLES = {
   }
 };
 
-const DEFAULT_TEMPLATES = [
-  { id: 1, title: "Wedding Season 15% OFF", text: "✨ *Special Wedding Season Offer - Husna Farooqui* ✨\n\nBook your Signature Bridal Look this week and get *Flat 15% OFF* + complimentary lash extension!\n\nUse Code: *WEDDING15*\nBook Online: https://your-domain.com" },
-  { id: 2, title: "Weekend Party Glam Flash Offer", text: "💄 *Flash Weekend Glam Offer!* 💄\n\nBook Super HD Party Makeup for 2 or more family members and get 1 Party Look at *50% OFF*!\n\nContact: +919997210876" }
-];
-
 const PRE_ADDED_REJECTION_REASONS = [
   "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
   "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
@@ -237,7 +232,6 @@ const ADMIN_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
-// Helper to auto-compress large images under 300KB before Firestore save
 const compressImageFile = (file, maxWidth = 600, quality = 0.8) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -444,7 +438,6 @@ export default function AdminApp() {
     }
   };
 
-  // Minimalist Status-Aware Slip Generator
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -675,29 +668,31 @@ export default function AdminApp() {
     }
   };
 
-  const handlePackageImageUpload = async (e, kit, pkgKey) => {
+  const handlePackageImageUpload = (e, kit, pkgKey) => {
     const file = e.target.files[0];
     if (file) {
-      try {
-        const compressedBase64 = await compressImageFile(file, 800, 0.82);
+      if (file.size > 20971520) {
+        alert("File exceeds 20MB. Please use a smaller image.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
         setDraft({
           ...draft,
           kitImages: {
             ...draft.kitImages,
             [kit]: {
               ...(draft.kitImages?.[kit] || {}),
-              [pkgKey]: compressedBase64
+              [pkgKey]: String(reader.result)
             }
           }
         });
-        setActionStatus(`Loaded optimized image for ${pkgKey}. Click Save below.`);
-      } catch (err) {
-        alert("Image processing error: " + err.message);
-      }
+        setActionStatus(`Loaded image for ${pkgKey}. Click Save below.`);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Safe Auto-Compressed Profile Photo Upload
   const handleProfileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -711,7 +706,6 @@ export default function AdminApp() {
     }
   };
 
-  // Safe Auto-Compressed Logo Upload (Under 200KB)
   const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -761,6 +755,26 @@ export default function AdminApp() {
     }
   };
 
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const getDayBookingStatus = (day) => {
+    const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const matches = bookingsList.filter(b => b.eventDate === formatted);
+    if (matches.length === 0) return { hasBookings: false, list: [] };
+    const isConfirmed = matches.some(b => b.status === 'confirmed');
+    return {
+      hasBookings: true,
+      isConfirmed,
+      count: matches.length,
+      list: matches,
+      dateStr: formatted
+    };
+  };
+
   const activeColorThemeKey = draft.theme?.colorTheme || 'liquid_glass';
   const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.liquid_glass;
 
@@ -771,6 +785,23 @@ export default function AdminApp() {
   const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
 
   const activeFolderObj = ADMIN_FOLDERS.find(f => f.id === activeFolderId);
+
+  if (!isAuthenticated) {
+    return (
+      <div className={`min-h-screen ${adminBgClass} flex items-center justify-center p-4 relative overflow-hidden font-sans`}>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
+        <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-3xl border text-center space-y-4 shadow-2xl ${cardBgClass}`}>
+          <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg">
+            <Lock className="w-8 h-8 animate-bounce" />
+          </div>
+          <h2 className="text-xl font-bold">Admin Portal</h2>
+          <p className={`text-xs ${adminMuted}`}>Master Studio Management Console</p>
+          <input type="password" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
+          <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Unlock Console</button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-24 transition-colors duration-300 relative overflow-x-hidden`}>
@@ -1141,13 +1172,13 @@ export default function AdminApp() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
                   <ChevronLeft className="w-4 h-4 text-cyan-400" />
                 </button>
                 <span className="font-bold text-xs sm:text-sm font-mono min-w-[130px] text-center text-white">
-                  {calendarDate.toLocaleString('default', { month: 'long' })} {calendarDate.getFullYear()}
+                  {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
                   <ChevronRight className="w-4 h-4 text-cyan-400" />
                 </button>
               </div>
@@ -1158,36 +1189,32 @@ export default function AdminApp() {
                 <span key={d} className="text-[11px] font-bold text-slate-400 py-1 uppercase">{d}</span>
               ))}
 
-              {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay() }).map((_, i) => (
+              {Array.from({ length: firstDayIndex }).map((_, i) => (
                 <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-2xl bg-transparent" />
               ))}
 
-              {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
+              {Array.from({ length: totalDaysInMonth }).map((_, i) => {
                 const day = i + 1;
-                const formatted = `${calendarDate.getFullYear()}-${String(calendarDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const matches = bookingsList.filter(b => b.eventDate === formatted);
-                const hasBookings = matches.length > 0;
-                const isConfirmed = matches.some(b => b.status === 'confirmed');
-
+                const status = getDayBookingStatus(day);
                 return (
                   <div
                     key={`day_${day}`}
-                    onClick={() => hasBookings ? setSelectedCalendarDay({ dateStr: formatted, isConfirmed, list: matches }) : null}
+                    onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
                     className={`h-16 sm:h-20 rounded-2xl p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
-                      hasBookings 
-                        ? (isConfirmed 
+                      status.hasBookings 
+                        ? (status.isConfirmed 
                             ? 'bg-emerald-500/15 border-emerald-500/40 hover:scale-105 shadow-md shadow-emerald-500/10' 
                             : 'bg-amber-500/15 border-amber-500/40 hover:scale-105 shadow-md shadow-amber-500/10')
                         : `${adminInnerCard} hover:border-white/20 opacity-75`
                     }`}
                   >
-                    <span className={`text-xs font-bold font-mono ${hasBookings ? (isConfirmed ? 'text-emerald-400' : 'text-amber-400') : 'text-slate-300'}`}>
+                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : 'text-slate-300'}`}>
                       {day}
                     </span>
 
-                    {hasBookings && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isConfirmed ? 'bg-emerald-500 text-neutral-950' : 'bg-amber-500 text-neutral-950'}`}>
-                        {matches.length} Booked
+                    {status.hasBookings && (
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${status.isConfirmed ? 'bg-emerald-500 text-neutral-950' : 'bg-amber-500 text-neutral-950'}`}>
+                        {status.count} Booked
                       </span>
                     )}
                   </div>
