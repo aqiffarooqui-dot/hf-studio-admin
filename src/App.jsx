@@ -7,7 +7,7 @@ import {
   ListFilter, Car, Volume2, Activity, SlidersHorizontal, CheckCircle2, 
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
-  Folder, FolderOpen, ArrowLeft
+  Folder, FolderOpen, ArrowLeft, Star
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -38,7 +38,8 @@ const DEFAULT_CONFIG = {
     enableFloatingBanner: true,
     enableGallery: true,
     enableBrands: true,
-    enableEstimator: true
+    enableEstimator: true,
+    showLogoOnApp: true
   },
 
   floatingBanner: {
@@ -198,6 +199,11 @@ const THEME_STYLES = {
   }
 };
 
+const DEFAULT_TEMPLATES = [
+  { id: 1, title: "Wedding Season 15% OFF", text: "✨ *Special Wedding Season Offer - Husna Farooqui* ✨\n\nBook your Signature Bridal Look this week and get *Flat 15% OFF* + complimentary lash extension!\n\nUse Code: *WEDDING15*\nBook Online: https://your-domain.com" },
+  { id: 2, title: "Weekend Party Glam Flash Offer", text: "💄 *Flash Weekend Glam Offer!* 💄\n\nBook Super HD Party Makeup for 2 or more family members and get 1 Party Look at *50% OFF*!\n\nContact: +919997210876" }
+];
+
 const PRE_ADDED_REJECTION_REASONS = [
   "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
   "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
@@ -212,6 +218,7 @@ const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
 const ADMIN_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
+  { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, desc: 'Edit bottom offer pill & auto-hide rules' },
@@ -219,14 +226,14 @@ const ADMIN_FOLDERS = [
   { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos (20MB)' },
   { id: 'kit_images', label: 'Package Images (Luxury vs HD)', icon: ImageIcon, desc: 'Upload distinct visuals for each vanity kit' },
   { id: 'packages_text', label: 'Package Titles & Descriptions', icon: Type, desc: 'Edit look names and descriptions per kit' },
-  { id: 'toggles_master', label: 'Master Feature Toggles', icon: SlidersHorizontal, desc: 'Enable or disable any main app section' },
+  { id: 'toggles_master', label: 'Master Feature Toggles', icon: SlidersHorizontal, desc: 'Enable/disable logo, sections & features' },
   { id: 'traffic_logs', label: 'Visitor Logs & Traffic', icon: Activity, desc: 'Track real-time Instagram bio & link visits' },
   { id: 'promotions', label: 'WhatsApp Broadcast Studio', icon: Megaphone, desc: 'Send bulk promo alerts via Baileys gateway' },
   { id: 'announcements', label: 'Top Announcements Ticker', icon: Volume2, desc: 'Configure top rotating ticker announcements' },
   { id: 'convenience', label: 'Travel Fees & Zones', icon: Car, desc: 'Edit venue travel charges per area' },
   { id: 'prices', label: 'Package Rates Manager', icon: Percent, desc: 'Adjust rates for Luxury vs HD kit looks' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, desc: 'Aesthetic skins, fonts & mode defaults' },
-  { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, artist title & contact' }
+  { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
 export default function AdminApp() {
@@ -239,9 +246,10 @@ export default function AdminApp() {
   
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
+  const [feedbacksList, setFeedbacksList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
-  const [promoTemplates, setPromoTemplates] = useState([]);
-  const [selectedTemplateText, setSelectedTemplateText] = useState('');
+  const [promoTemplates, setPromoTemplates] = useState(DEFAULT_TEMPLATES);
+  const [selectedTemplateText, setSelectedTemplateText] = useState(DEFAULT_TEMPLATES[0].text);
   const [customNumbersInput, setCustomNumbersInput] = useState('');
   const [sendingPromo, setSendingPromo] = useState(false);
   const [savingSection, setSavingSection] = useState('');
@@ -298,6 +306,18 @@ export default function AdminApp() {
 
   useEffect(() => {
     try {
+      const q = query(collection(db, "feedbacks"), orderBy("submittedAt", "desc"), limit(50));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setFeedbacksList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn(e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
       const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(60));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setVisitorLogs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -319,7 +339,7 @@ export default function AdminApp() {
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus(`🎉 ${sectionName} saved & synced live successfully!`);
+      setActionStatus(`🎉 ${sectionName} saved & synced live to Customer App!`);
     } catch (err) {
       setActionStatus(`❌ Error saving ${sectionName}: ${err.message}`);
     } finally {
@@ -395,29 +415,30 @@ export default function AdminApp() {
     }
   };
 
+  // 📄 Multi-Line Dynamic Rejection & Status-Aware Slip Engine
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
     canvas.width = 1080;
-    canvas.height = 1720;
+    canvas.height = 1760;
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1080, 1720);
+    ctx.fillRect(0, 0, 1080, 1760);
 
     const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
     bgGrad.addColorStop(0, '#ffffff');
     bgGrad.addColorStop(1, '#fafafa');
     ctx.fillStyle = bgGrad;
-    ctx.fillRect(20, 20, 1040, 1680);
+    ctx.fillRect(20, 20, 1040, 1720);
 
     const isRejected = b.status === 'rejected';
     const isConfirmed = b.status === 'confirmed';
 
     ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#b48a3c');
     ctx.lineWidth = 4;
-    ctx.strokeRect(40, 40, 1000, 1640);
+    ctx.strokeRect(40, 40, 1000, 1680);
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#1e293b';
@@ -547,33 +568,53 @@ export default function AdminApp() {
     ctx.font = 'bold 56px serif';
     ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
 
+    // 🌟 Multi-Line Wrap Rejection / Status Box Engine
     if (isRejected) {
       startY += 160;
       ctx.fillStyle = '#fff1f2';
-      ctx.fillRect(80, startY, 920, 110);
+      ctx.fillRect(80, startY, 920, 130);
       ctx.strokeStyle = '#f43f5e';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(80, startY, 920, 110);
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(80, startY, 920, 130);
 
       ctx.textAlign = 'center';
       ctx.fillStyle = '#be123c';
       ctx.font = 'bold 19px sans-serif';
-      ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 35);
+      ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 32);
 
       ctx.fillStyle = '#475569';
       ctx.font = 'italic 16px sans-serif';
-      let note = b.rejectionReason || "Slot unavailable for requested date.";
-      ctx.fillText(note.substring(0, 95), 540, startY + 75);
+      
+      const fullReason = b.rejectionReason || "Slot unavailable for requested date. Please connect with studio.";
+      const words = fullReason.split(' ');
+      let line1 = '';
+      let line2 = '';
+      let line3 = '';
+      
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line1 + words[n] + ' ';
+        if (ctx.measureText(testLine).width < 820 && !line2) {
+          line1 = testLine;
+        } else if ((line2 + words[n] + ' ').length < 90 && !line3) {
+          line2 += words[n] + ' ';
+        } else {
+          line3 += words[n] + ' ';
+        }
+      }
+
+      ctx.fillText(line1.trim(), 540, startY + 62);
+      if (line2) ctx.fillText(line2.trim(), 540, startY + 86);
+      if (line3) ctx.fillText(line3.trim(), 540, startY + 110);
     }
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#64748b';
     ctx.font = '17px sans-serif';
-    ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1630);
+    ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1670);
 
     ctx.fillStyle = '#b48a3c';
     ctx.font = 'italic 16px sans-serif';
-    ctx.fillText('Your Beauty, Our Expertise', 540, 1660);
+    ctx.fillText('Your Beauty, Our Expertise', 540, 1700);
 
     const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
     const downloadLink = document.createElement('a');
@@ -650,6 +691,42 @@ export default function AdminApp() {
         setDraft({ ...draft, studioLogo: reader.result });
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteFeedback = async (id) => {
+    if (confirm("Delete this client feedback?")) {
+      try {
+        await deleteDoc(doc(db, "feedbacks", id));
+      } catch (err) {
+        alert("Error deleting: " + err.message);
+      }
+    }
+  };
+
+  const handleSendBroadcast = async () => {
+    let numbers = bookingsList.map(b => b.clientPhone);
+    if (customNumbersInput.trim()) {
+      const extra = customNumbersInput.split(',').map(n => n.trim()).filter(Boolean);
+      numbers = [...new Set([...numbers, ...extra])];
+    }
+    if (numbers.length === 0) {
+      alert("No client phone numbers found to broadcast.");
+      return;
+    }
+    setSendingPromo(true);
+    setActionStatus(`Starting broadcast to ${numbers.length} clients...`);
+    try {
+      await fetch(`${BAILEYS_URL}/api/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipients: numbers, templateText: selectedTemplateText })
+      });
+      setActionStatus(`🎉 Broadcast started in background for ${numbers.length} clients!`);
+    } catch (err) {
+      setActionStatus(`⚠️ Failed to connect to WhatsApp Gateway: ${err.message}`);
+    } finally {
+      setSendingPromo(false);
     }
   };
 
@@ -800,7 +877,7 @@ export default function AdminApp() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
             {ADMIN_FOLDERS.map(f => {
               const Icon = f.icon;
-              const count = f.countKey === 'bookings' ? bookingsList.length : null;
+              const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
 
               return (
                 <div
@@ -832,7 +909,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* 🗂️ VIEW 2: INSIDE SPECIFIC FOLDER CARD (PER-CARD SAVE) */}
+        {/* 🗂️ VIEW 2: INSIDE SPECIFIC FOLDER CARD */}
 
         {/* TAB: BOOKINGS */}
         {activeFolderId === 'bookings' && (
@@ -900,7 +977,7 @@ export default function AdminApp() {
                         <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span>{b.zoneName}</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
                         {b.rejectionReason && (
-                          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-300 text-[11px]">
+                          <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
                             <strong>Rejection Note:</strong> {b.rejectionReason}
                           </div>
                         )}
@@ -967,6 +1044,58 @@ export default function AdminApp() {
           </div>
         )}
 
+        {/* TAB: FEEDBACKS */}
+        {activeFolderId === 'feedbacks' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <MessageSquare className="w-4 h-4" /> Client Feedback & Suggestions Box
+                </h3>
+                <p className={`text-xs ${adminMuted}`}>Reviews, ratings, and creative suggestions submitted by clients.</p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
+                {feedbacksList.length} Feedbacks
+              </span>
+            </div>
+
+            {feedbacksList.length === 0 ? (
+              <p className="text-xs text-slate-400 py-8 text-center">No client feedback submitted yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {feedbacksList.map(item => (
+                  <div key={item.id} className={`p-4 rounded-2xl border space-y-2.5 ${adminInnerCard}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {Array.from({ length: item.rating || 5 }).map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                          ))}
+                        </div>
+                        <h4 className="font-bold text-sm text-white mt-1">{item.clientName}</h4>
+                        {item.clientPhone && item.clientPhone !== 'Not Provided' && (
+                          <p className="text-[11px] text-slate-400 font-mono">📞 {item.clientPhone}</p>
+                        )}
+                      </div>
+                      <button onClick={() => handleDeleteFeedback(item.id)} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+
+                    <p className="text-xs text-slate-300 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
+                      "{item.message}"
+                    </p>
+
+                    <div className="flex justify-end">
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {item.submittedAt ? new Date(item.submittedAt.toDate?.() || item.submittedAt).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB: CALENDAR */}
         {activeFolderId === 'calendar_view' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
@@ -993,7 +1122,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
                 <span key={d} className="text-[11px] font-bold text-slate-400 py-1 uppercase">{d}</span>
@@ -1668,11 +1796,12 @@ export default function AdminApp() {
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
               </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Enable or disable any section, widget or feature on the live main customer app.</p>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Enable or disable any section, widget or logo on the customer app.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
+                { key: 'showLogoOnApp', label: 'Show Studio Logo on Main App', desc: 'Render uploaded brand logo in header and splash' },
                 { key: 'enableAnnouncements', label: 'Top Announcements Ticker', desc: 'Show/hide rotating top announcement bar' },
                 { key: 'enableCoupons', label: 'Promo Coupon System', desc: 'Enable/disable coupon codes application' },
                 { key: 'enableGuestDiscount', label: 'Extra Guest Group Discount', desc: 'Apply automatic savings on multiple guests' },
@@ -2022,13 +2151,17 @@ export default function AdminApp() {
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
               </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo & manage Instagram handles.</p>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo, artist profile picture & manage social handles.</p>
             </div>
 
+            {/* 1. Studio Logo Upload Card */}
             <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
-              <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
-                <Crown className="w-4 h-4" /> Official Studio Brand Logo
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
+                  <Crown className="w-4 h-4" /> 1. Official Studio Logo
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Appears in Header & Splash</span>
+              </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
@@ -2047,9 +2180,39 @@ export default function AdminApp() {
                     onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
                     className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`}
                   />
-                  <label className="inline-block px-3.5 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25">
+                  <label className="inline-block px-3.5 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25 transition">
                     Upload Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Artist Profile Photo Card */}
+            <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
+                  <ImageIcon className="w-4 h-4" /> 2. Artist Profile Picture
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Avatar Card</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-neutral-800 border-2 border-amber-400/40 shrink-0 shadow-md">
+                  <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                </div>
+
+                <div className="flex-1 w-full space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Paste Profile Photo URL"
+                    value={draft.profileImage || ''}
+                    onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`}
+                  />
+                  <label className="inline-block px-3.5 py-1.5 rounded-xl bg-amber-500/15 text-amber-400 text-xs font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25 transition">
+                    Upload Profile Photo
+                    <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
                 </div>
               </div>
@@ -2069,8 +2232,8 @@ export default function AdminApp() {
                 <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, instagramHandle: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs font-mono text-pink-400 border ${adminInputBg}`} />
               </div>
               <div>
-                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Artist Profile Photo URL</label>
-                <input type="text" value={draft.profileImage || ''} onChange={e => setDraft({ ...draft, profileImage: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`} />
+                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Artist Tagline / Subtitle</label>
+                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs border ${adminInputBg}`} />
               </div>
             </div>
 
