@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
   Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
-  SlidersHorizontal, CheckCircle2, XCircle, Clock, Gift, AlertCircle, Calendar, CheckSquare
+  SlidersHorizontal, CheckCircle2, XCircle, Clock, Gift, AlertCircle, Calendar,
+  Download, FileCheck, Hash, AlertTriangle
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -182,6 +183,7 @@ export default function AdminApp() {
   const [isSaving, setIsSaving] = useState(false);
   const [actionStatus, setActionStatus] = useState('');
 
+  const canvasRef = useRef(null);
   const BAILEYS_URL = "http://localhost:3005";
 
   useEffect(() => {
@@ -221,7 +223,6 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  // 🛡️ 100% Robust Sanitization Logic
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     setIsSaving(true);
@@ -237,14 +238,15 @@ export default function AdminApp() {
     }
   };
 
-  // 📄 Accept & Dispatch Official FINAL CONFIRMED BOOKING SLIP to WhatsApp
-  const handleAcceptBooking = async (b) => {
+  // 📄 Accept via WhatsApp Dispatch
+  const handleAcceptBookingWhatsApp = async (b) => {
     setActionStatus(`Dispatching Final Confirmation Slip to ${b.clientName}...`);
     try {
       const confirmSlipMessage = 
         `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - ${draft.studioName || "HUSNA FAROOQUI STUDIO"}* 🎉\n\n` +
         `Dear *${b.clientName}*,\n` +
-        `Your VIP makeup appointment is officially confirmed in our master schedule!\n\n` +
+        `Your appointment is officially confirmed in our master schedule!\n\n` +
+        `🔢 *Booking Number:* ${b.bookingNumber || '#HF-CONFIRMED'}\n` +
         `📅 *Confirmed Event Date:* ${b.eventDate}\n` +
         `💄 *Main Look:* ${b.packageName}\n` +
         `💎 *Vanity Tier:* ${b.kitType}\n` +
@@ -253,7 +255,7 @@ export default function AdminApp() {
         `🏠 *Exact Address:* ${b.venueAddress}\n` +
         `💰 *Total Investment:* ₹${b.totalAmount?.toLocaleString('en-IN')}\n\n` +
         `_Status: CONFIRMED & SCHEDULED_\n` +
-        `Our senior artist team will coordinate final timings with you prior to the date.\n\n` +
+        `Our artist team will coordinate final timings with you prior to the date.\n\n` +
         `Studio Contact: +${draft.whatsappNumber}`;
 
       await fetch(`${BAILEYS_URL}/api/send-message`, {
@@ -263,10 +265,134 @@ export default function AdminApp() {
       });
 
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
-      setActionStatus(`✅ Final Confirmation Slip successfully dispatched to ${b.clientName}!`);
+      setActionStatus(`✅ Final Confirmation Slip sent to ${b.clientName} on WhatsApp!`);
     } catch (err) {
-      setActionStatus(`⚠️ Baileys Gateway offline or error: ${err.message}`);
+      setActionStatus(`⚠️ Baileys Gateway offline or error: ${err.message}. You can use Manual Accept below.`);
     }
+  };
+
+  // ✅ Manual Accept Button (Fallback when WhatsApp is offline/fails)
+  const handleManualAcceptBooking = async (b) => {
+    try {
+      await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
+      setActionStatus(`✅ Booking ${b.bookingNumber || b.clientName} marked as CONFIRMED manually!`);
+    } catch (err) {
+      alert("Error accepting manually: " + err.message);
+    }
+  };
+
+  // 📄 Generate & Download Official Confirmed Booking Slip (.JPG) On-Demand
+  const handleGenerateSlipJpgOnDemand = (b) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = 1080;
+    canvas.height = 1680;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1080, 1680);
+
+    const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
+    bgGrad.addColorStop(0, '#ffffff');
+    bgGrad.addColorStop(1, '#f8fafc');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(20, 20, 1040, 1640);
+
+    ctx.strokeStyle = '#b48a3c';
+    ctx.lineWidth = 7;
+    ctx.strokeRect(36, 36, 1008, 1608);
+
+    ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(48, 48, 984, 1584);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#996515';
+    ctx.font = 'bold 50px serif';
+    ctx.fillText(draft.studioName || 'HUSNA FAROOQUI', 540, 125);
+
+    ctx.fillStyle = '#be123c';
+    ctx.font = '600 26px sans-serif';
+    ctx.fillText(draft.artistTagline || 'Celebrity & Bridal Makeup Artist', 540, 170);
+
+    ctx.strokeStyle = 'rgba(180, 138, 60, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(140, 205);
+    ctx.lineTo(940, 205);
+    ctx.stroke();
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText('✨ OFFICIAL CONFIRMED APPOINTMENT SLIP ✨', 540, 255);
+
+    const rows = [
+      { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-CONFIRMED' },
+      { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
+      { label: 'PHONE NUMBER', val: b.clientPhone || 'Not Provided' },
+      { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
+      { label: 'VANITY KIT', val: b.kitType || 'Luxury Vanity' },
+      { label: 'PACKAGE', val: b.packageName || 'Bridal Makeup' },
+      { label: 'EXTRA GUESTS', val: `${b.extraGuestsCount || 0} Person(s) (+₹${b.extraGuestsCost || 0})` },
+      { label: 'VENUE ZONE', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
+      { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' },
+      { label: 'APPLIED PROMO', val: b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0} OFF)` : 'No Promo' }
+    ];
+
+    let startY = 330;
+    rows.forEach((row, idx) => {
+      ctx.fillStyle = idx === 0 ? 'rgba(16, 185, 129, 0.15)' : (idx % 2 === 0 ? 'rgba(241, 245, 249, 0.8)' : '#ffffff');
+      ctx.fillRect(80, startY - 30, 920, 62);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = idx === 0 ? '#047857' : '#64748b';
+      ctx.font = idx === 0 ? 'bold 23px monospace' : 'bold 22px sans-serif';
+      ctx.fillText(row.label, 100, startY + 8);
+
+      ctx.fillStyle = idx === 0 ? '#065f46' : '#0f172a';
+      ctx.font = idx === 0 ? 'bold 25px monospace' : 'bold 23px sans-serif';
+
+      let displayVal = row.val;
+      while (ctx.measureText(displayVal).width > 580 && displayVal.length > 4) {
+        displayVal = displayVal.substring(0, displayVal.length - 4) + '...';
+      }
+      ctx.fillText(displayVal, 390, startY + 8);
+      startY += 76;
+    });
+
+    ctx.fillStyle = '#fefce8';
+    ctx.fillRect(80, 1100, 920, 180);
+    ctx.strokeStyle = '#b48a3c';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(80, 1100, 920, 180);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#854d0e';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('FINAL CONFIRMED INVESTMENT', 540, 1150);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 64px serif';
+    ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, 1230);
+
+    ctx.fillStyle = '#475569';
+    ctx.font = '22px sans-serif';
+    ctx.fillText(`📍 Base Location: ${draft.baseLocation} • Studio WhatsApp: +${draft.whatsappNumber}`, 540, 1370);
+
+    ctx.fillStyle = '#e11d48';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(`Official Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1415);
+
+    ctx.fillStyle = '#047857';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('STATUS: OFFICIALLY CONFIRMED IN STUDIO SCHEDULE', 540, 1475);
+
+    const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
+    const downloadLink = document.createElement('a');
+    downloadLink.download = `Confirmed_Slip_${b.bookingNumber || b.clientName}.jpg`;
+    downloadLink.href = jpgUrl;
+    downloadLink.click();
   };
 
   // 📹 20MB Safe Media Uploader
@@ -392,6 +518,8 @@ export default function AdminApp() {
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300`}>
       
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+
       {/* 💎 Header */}
       <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
@@ -414,7 +542,7 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
-        {/* 🚀 Sleek Horizontal Scrollable Tabs Bar */}
+        {/* 🚀 Horizontal Scrollable Tabs Bar */}
         <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200/40 dark:border-white/10 scrollbar-thin">
           {ADMIN_TABS.map(tab => {
             const isActive = activeTab === tab.id;
@@ -440,13 +568,13 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 1: INCOMING BOOKINGS */}
+        {/* TAB 1: LIVE BOOKINGS (WITH BUSY CONFLICT DETECTOR & MANUAL ACCEPT) */}
         {activeTab === 'bookings' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400">Incoming Customer Bookings Queue</h3>
-                <p className={`text-xs ${adminMuted}`}>Accept to dispatch official Final Confirmation Slip to client's WhatsApp.</p>
+                <p className={`text-xs ${adminMuted}`}>Review requests, check date conflicts, dispatch WhatsApp slips or accept manually.</p>
               </div>
               <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
                 {bookingsList.length} Total Bookings
@@ -457,39 +585,91 @@ export default function AdminApp() {
               <p className="text-xs text-slate-400 py-8 text-center">No bookings received yet. Submissions will appear here instantly!</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {bookingsList.map(b => (
-                  <div key={b.id} className={`p-5 rounded-3xl border space-y-3 ${adminInnerCard}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'}`}>
-                          {b.status === 'confirmed' ? '✅ Scheduled & Confirmed' : '⏳ Pending Review'}
-                        </span>
-                        <h4 className="font-bold text-base mt-2">{b.clientName}</h4>
-                        <p className="text-xs text-slate-400 font-mono">📞 {b.clientPhone}</p>
+                {bookingsList.map(b => {
+                  // 🔍 Internal Conflict Check: Check if another booking on the same date is already CONFIRMED
+                  const conflictingConfirmedBooking = b.status === 'pending' 
+                    ? bookingsList.find(other => other.id !== b.id && other.eventDate === b.eventDate && other.status === 'confirmed')
+                    : null;
+
+                  return (
+                    <div key={b.id} className={`p-5 rounded-3xl border space-y-3 ${adminInnerCard} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/50' : ''}`}>
+                      
+                      {/* Booking Top Header */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
+                              {b.bookingNumber || '#HF-PENDING'}
+                            </span>
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'}`}>
+                              {b.status === 'confirmed' ? '✅ Confirmed' : '⏳ Pending Review'}
+                            </span>
+                          </div>
+                          
+                          <h4 className="font-bold text-base mt-2">{b.clientName}</h4>
+                          <p className="text-xs text-slate-400 font-mono">📞 {b.clientPhone}</p>
+                        </div>
+                        <button onClick={() => deleteDoc(doc(db, "bookings", b.id))} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                       </div>
-                      <button onClick={() => deleteDoc(doc(db, "bookings", b.id))} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
-                    </div>
 
-                    <div className="text-xs space-y-1 border-t border-b border-white/10 py-2">
-                      <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-amber-400 font-mono">{b.eventDate}</strong></div>
-                      <div className="flex justify-between"><span className={adminMuted}>Package:</span><span>{b.packageName}</span></div>
-                      <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span>{b.kitType}</span></div>
-                      <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span>{b.extraGuestsCount || 0} Person(s) (+₹{b.extraGuestsCost || 0})</span></div>
-                      <div className="flex justify-between"><span className={adminMuted}>Venue Zone:</span><span>{b.zoneName}</span></div>
-                      <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
-                      <div className="flex justify-between pt-1 border-t border-white/5"><span className="font-bold">Total Investment:</span><strong className="text-cyan-400 font-mono text-sm">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
-                    </div>
+                      {/* ⚠️ DATE CONFLICT WARNING BANNER */}
+                      {conflictingConfirmedBooking && (
+                        <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs space-y-1 animate-pulse">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                            <span>STUDIO BUSY FOR THIS DATE!</span>
+                          </div>
+                          <p className="text-[11px] text-rose-200">
+                            You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.
+                          </p>
+                        </div>
+                      )}
 
-                    <button
-                      type="button"
-                      onClick={() => handleAcceptBooking(b)}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span>{b.status === 'confirmed' ? 'Resend WhatsApp Final Slip' : 'Accept & Send WhatsApp Final Confirmation Slip'}</span>
-                    </button>
-                  </div>
-                ))}
+                      <div className="text-xs space-y-1 border-t border-b border-white/10 py-2">
+                        <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-amber-400 font-mono">{b.eventDate}</strong></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Package:</span><span>{b.packageName}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span>{b.kitType}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span>{b.extraGuestsCount || 0} Person(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Venue Zone:</span><span>{b.zoneName}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
+                        <div className="flex justify-between pt-1 border-t border-white/5"><span className="font-bold">Total Investment:</span><strong className="text-cyan-400 font-mono text-sm">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
+                      </div>
+
+                      {/* Action Buttons: WhatsApp Dispatch + Manual Accept + Slip Generator */}
+                      <div className="space-y-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptBookingWhatsApp(b)}
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
+                        </button>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleManualAcceptBooking(b)}
+                            className="py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Manual Accept</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleGenerateSlipJpgOnDemand(b)}
+                            className="py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Generate Slip (.JPG)</span>
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -529,7 +709,7 @@ export default function AdminApp() {
                         {items.map(b => (
                           <div key={b.id} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                             <div className="flex justify-between font-bold">
-                              <span className="text-cyan-300">{b.clientName}</span>
+                              <span className="text-cyan-300">{b.bookingNumber || ''} - {b.clientName}</span>
                               <span className={b.status === 'confirmed' ? 'text-emerald-400' : 'text-amber-400'}>{b.status === 'confirmed' ? 'Confirmed' : 'Pending'}</span>
                             </div>
                             <p className={adminMuted}>{b.packageName} ({b.kitType})</p>
