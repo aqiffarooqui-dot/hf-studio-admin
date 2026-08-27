@@ -3,7 +3,8 @@ import {
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
-  Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity
+  Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
+  SlidersHorizontal, CheckCircle2, XCircle
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -24,9 +25,17 @@ const DEFAULT_CONFIG = {
     defaultMode: "dark"
   },
 
-  showOfferSection: true,
-  enableDiscountsAndCoupons: true,
-  
+  // 🎛️ Master Feature Toggles
+  toggles: {
+    enableAnnouncements: true,
+    enableCoupons: true,
+    enableGuestDiscount: true,
+    enableFloatingBanner: true,
+    enableGallery: true,
+    enableBrands: true,
+    enableEstimator: true
+  },
+
   floatingBanner: {
     enabled: true,
     tag: "SPECIAL WEDDING OFFER",
@@ -40,16 +49,26 @@ const DEFAULT_CONFIG = {
     discountPercent: 15
   },
 
-  packageDetails: {
-    simple_party: { num: 1, name: "Simple Party Makeup", desc: "Natural dewy skin glow, subtle eye liner, soft lip tone & simple hair styling." },
-    hd_party: { num: 2, name: "HD Party Makeup", desc: "High-definition camera ready base, customized eye contouring, and designer hair styling." },
-    super_hd_party: { num: 3, name: "Super HD Glam Party", desc: "Flawless poreless glass skin, 3D lashes, statement eye look & intricate hair design." },
-    cocktail_glam: { num: 4, name: "Cocktail / Reception Glam", desc: "High glam celebrity makeover, smokey or shimmer eye art, luxury lash extensions & styling." },
-    engagement_bride: { num: 5, name: "Engagement / Sagan Bride", desc: "Radiant luxury bridal base, sculpted features, premium lash drama, draping & floral hair." },
-    royal_bridal: { num: 6, name: "Royal Asian Bridal", desc: "Signature bridal artistry, 16HR waterproof HD finish, jewel placement, master draping & hair styling." }
+  // 📝 Separate Package Titles & Descriptions (International vs Drugstore Kit)
+  kitText: {
+    international: {
+      simple_party: { num: 1, name: "Simple Party Makeup (Luxury)", desc: "Natural dewy skin glow with Dior & NARS, soft contour & luxury hair styling." },
+      hd_party: { num: 2, name: "HD Party Makeup (Luxury)", desc: "High-definition camera ready base with Charlotte Tilbury & Huda, designer hair styling." },
+      super_hd_party: { num: 3, name: "Super HD Glam Party (Luxury)", desc: "Flawless poreless glass skin, 3D luxury lashes, statement eye look & hair artistry." },
+      cocktail_glam: { num: 4, name: "Cocktail / Reception Glam (Luxury)", desc: "Red-carpet celebrity glam, smokey or shimmer eye art, luxury extensions & styling." },
+      engagement_bride: { num: 5, name: "Engagement / Sagan Bride (Luxury)", desc: "Radiant luxury bridal base, sculpted features, premium lash drama, draping & hair styling." },
+      royal_bridal: { num: 6, name: "Royal Asian Bridal (Luxury)", desc: "Signature bridal artistry, 16HR waterproof HD finish with Estee Lauder & MAC, master draping & styling." }
+    },
+    drugstore: {
+      simple_party: { num: 1, name: "Simple Party Makeup (HD Classic)", desc: "Clean everyday fresh look, light foundation base & classic hair styling." },
+      hd_party: { num: 2, name: "HD Party Makeup (HD Classic)", desc: "High-definition camera ready base with PAC/Milani, customized eye look & hair styling." },
+      super_hd_party: { num: 3, name: "Super HD Glam Party (HD Classic)", desc: "Long-wear HD base, dramatic eye shimmer, 3D lashes & elegant hair styling." },
+      cocktail_glam: { num: 4, name: "Cocktail / Reception Glam (HD Classic)", desc: "Even toned radiant glam, bold lip contour, full party hair styling." },
+      engagement_bride: { num: 5, name: "Engagement / Sagan Bride (HD Classic)", desc: "HD bridal glow, durable base, customized lash placement, dupatta draping." },
+      royal_bridal: { num: 6, name: "Royal Asian Bridal (HD Classic)", desc: "Complete Asian bridal makeover, smudge-proof HD base, jewelry setting & bridal draping." }
+    }
   },
 
-  // 🖼️ Kit-Specific Distinct Images
   kitImages: {
     international: {
       simple_party: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80",
@@ -83,10 +102,10 @@ const DEFAULT_CONFIG = {
   ],
 
   validCoupons: {
-    "BRIDE2026": { type: "percent", value: 10, label: "10% Seasonal Wedding Discount", maxUses: 1 },
-    "HUSNA15": { type: "percent", value: 15, label: "15% Special Bridal Promo", maxUses: 1 },
-    "ROYAL1000": { type: "flat", value: 1000, label: "₹1,000 Flat Off on Packages", maxUses: 5 },
-    "WELCOME500": { type: "flat", value: 500, label: "₹500 Flat First-Booking Offer", maxUses: "unlimited" }
+    "BRIDE2026": { type: "percent", value: 10, label: "10% Seasonal Wedding Discount", maxUses: 1, enabled: true },
+    "HUSNA15": { type: "percent", value: 15, label: "15% Special Bridal Promo", maxUses: 1, enabled: true },
+    "ROYAL1000": { type: "flat", value: 1000, label: "₹1,000 Flat Off on Packages", maxUses: 5, enabled: true },
+    "WELCOME500": { type: "flat", value: 500, label: "₹500 Flat First-Booking Offer", maxUses: "unlimited", enabled: true }
   },
 
   pricingByKit: {
@@ -132,15 +151,16 @@ const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
 const TAB_OPTIONS = [
   { id: 'bookings', label: '📋 Live Bookings & Queue' },
+  { id: 'toggles_master', label: '🎛️ Master Feature Toggles' },
+  { id: 'packages_text', label: '✏️ Package Titles (Luxury vs HD)' },
+  { id: 'kit_images', label: '🖼️ Package Images (Luxury vs HD)' },
+  { id: 'coupons', label: '🏷️ Promo Coupons & Code Toggles' },
   { id: 'traffic_logs', label: '📊 Visitor Traffic & Instagram Logs' },
   { id: 'gallery', label: '📸 Transformations, Videos & GIFs' },
-  { id: 'kit_images', label: '🖼️ Package Images (Luxury vs HD)' },
-  { id: 'packages_text', label: '✏️ Package Titles & Text Editor' },
   { id: 'promotions', label: '📢 WhatsApp Campaign Studio' },
   { id: 'announcements', label: '📢 Top Announcements Ticker' },
   { id: 'convenience', label: '🚗 Travel Fees & Zones' },
   { id: 'prices', label: '💄 Package Rates Manager' },
-  { id: 'coupons', label: '🏷️ Promo Coupons' },
   { id: 'theme', label: '🎨 Themes & Typography' },
   { id: 'profile', label: '📱 Studio Profile & Contact' }
 ];
@@ -150,6 +170,7 @@ export default function AdminApp() {
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const [activeTab, setActiveTab] = useState('bookings');
+  const [editingKitTab, setEditingKitTab] = useState('international');
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
@@ -170,7 +191,6 @@ export default function AdminApp() {
     load();
   }, []);
 
-  // Real-time bookings listener
   useEffect(() => {
     try {
       const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
@@ -183,7 +203,6 @@ export default function AdminApp() {
     }
   }, []);
 
-  // Real-time visitor logs listener
   useEffect(() => {
     try {
       const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(60));
@@ -201,7 +220,6 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  // 🛡️ 100% Sanitized Save to prevent Firestore Entity error
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     setIsSaving(true);
@@ -209,7 +227,7 @@ export default function AdminApp() {
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus('🎉 All media, packages, images, fees & rates synced live!');
+      setActionStatus('🎉 All package texts, toggles, images, coupons & settings synced live!');
     } catch (err) {
       setActionStatus('❌ Error saving: ' + err.message);
     } finally {
@@ -245,7 +263,6 @@ export default function AdminApp() {
     }
   };
 
-  // 📹 Universal Media Handler (Supports GIF, Video, Image files)
   const handleMediaUpload = (e, index) => {
     const file = e.target.files[0];
     if (file) {
@@ -264,13 +281,12 @@ export default function AdminApp() {
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} file. Click 'Save All Changes' to publish live.`);
+        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} file. Click 'Save All Changes' to publish.`);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // 🖼️ Package Card Direct Image File Upload
   const handlePackageImageUpload = (e, kit, pkgKey) => {
     const file = e.target.files[0];
     if (file) {
@@ -450,7 +466,271 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: VISITOR TRAFFIC & INSTAGRAM LOGS */}
+        {/* TAB 2: MASTER FEATURE & SECTION TOGGLES */}
+        {activeTab === 'toggles_master' && (
+          <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
+            <div>
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
+              </h3>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Enable or disable any section, widget or feature on the live main customer app.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { key: 'enableAnnouncements', label: 'Top Announcements Ticker', desc: 'Show/hide rotating top announcement bar' },
+                { key: 'enableCoupons', label: 'Promo Coupon System', desc: 'Enable/disable coupon codes application' },
+                { key: 'enableGuestDiscount', label: 'Extra Guest Group Discount', desc: 'Apply automatic savings on multiple guests' },
+                { key: 'enableFloatingBanner', label: 'Bottom Floating Offer Widget', desc: 'Show/hide bottom right floating promo pill' },
+                { key: 'enableGallery', label: 'Transformations Video Gallery Tab', desc: 'Show/hide signature video & photo lookbook' },
+                { key: 'enableBrands', label: 'Vanity Brands Kit Tab', desc: 'Show/hide authentic cosmetics brand list' },
+                { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
+              ].map(toggle => {
+                const isEnabled = draft.toggles?.[toggle.key] !== false;
+                return (
+                  <div key={toggle.key} className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${adminInnerCard}`}>
+                    <div className="space-y-0.5">
+                      <h4 className="font-bold text-xs text-white">{toggle.label}</h4>
+                      <p className={`text-[11px] ${adminMuted}`}>{toggle.desc}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDraft({
+                        ...draft,
+                        toggles: {
+                          ...(draft.toggles || {}),
+                          [toggle.key]: !isEnabled
+                        }
+                      })}
+                      className={`p-2 rounded-xl flex items-center gap-1.5 font-bold text-xs transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
+                    >
+                      {isEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                      <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: PACKAGE TITLES & DESCRIPTIONS (WITH KIT SWITCHER: LUXURY VS HD) */}
+        {activeTab === 'packages_text' && (
+          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Type className="w-4 h-4" /> Package Titles & Text Editor (Kit-Wise)
+                </h3>
+                <p className={`text-xs ${adminMuted} mt-0.5`}>Customise package titles and descriptions separately for International Luxury vs Premium HD kits.</p>
+              </div>
+
+              {/* Kit Switcher Pill in Admin */}
+              <div className="inline-flex p-1 rounded-xl bg-black/50 border border-white/10 gap-1 self-start">
+                <button
+                  type="button"
+                  onClick={() => setEditingKitTab('international')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400'}`}
+                >
+                  👑 International Luxury Kit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingKitTab('drugstore')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400'}`}
+                >
+                  ✨ Premium HD Kit
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {partyPackages.concat(bridalPackages).map(k => {
+                const pkg = draft.kitText?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitText[editingKitTab][k];
+                return (
+                  <div key={`${editingKitTab}_${k}`} className={`p-4 rounded-2xl border space-y-2.5 ${adminInnerCard}`}>
+                    <label className="block text-xs font-bold text-cyan-400 capitalize">{k.replace(/_/g, ' ')} ({editingKitTab === 'international' ? 'Luxury' : 'HD Kit'})</label>
+                    <div>
+                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Package Display Name</span>
+                      <input
+                        type="text"
+                        value={pkg.name || ''}
+                        onChange={e => setDraft({
+                          ...draft,
+                          kitText: {
+                            ...(draft.kitText || {}),
+                            [editingKitTab]: {
+                              ...(draft.kitText?.[editingKitTab] || {}),
+                              [k]: { ...pkg, name: e.target.value }
+                            }
+                          }
+                        })}
+                        className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
+                      />
+                    </div>
+                    <div>
+                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Description / Details Text</span>
+                      <textarea
+                        rows={2}
+                        value={pkg.desc || ''}
+                        onChange={e => setDraft({
+                          ...draft,
+                          kitText: {
+                            ...(draft.kitText || {}),
+                            [editingKitTab]: {
+                              ...(draft.kitText?.[editingKitTab] || {}),
+                              [k]: { ...pkg, desc: e.target.value }
+                            }
+                          }
+                        })}
+                        className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: PACKAGE IMAGES & SEPARATE KIT PHOTOS */}
+        {activeTab === 'kit_images' && (
+          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+            <div>
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <ImageIcon className="w-4 h-4" /> Separate Package Images (Luxury Kit vs HD Kit)
+              </h3>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Upload any format photo or paste image URL for each package.</p>
+            </div>
+
+            {/* International Kit Images */}
+            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Photos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {partyPackages.concat(bridalPackages).map(k => (
+                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
+                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
+                    <input
+                      type="text"
+                      placeholder="Paste Image URL"
+                      value={draft.kitImages?.international?.[k] || ''}
+                      onChange={e => setDraft({
+                        ...draft,
+                        kitImages: {
+                          ...draft.kitImages,
+                          international: { ...(draft.kitImages?.international || {}), [k]: e.target.value }
+                        }
+                      })}
+                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
+                    />
+                    <label className="block text-center py-1.5 rounded-lg bg-amber-500/15 text-amber-400 text-[11px] font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25">
+                      Upload Any Image File
+                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'international', k)} className="hidden" />
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* HD Drugstore Kit Images */}
+            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Photos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {partyPackages.concat(bridalPackages).map(k => (
+                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
+                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
+                    <input
+                      type="text"
+                      placeholder="Paste Image URL"
+                      value={draft.kitImages?.drugstore?.[k] || ''}
+                      onChange={e => setDraft({
+                        ...draft,
+                        kitImages: {
+                          ...draft.kitImages,
+                          drugstore: { ...(draft.kitImages?.drugstore || {}), [k]: e.target.value }
+                        }
+                      })}
+                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
+                    />
+                    <label className="block text-center py-1.5 rounded-lg bg-rose-500/15 text-rose-400 text-[11px] font-bold cursor-pointer border border-rose-500/30 hover:bg-rose-500/25">
+                      Upload Any Image File
+                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'drugstore', k)} className="hidden" />
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: PROMO COUPONS (WITH INDIVIDUAL ENABLE/DISABLE TOGGLE) */}
+        {activeTab === 'coupons' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400">Promo Coupons & Individual Toggles</h3>
+                <p className={`text-xs ${adminMuted}`}>Enable, disable, or configure specific discount promo codes.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const code = prompt("Enter Coupon Code:");
+                  if (code) {
+                    const clean = code.toUpperCase().trim();
+                    setDraft({ ...draft, validCoupons: { ...draft.validCoupons, [clean]: { type: "percent", value: 10, label: "Special Offer", enabled: true } } });
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs"
+              >
+                + Add Coupon
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
+                const isCodeActive = c.enabled !== false;
+                return (
+                  <div key={code} className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${adminInnerCard}`}>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-cyan-400 font-bold text-sm">{code}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                          {isCodeActive ? 'ACTIVE' : 'DISABLED'}
+                        </span>
+                      </div>
+                      <p className={`text-xs ${adminMuted}`}>{c.type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`} • {c.label}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDraft({
+                          ...draft,
+                          validCoupons: {
+                            ...draft.validCoupons,
+                            [code]: { ...c, enabled: !isCodeActive }
+                          }
+                        })}
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
+                      >
+                        {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                        <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
+                      </button>
+
+                      <button onClick={() => {
+                        const copy = { ...draft.validCoupons };
+                        delete copy[code];
+                        setDraft({ ...draft, validCoupons: copy });
+                      }} className="text-rose-400 p-2 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: VISITOR TRAFFIC & INSTAGRAM LOGS */}
         {activeTab === 'traffic_logs' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -488,7 +768,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: TRANSFORMATIONS, VIDEOS & GIFS */}
+        {/* TAB 7: TRANSFORMATIONS, VIDEOS & GIFS */}
         {activeTab === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -573,130 +853,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 4: PACKAGE IMAGES & SEPARATE KIT PHOTOS (UPLOAD + URL) */}
-        {activeTab === 'kit_images' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
-            <div>
-              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4" /> Separate Package Images (Luxury Kit vs HD Kit)
-              </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Upload any format photo or paste image URL for each package.</p>
-            </div>
-
-            {/* International Kit Images */}
-            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
-              <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Photos</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {partyPackages.concat(bridalPackages).map(k => (
-                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
-                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                    <input
-                      type="text"
-                      placeholder="Paste Image URL"
-                      value={draft.kitImages?.international?.[k] || ''}
-                      onChange={e => setDraft({
-                        ...draft,
-                        kitImages: {
-                          ...draft.kitImages,
-                          international: { ...(draft.kitImages?.international || {}), [k]: e.target.value }
-                        }
-                      })}
-                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
-                    />
-                    <label className="block text-center py-1.5 rounded-lg bg-amber-500/15 text-amber-400 text-[11px] font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25">
-                      Upload Any Image File
-                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'international', k)} className="hidden" />
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* HD Drugstore Kit Images */}
-            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
-              <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Photos</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {partyPackages.concat(bridalPackages).map(k => (
-                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
-                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                    <input
-                      type="text"
-                      placeholder="Paste Image URL"
-                      value={draft.kitImages?.drugstore?.[k] || ''}
-                      onChange={e => setDraft({
-                        ...draft,
-                        kitImages: {
-                          ...draft.kitImages,
-                          drugstore: { ...(draft.kitImages?.drugstore || {}), [k]: e.target.value }
-                        }
-                      })}
-                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
-                    />
-                    <label className="block text-center py-1.5 rounded-lg bg-rose-500/15 text-rose-400 text-[11px] font-bold cursor-pointer border border-rose-500/30 hover:bg-rose-500/25">
-                      Upload Any Image File
-                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'drugstore', k)} className="hidden" />
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: PACKAGE TEXT & TITLES FULL EDITOR */}
-        {activeTab === 'packages_text' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <div>
-              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                <Type className="w-4 h-4" /> Package Titles, Descriptions & Content Editor
-              </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Edit package names and descriptions shown on client cards.</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {partyPackages.concat(bridalPackages).map(k => {
-                const pkg = draft.packageDetails?.[k] || DEFAULT_CONFIG.packageDetails[k];
-                return (
-                  <div key={k} className={`p-4 rounded-2xl border space-y-2.5 ${adminInnerCard}`}>
-                    <label className="block text-xs font-bold text-cyan-400 capitalize">{k.replace(/_/g, ' ')}</label>
-                    <div>
-                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Package Display Name</span>
-                      <input
-                        type="text"
-                        value={pkg.name || ''}
-                        onChange={e => setDraft({
-                          ...draft,
-                          packageDetails: {
-                            ...draft.packageDetails,
-                            [k]: { ...pkg, name: e.target.value }
-                          }
-                        })}
-                        className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
-                      />
-                    </div>
-                    <div>
-                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Description / Details Text</span>
-                      <textarea
-                        rows={2}
-                        value={pkg.desc || ''}
-                        onChange={e => setDraft({
-                          ...draft,
-                          packageDetails: {
-                            ...draft.packageDetails,
-                            [k]: { ...pkg, desc: e.target.value }
-                          }
-                        })}
-                        className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 6: PROMOTIONS */}
+        {/* TAB 8: PROMOTIONS */}
         {activeTab === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -720,7 +877,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 7: TOP ANNOUNCEMENTS TICKER */}
+        {/* TAB 9: TOP ANNOUNCEMENTS TICKER */}
         {activeTab === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -766,7 +923,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 8: TRAVEL FEES & CONVENIENCE ZONES */}
+        {/* TAB 10: TRAVEL FEES & CONVENIENCE ZONES */}
         {activeTab === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -848,7 +1005,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 9: RATES */}
+        {/* TAB 11: RATES */}
         {activeTab === 'prices' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
@@ -873,42 +1030,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 10: PROMO COUPONS */}
-        {activeTab === 'coupons' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <div className="flex justify-between items-center">
-              <h3 className="font-bold text-xs uppercase text-cyan-400">Promo Coupons Manager</h3>
-              <button
-                type="button"
-                onClick={() => {
-                  const code = prompt("Enter Coupon Code:");
-                  if (code) {
-                    const clean = code.toUpperCase().trim();
-                    setDraft({ ...draft, validCoupons: { ...draft.validCoupons, [clean]: { type: "percent", value: 10, label: "Special Offer" } } });
-                  }
-                }}
-                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs"
-              >
-                + Add Coupon
-              </button>
-            </div>
-            {Object.entries(draft.validCoupons || {}).map(([code, c]) => (
-              <div key={code} className={`p-3 rounded-2xl border flex justify-between items-center ${adminInnerCard}`}>
-                <div>
-                  <span className="font-mono text-cyan-400 font-bold text-xs">{code}</span>
-                  <p className={`text-[11px] ${adminMuted}`}>{c.type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`} • {c.label}</p>
-                </div>
-                <button onClick={() => {
-                  const copy = { ...draft.validCoupons };
-                  delete copy[code];
-                  setDraft({ ...draft, validCoupons: copy });
-                }} className="text-rose-400 p-1"><Trash2 className="w-4 h-4" /></button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* TAB 11: THEMES & FONTS */}
+        {/* TAB 12: THEMES & FONTS */}
         {activeTab === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts</h3>
@@ -949,7 +1071,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 12: PROFILE */}
+        {/* TAB 13: PROFILE */}
         {activeTab === 'profile' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Profile & Studio Identity</h3>
