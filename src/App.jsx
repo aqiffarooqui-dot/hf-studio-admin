@@ -240,8 +240,8 @@ export default function AdminApp() {
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
-  const [promoTemplates, setPromoTemplates] = useState(DEFAULT_TEMPLATES);
-  const [selectedTemplateText, setSelectedTemplateText] = useState(DEFAULT_TEMPLATES[0].text);
+  const [promoTemplates, setPromoTemplates] = useState([]);
+  const [selectedTemplateText, setSelectedTemplateText] = useState('');
   const [customNumbersInput, setCustomNumbersInput] = useState('');
   const [sendingPromo, setSendingPromo] = useState(false);
   const [savingSection, setSavingSection] = useState('');
@@ -653,31 +653,11 @@ export default function AdminApp() {
     }
   };
 
-  const year = calendarDate.getFullYear();
-  const month = calendarDate.getMonth();
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  const getDayBookingStatus = (day) => {
-    const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const matches = bookingsList.filter(b => b.eventDate === formatted);
-    if (matches.length === 0) return { hasBookings: false, list: [] };
-    const isConfirmed = matches.some(b => b.status === 'confirmed');
-    return {
-      hasBookings: true,
-      isConfirmed,
-      count: matches.length,
-      list: matches,
-      dateStr: formatted
-    };
-  };
-
   const activeColorThemeKey = draft.theme?.colorTheme || 'liquid_glass';
   const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.liquid_glass;
 
   const adminBgClass = isAdminDarkMode ? "bg-[#030712] text-[#f8fafc]" : "bg-[#f8fafc] text-[#0f172a]";
-  const adminCardBg = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border border-white/[0.12] shadow-2xl text-[#f8fafc]" : "bg-white border border-slate-200 shadow-xl text-[#0f172a]";
+  const cardBgClass = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border border-white/[0.12] shadow-2xl text-[#f8fafc]" : "bg-white border border-slate-200 shadow-xl text-[#0f172a]";
   const adminInnerCard = isAdminDarkMode ? "bg-black/40 border border-white/10 text-[#f8fafc]" : "bg-slate-50 border border-slate-200 text-[#0f172a]";
   const adminInputBg = isAdminDarkMode ? "bg-black/40 border border-white/20 text-white placeholder-slate-400 focus:border-cyan-400" : "bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:border-blue-500";
   const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
@@ -856,7 +836,7 @@ export default function AdminApp() {
 
         {/* TAB: BOOKINGS */}
         {activeFolderId === 'bookings' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400">Incoming Customer Bookings Queue</h3>
@@ -989,7 +969,7 @@ export default function AdminApp() {
 
         {/* TAB: CALENDAR */}
         {activeFolderId === 'calendar_view' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1001,55 +981,54 @@ export default function AdminApp() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
+                <button type="button" onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
                   <ChevronLeft className="w-4 h-4 text-cyan-400" />
                 </button>
                 <span className="font-bold text-xs sm:text-sm font-mono min-w-[130px] text-center text-white">
-                  {monthNames[month]} {year}
+                  {calendarDate.toLocaleString('default', { month: 'long' })} {calendarDate.getFullYear()}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
+                <button type="button" onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
                   <ChevronRight className="w-4 h-4 text-cyan-400" />
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" /><span className={adminMuted}>Confirmed Booking</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" /><span className={adminMuted}>Pending Inquiry</span></div>
-              <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-600" /><span className={adminMuted}>Free Slot</span></div>
-            </div>
-
+            {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
                 <span key={d} className="text-[11px] font-bold text-slate-400 py-1 uppercase">{d}</span>
               ))}
 
-              {Array.from({ length: firstDayIndex }).map((_, i) => (
+              {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth(), 1).getDay() }).map((_, i) => (
                 <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-2xl bg-transparent" />
               ))}
 
-              {Array.from({ length: totalDaysInMonth }).map((_, i) => {
+              {Array.from({ length: new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate() }).map((_, i) => {
                 const day = i + 1;
-                const status = getDayBookingStatus(day);
+                const formatted = `${calendarDate.getFullYear()}-${String(calendarDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const matches = bookingsList.filter(b => b.eventDate === formatted);
+                const hasBookings = matches.length > 0;
+                const isConfirmed = matches.some(b => b.status === 'confirmed');
+
                 return (
                   <div
                     key={`day_${day}`}
-                    onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
+                    onClick={() => hasBookings ? setSelectedCalendarDay({ dateStr: formatted, isConfirmed, list: matches }) : null}
                     className={`h-16 sm:h-20 rounded-2xl p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
-                      status.hasBookings 
-                        ? (status.isConfirmed 
+                      hasBookings 
+                        ? (isConfirmed 
                             ? 'bg-emerald-500/15 border-emerald-500/40 hover:scale-105 shadow-md shadow-emerald-500/10' 
                             : 'bg-amber-500/15 border-amber-500/40 hover:scale-105 shadow-md shadow-amber-500/10')
                         : `${adminInnerCard} hover:border-white/20 opacity-75`
                     }`}
                   >
-                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : 'text-slate-300'}`}>
+                    <span className={`text-xs font-bold font-mono ${hasBookings ? (isConfirmed ? 'text-emerald-400' : 'text-amber-400') : 'text-slate-300'}`}>
                       {day}
                     </span>
 
-                    {status.hasBookings && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${status.isConfirmed ? 'bg-emerald-500 text-neutral-950' : 'bg-amber-500 text-neutral-950'}`}>
-                        {status.count} Booked
+                    {hasBookings && (
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${isConfirmed ? 'bg-emerald-500 text-neutral-950' : 'bg-amber-500 text-neutral-950'}`}>
+                        {matches.length} Booked
                       </span>
                     )}
                   </div>
@@ -1088,7 +1067,7 @@ export default function AdminApp() {
 
         {/* TAB: MAINTENANCE MODE */}
         {activeFolderId === 'app_maintenance' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <Wrench className="w-4 h-4" /> App Down & Maintenance Controller
@@ -1139,7 +1118,7 @@ export default function AdminApp() {
 
         {/* TAB: FLOATING BANNER */}
         {activeFolderId === 'floating' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1264,7 +1243,7 @@ export default function AdminApp() {
 
         {/* TAB: PROMO COUPONS */}
         {activeFolderId === 'coupons' && (
-          <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1423,7 +1402,7 @@ export default function AdminApp() {
 
         {/* TAB: TRANSFORMATIONS */}
         {activeFolderId === 'gallery' && (
-          <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1518,7 +1497,7 @@ export default function AdminApp() {
 
         {/* TAB: PACKAGE IMAGES */}
         {activeFolderId === 'kit_images' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4" /> Separate Package Images (Luxury Kit vs HD Kit)
@@ -1596,7 +1575,7 @@ export default function AdminApp() {
 
         {/* TAB: PACKAGE TITLES & TEXT */}
         {activeFolderId === 'packages_text' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1684,7 +1663,7 @@ export default function AdminApp() {
 
         {/* TAB: MASTER FEATURE TOGGLES */}
         {activeFolderId === 'toggles_master' && (
-          <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
@@ -1742,7 +1721,7 @@ export default function AdminApp() {
 
         {/* TAB: VISITOR TRAFFIC LOGS */}
         {activeFolderId === 'traffic_logs' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1780,7 +1759,7 @@ export default function AdminApp() {
 
         {/* TAB: PROMOTIONS */}
         {activeFolderId === 'promotions' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
               <Megaphone className="w-4 h-4" /> WhatsApp Broadcast Studio
             </h3>
@@ -1804,7 +1783,7 @@ export default function AdminApp() {
 
         {/* TAB: TOP ANNOUNCEMENTS */}
         {activeFolderId === 'announcements' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1860,7 +1839,7 @@ export default function AdminApp() {
 
         {/* TAB: TRAVEL FEES */}
         {activeFolderId === 'convenience' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1952,7 +1931,7 @@ export default function AdminApp() {
 
         {/* TAB: RATES */}
         {activeFolderId === 'prices' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {partyPackages.concat(bridalPackages).map(k => (
@@ -1987,7 +1966,7 @@ export default function AdminApp() {
 
         {/* TAB: THEMES */}
         {activeFolderId === 'theme' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts (Synced)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
@@ -2038,7 +2017,7 @@ export default function AdminApp() {
 
         {/* TAB: PROFILE & LOGO UPLOAD */}
         {activeFolderId === 'profile' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
