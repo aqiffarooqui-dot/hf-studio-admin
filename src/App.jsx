@@ -3,10 +3,10 @@ import {
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
-  Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2
+  Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
 
 const DEFAULT_CONFIG = {
   adminPin: "8760",
@@ -38,6 +38,15 @@ const DEFAULT_CONFIG = {
   guestDiscount: {
     enabled: true,
     discountPercent: 15
+  },
+
+  packageDetails: {
+    simple_party: { num: 1, name: "Simple Party Makeup", desc: "Natural dewy skin glow, subtle eye liner, soft lip tone & simple hair styling." },
+    hd_party: { num: 2, name: "HD Party Makeup", desc: "High-definition camera ready base, customized eye contouring, and designer hair styling." },
+    super_hd_party: { num: 3, name: "Super HD Glam Party", desc: "Flawless poreless glass skin, 3D lashes, statement eye look & intricate hair design." },
+    cocktail_glam: { num: 4, name: "Cocktail / Reception Glam", desc: "High glam celebrity makeover, smokey or shimmer eye art, luxury lash extensions & styling." },
+    engagement_bride: { num: 5, name: "Engagement / Sagan Bride", desc: "Radiant luxury bridal base, sculpted features, premium lash drama, draping & floral hair." },
+    royal_bridal: { num: 6, name: "Royal Asian Bridal", desc: "Signature bridal artistry, 16HR waterproof HD finish, jewel placement, master draping & hair styling." }
   },
 
   // 🖼️ Kit-Specific Distinct Images
@@ -123,8 +132,10 @@ const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
 const TAB_OPTIONS = [
   { id: 'bookings', label: '📋 Live Bookings & Queue' },
-  { id: 'gallery', label: '📸 Transformations & Live Videos' },
-  { id: 'kit_images', label: '🖼️ Package Cards & Images' },
+  { id: 'traffic_logs', label: '📊 Visitor Traffic & Instagram Logs' },
+  { id: 'gallery', label: '📸 Transformations, Videos & GIFs' },
+  { id: 'kit_images', label: '🖼️ Package Images (Luxury vs HD)' },
+  { id: 'packages_text', label: '✏️ Package Titles & Text Editor' },
   { id: 'promotions', label: '📢 WhatsApp Campaign Studio' },
   { id: 'announcements', label: '📢 Top Announcements Ticker' },
   { id: 'convenience', label: '🚗 Travel Fees & Zones' },
@@ -141,6 +152,7 @@ export default function AdminApp() {
   const [activeTab, setActiveTab] = useState('bookings');
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
+  const [visitorLogs, setVisitorLogs] = useState([]);
   const [promoTemplates, setPromoTemplates] = useState(DEFAULT_TEMPLATES);
   const [selectedTemplateText, setSelectedTemplateText] = useState(DEFAULT_TEMPLATES[0].text);
   const [customNumbersInput, setCustomNumbersInput] = useState('');
@@ -158,6 +170,7 @@ export default function AdminApp() {
     load();
   }, []);
 
+  // Real-time bookings listener
   useEffect(() => {
     try {
       const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
@@ -170,12 +183,25 @@ export default function AdminApp() {
     }
   }, []);
 
+  // Real-time visitor logs listener
+  useEffect(() => {
+    try {
+      const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(60));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        setVisitorLogs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn(e);
+    }
+  }, []);
+
   const handleLogin = (e) => {
     e.preventDefault();
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  // 🛡️ 100% Sanitized Save to completely prevent Firestore Entity / Undefined Error
+  // 🛡️ 100% Sanitized Save to prevent Firestore Entity error
   const handleSave = async (e) => {
     if (e) e.preventDefault();
     setIsSaving(true);
@@ -183,7 +209,7 @@ export default function AdminApp() {
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus('🎉 All media videos, announcements, travel fees & rates synced live!');
+      setActionStatus('🎉 All media, packages, images, fees & rates synced live!');
     } catch (err) {
       setActionStatus('❌ Error saving: ' + err.message);
     } finally {
@@ -219,12 +245,12 @@ export default function AdminApp() {
     }
   };
 
-  // 📹 Clean & Sanitized Media Upload Handler
+  // 📹 Universal Media Handler (Supports GIF, Video, Image files)
   const handleMediaUpload = (e, index) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2500000) {
-        alert("File size is larger than 2.5MB. For smooth performance, please paste a direct video link or use a compressed clip.");
+        alert("File size is larger than 2.5MB. For smooth performance, please paste a direct video link or use a compressed clip/GIF.");
         return;
       }
       const isVid = file.type.startsWith('video');
@@ -232,13 +258,39 @@ export default function AdminApp() {
       reader.onloadend = () => {
         const copy = [...(draft.galleryPhotos || [])];
         copy[index] = {
-          title: copy[index]?.title || "Signature Look",
+          title: copy[index]?.title || "Signature Transformation",
           sub: copy[index]?.sub || "HD Artistry",
           url: String(reader.result),
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image'} file. Click 'Save All Changes' to publish live.`);
+        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} file. Click 'Save All Changes' to publish live.`);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 🖼️ Package Card Direct Image File Upload
+  const handlePackageImageUpload = (e, kit, pkgKey) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2500000) {
+        alert("Image size is larger than 2.5MB. Please choose a smaller image.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDraft({
+          ...draft,
+          kitImages: {
+            ...draft.kitImages,
+            [kit]: {
+              ...(draft.kitImages?.[kit] || {}),
+              [pkgKey]: String(reader.result)
+            }
+          }
+        });
+        setActionStatus(`Loaded new image for ${pkgKey}. Click 'Save All Changes' to publish.`);
       };
       reader.readAsDataURL(file);
     }
@@ -309,7 +361,7 @@ export default function AdminApp() {
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300`}>
       
-      {/* 💎 Header with Navigation Dropdown */}
+      {/* 💎 Header with Quick Dropdown */}
       <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
@@ -331,11 +383,11 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
-        {/* 🚀 Sleek Dropdown Navigation Selector */}
+        {/* 🚀 Navigation Dropdown Selector */}
         <div className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md ${adminCardBg}`}>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <ListFilter className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Jump to Admin Section:</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Select Section to Edit:</span>
           </div>
 
           <div className="relative w-full sm:w-80">
@@ -398,15 +450,53 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: TRANSFORMATIONS & LIVE AUTO-PLAYING VIDEOS */}
+        {/* TAB 2: VISITOR TRAFFIC & INSTAGRAM LOGS */}
+        {activeTab === 'traffic_logs' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Activity className="w-4 h-4" /> Live Traffic & Instagram Visitor Logs
+                </h3>
+                <p className={`text-xs ${adminMuted}`}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
+              </div>
+              <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
+                {visitorLogs.length} Recent Visits Logged
+              </span>
+            </div>
+
+            {visitorLogs.length === 0 ? (
+              <p className="text-xs text-slate-400 py-8 text-center">No visitor traffic recorded yet.</p>
+            ) : (
+              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                {visitorLogs.map(log => (
+                  <div key={log.id} className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs ${adminInnerCard}`}>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-cyan-400 font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300">Active Visit</span>
+                      </div>
+                      <p className={`text-[11px] truncate max-w-md ${adminMuted}`}>{log.userAgent}</p>
+                    </div>
+                    <span className="text-[11px] text-amber-400 font-mono">
+                      {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: TRANSFORMATIONS, VIDEOS & GIFS */}
         {activeTab === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                  <Film className="w-4 h-4" /> Media & Auto-Playing Video Studio
+                  <Film className="w-4 h-4" /> Transformations, Videos & GIFs Studio
                 </h3>
-                <p className={`text-xs ${adminMuted}`}>Direct URLs (.mp4, .webm) or file uploads under 2.5MB.</p>
+                <p className={`text-xs ${adminMuted}`}>Direct URLs (.mp4, .webm, .gif) or file uploads under 2.5MB.</p>
               </div>
               <button
                 type="button"
@@ -429,7 +519,7 @@ export default function AdminApp() {
               {(draft.galleryPhotos || []).map((item, idx) => (
                 <div key={idx} className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-cyan-400 font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Photo'})</span>
+                    <span className="text-xs font-bold text-cyan-400 font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
                     <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-400 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
 
@@ -442,7 +532,7 @@ export default function AdminApp() {
                         setDraft({ ...draft, galleryPhotos: copy });
                       }} className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}>
                         <option value="video">🎥 Auto-play Video</option>
-                        <option value="image">🖼️ Image</option>
+                        <option value="image">🖼️ Image / Animated GIF</option>
                       </select>
                     </div>
                     <div>
@@ -465,7 +555,7 @@ export default function AdminApp() {
                   </div>
 
                   <div>
-                    <label className={`block text-[10px] mb-1 ${adminMuted}`}>Direct URL (e.g. mp4/webm/image link)</label>
+                    <label className={`block text-[10px] mb-1 ${adminMuted}`}>Direct URL (Video, GIF, or Image link)</label>
                     <input type="text" value={item.url || ''} onChange={e => {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
@@ -474,8 +564,8 @@ export default function AdminApp() {
                   </div>
 
                   <label className="block text-center py-2 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25 transition">
-                    Upload Direct Video/Image File (&lt;2.5MB)
-                    <input type="file" accept="video/*,image/*" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
+                    Upload Direct Video/GIF/Image File (&lt;2.5MB)
+                    <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
                 </div>
               ))}
@@ -483,25 +573,26 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: PACKAGE IMAGES & DISTINCT CARDS */}
+        {/* TAB 4: PACKAGE IMAGES & SEPARATE KIT PHOTOS (UPLOAD + URL) */}
         {activeTab === 'kit_images' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4" /> Separate Package Images (Luxury Kit vs HD Kit)
               </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Set different custom photos for each package under International vs Drugstore kits.</p>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Upload any format photo or paste image URL for each package.</p>
             </div>
 
             {/* International Kit Images */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
-              <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Images</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Photos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {partyPackages.concat(bridalPackages).map(k => (
-                  <div key={k}>
-                    <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')} Image URL</label>
+                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
+                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
                     <input
                       type="text"
+                      placeholder="Paste Image URL"
                       value={draft.kitImages?.international?.[k] || ''}
                       onChange={e => setDraft({
                         ...draft,
@@ -512,20 +603,25 @@ export default function AdminApp() {
                       })}
                       className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
                     />
+                    <label className="block text-center py-1.5 rounded-lg bg-amber-500/15 text-amber-400 text-[11px] font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25">
+                      Upload Any Image File
+                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'international', k)} className="hidden" />
+                    </label>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* HD Drugstore Kit Images */}
-            <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
-              <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Images</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Photos</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {partyPackages.concat(bridalPackages).map(k => (
-                  <div key={k}>
-                    <label className={`block text-[10px] mb-1 capitalize ${adminMuted}`}>{k.replace(/_/g, ' ')} Image URL</label>
+                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
+                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
                     <input
                       type="text"
+                      placeholder="Paste Image URL"
                       value={draft.kitImages?.drugstore?.[k] || ''}
                       onChange={e => setDraft({
                         ...draft,
@@ -536,6 +632,10 @@ export default function AdminApp() {
                       })}
                       className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
                     />
+                    <label className="block text-center py-1.5 rounded-lg bg-rose-500/15 text-rose-400 text-[11px] font-bold cursor-pointer border border-rose-500/30 hover:bg-rose-500/25">
+                      Upload Any Image File
+                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'drugstore', k)} className="hidden" />
+                    </label>
                   </div>
                 ))}
               </div>
@@ -543,7 +643,60 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 4: PROMOTIONS */}
+        {/* TAB 5: PACKAGE TEXT & TITLES FULL EDITOR */}
+        {activeTab === 'packages_text' && (
+          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
+            <div>
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <Type className="w-4 h-4" /> Package Titles, Descriptions & Content Editor
+              </h3>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Edit package names and descriptions shown on client cards.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {partyPackages.concat(bridalPackages).map(k => {
+                const pkg = draft.packageDetails?.[k] || DEFAULT_CONFIG.packageDetails[k];
+                return (
+                  <div key={k} className={`p-4 rounded-2xl border space-y-2.5 ${adminInnerCard}`}>
+                    <label className="block text-xs font-bold text-cyan-400 capitalize">{k.replace(/_/g, ' ')}</label>
+                    <div>
+                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Package Display Name</span>
+                      <input
+                        type="text"
+                        value={pkg.name || ''}
+                        onChange={e => setDraft({
+                          ...draft,
+                          packageDetails: {
+                            ...draft.packageDetails,
+                            [k]: { ...pkg, name: e.target.value }
+                          }
+                        })}
+                        className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
+                      />
+                    </div>
+                    <div>
+                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Description / Details Text</span>
+                      <textarea
+                        rows={2}
+                        value={pkg.desc || ''}
+                        onChange={e => setDraft({
+                          ...draft,
+                          packageDetails: {
+                            ...draft.packageDetails,
+                            [k]: { ...pkg, desc: e.target.value }
+                          }
+                        })}
+                        className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: PROMOTIONS */}
         {activeTab === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -567,7 +720,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 5: TOP ANNOUNCEMENTS TICKER (FIXED) */}
+        {/* TAB 7: TOP ANNOUNCEMENTS TICKER */}
         {activeTab === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -613,7 +766,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 6: TRAVEL FEES & CONVENIENCE ZONES (FIXED) */}
+        {/* TAB 8: TRAVEL FEES & CONVENIENCE ZONES */}
         {activeTab === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -695,7 +848,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 7: RATES */}
+        {/* TAB 9: RATES */}
         {activeTab === 'prices' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
@@ -720,7 +873,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 8: PROMO COUPONS */}
+        {/* TAB 10: PROMO COUPONS */}
         {activeTab === 'coupons' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -755,7 +908,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 9: THEMES & FONTS */}
+        {/* TAB 11: THEMES & FONTS */}
         {activeTab === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts</h3>
@@ -796,7 +949,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 10: PROFILE */}
+        {/* TAB 12: PROFILE */}
         {activeTab === 'profile' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Profile & Studio Identity</h3>
@@ -833,7 +986,7 @@ export default function AdminApp() {
           className="w-full py-4 bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400 text-neutral-950 font-bold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
         >
           <Save className="w-4 h-4" />
-          <span>{isSaving ? 'Syncing...' : 'Save All Changes Live to Main App'}</span>
+          <span>{isSaving ? 'Syncing...' : 'Save All Changes Live to Customer App'}</span>
         </button>
 
       </div>
