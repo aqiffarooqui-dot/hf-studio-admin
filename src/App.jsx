@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
-  Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
-  Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
-  SlidersHorizontal, CheckCircle2, XCircle, Clock, Gift, AlertCircle, Calendar,
-  Download, FileCheck, Hash, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon,
-  Wrench, X, MessageSquare, RotateCcw, Ban, Folder, FolderOpen, ArrowLeft
+  Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight, 
+  Sliders, Palette, MapPin, Eye, ChevronDown, ChevronRight, ChevronLeft, 
+  ListFilter, Car, Volume2, Activity, SlidersHorizontal, CheckCircle2, 
+  XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
+  Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
+  Folder, FolderOpen, ArrowLeft
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -197,11 +198,6 @@ const THEME_STYLES = {
   }
 };
 
-const DEFAULT_TEMPLATES = [
-  { id: 1, title: "Wedding Season 15% OFF", text: "✨ *Special Wedding Season Offer - Husna Farooqui* ✨\n\nBook your Signature Bridal Look this week and get *Flat 15% OFF* + complimentary lash extension!\n\nUse Code: *WEDDING15*\nBook Online: https://your-domain.com" },
-  { id: 2, title: "Weekend Party Glam Flash Offer", text: "💄 *Flash Weekend Glam Offer!* 💄\n\nBook Super HD Party Makeup for 2 or more family members and get 1 Party Look at *50% OFF*!\n\nContact: +919997210876" }
-];
-
 const PRE_ADDED_REJECTION_REASONS = [
   "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
   "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
@@ -214,7 +210,6 @@ const PRE_ADDED_REJECTION_REASONS = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-// 📁 Folder Directory Cards Definition
 const ADMIN_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
@@ -252,11 +247,9 @@ export default function AdminApp() {
   const [savingSection, setSavingSection] = useState('');
   const [actionStatus, setActionStatus] = useState('');
 
-  // Rejection Modal State
   const [rejectModalData, setRejectModalData] = useState(null);
   const [rejectionReasonText, setRejectionReasonText] = useState(PRE_ADDED_REJECTION_REASONS[0]);
 
-  // Calendar State
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
@@ -265,8 +258,28 @@ export default function AdminApp() {
 
   useEffect(() => {
     async function load() {
-      const data = await fetchLiveConfig(DEFAULT_CONFIG);
-      setDraft(data);
+      try {
+        const data = await fetchLiveConfig(DEFAULT_CONFIG);
+        if (data) {
+          setDraft(prev => ({
+            ...DEFAULT_CONFIG,
+            ...data,
+            kitText: {
+              international: { ...DEFAULT_CONFIG.kitText.international, ...(data.kitText?.international || {}) },
+              drugstore: { ...DEFAULT_CONFIG.kitText.drugstore, ...(data.kitText?.drugstore || {}) }
+            },
+            kitImages: {
+              international: { ...DEFAULT_CONFIG.kitImages.international, ...(data.kitImages?.international || {}) },
+              drugstore: { ...DEFAULT_CONFIG.kitImages.drugstore, ...(data.kitImages?.drugstore || {}) }
+            },
+            theme: { ...DEFAULT_CONFIG.theme, ...(data.theme || {}) },
+            toggles: { ...DEFAULT_CONFIG.toggles, ...(data.toggles || {}) },
+            floatingBanner: { ...DEFAULT_CONFIG.floatingBanner, ...(data.floatingBanner || {}) }
+          }));
+        }
+      } catch (err) {
+        console.error("Config load error:", err);
+      }
     }
     load();
   }, []);
@@ -300,7 +313,6 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  // 💾 Per-Card Specific Save Engine
   const handleSaveSpecificCard = async (sectionName) => {
     setSavingSection(sectionName);
     setActionStatus('');
@@ -383,7 +395,6 @@ export default function AdminApp() {
     }
   };
 
-  // 📄 Minimalist Status-Aware Slip Generator
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -468,7 +479,6 @@ export default function AdminApp() {
       startY += 64;
     });
 
-    // Extra Guests Breakdown
     if (b.extraGuestsList && b.extraGuestsList.length > 0) {
       startY += 10;
       ctx.fillStyle = '#fdf4ff';
@@ -505,7 +515,6 @@ export default function AdminApp() {
       });
     }
 
-    // Applied Promo
     if (b.appliedCoupon && b.appliedCoupon !== 'None') {
       startY += 6;
       ctx.fillStyle = '#ecfdf5';
@@ -522,7 +531,6 @@ export default function AdminApp() {
       startY += 58;
     }
 
-    // Total Amount Box
     startY += 10;
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(80, startY, 920, 140);
@@ -539,7 +547,6 @@ export default function AdminApp() {
     ctx.font = 'bold 56px serif';
     ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
 
-    // Dynamic Remarks Box if Rejected
     if (isRejected) {
       startY += 160;
       ctx.fillStyle = '#fff1f2';
@@ -559,7 +566,6 @@ export default function AdminApp() {
       ctx.fillText(note.substring(0, 95), 540, startY + 75);
     }
 
-    // Minimal Signature Footer
     ctx.textAlign = 'center';
     ctx.fillStyle = '#64748b';
     ctx.font = '17px sans-serif';
@@ -647,6 +653,26 @@ export default function AdminApp() {
     }
   };
 
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  const getDayBookingStatus = (day) => {
+    const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const matches = bookingsList.filter(b => b.eventDate === formatted);
+    if (matches.length === 0) return { hasBookings: false, list: [] };
+    const isConfirmed = matches.some(b => b.status === 'confirmed');
+    return {
+      hasBookings: true,
+      isConfirmed,
+      count: matches.length,
+      list: matches,
+      dateStr: formatted
+    };
+  };
+
   const activeColorThemeKey = draft.theme?.colorTheme || 'liquid_glass';
   const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.liquid_glass;
 
@@ -661,7 +687,6 @@ export default function AdminApp() {
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-24 transition-colors duration-300 relative overflow-x-hidden`}>
       
-      {/* Ambient Liquid Glow Orbs */}
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
@@ -983,7 +1008,7 @@ export default function AdminApp() {
                   {monthNames[month]} {year}
                 </span>
                 <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
-                  <ChevronRightIcon className="w-4 h-4 text-cyan-400" />
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
                 </button>
               </div>
             </div>
@@ -1960,7 +1985,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: THEMES & FONTS */}
+        {/* TAB: THEMES */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts (Synced)</h3>
@@ -1970,8 +1995,8 @@ export default function AdminApp() {
                 <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-2.5 rounded-xl text-xs font-bold text-cyan-400 border ${adminInputBg}`}>
                   <option value="liquid_glass">💎 Liquid Glass iOS</option>
                   <option value="one_ui_9">✨ Samsung One UI 9</option>
-                  <option value="nordic_pearl">❄️ Nordic Pearl Luxury</option>
-                  <option value="sunset_rose">🌅 Sunset Rose Gold</option>
+                  <option value="gold_rose">👑 Royal Gold Rose</option>
+                  <option value="champagne">🥂 Champagne Gold</option>
                   <option value="emerald">💚 Emerald Luxe</option>
                   <option value="violet">🔮 Midnight Orchid Violet</option>
                   <option value="google_minimal">🔵 Google Minimal</option>
@@ -2021,7 +2046,6 @@ export default function AdminApp() {
               <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo & manage Instagram handles.</p>
             </div>
 
-            {/* Custom Studio Logo Upload Section */}
             <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
                 <Crown className="w-4 h-4" /> Official Studio Brand Logo
