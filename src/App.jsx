@@ -5,7 +5,8 @@ import {
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
   Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
   SlidersHorizontal, CheckCircle2, XCircle, Clock, Gift, AlertCircle, Calendar,
-  Download, FileCheck, Hash, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon, Wrench
+  Download, FileCheck, Hash, AlertTriangle, ChevronLeft, ChevronRight as ChevronRightIcon,
+  Wrench, X, MessageSquare, RotateCcw, Ban
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -26,7 +27,6 @@ const DEFAULT_CONFIG = {
     defaultMode: "dark"
   },
 
-  // 🛑 Maintenance / App Down Mode Toggle
   isAppDown: false,
 
   toggles: {
@@ -149,6 +149,15 @@ const DEFAULT_TEMPLATES = [
   { id: 2, title: "Weekend Party Glam Flash Offer", text: "💄 *Flash Weekend Glam Offer!* 💄\n\nBook Super HD Party Makeup for 2 or more family members and get 1 Party Look at *50% OFF*!\n\nContact: +919997210876" }
 ];
 
+const PRE_ADDED_REJECTION_REASONS = [
+  "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
+  "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
+  "Due to prior studio commitments in another city/location, we cannot take further appointments for this date.",
+  "Your requested time slot is unavailable. Please visit our app and choose an alternative available date.",
+  "We are currently experiencing peak seasonal bookings and this date has reached full capacity. We apologize for the inconvenience.",
+  "Thank you for your interest! Unfortunately, we are not operational at the requested venue location on this date."
+];
+
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
@@ -177,6 +186,8 @@ export default function AdminApp() {
   const [pinInput, setPinInput] = useState('');
   const [activeTab, setActiveTab] = useState('bookings');
   const [editingKitTab, setEditingKitTab] = useState('international');
+  
+  // 🌟 Global Single Master Draft State (Preserves all tabs changes in memory)
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
@@ -186,6 +197,10 @@ export default function AdminApp() {
   const [sendingPromo, setSendingPromo] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [actionStatus, setActionStatus] = useState('');
+
+  // 🛑 Rejection Confirmation Modal State
+  const [rejectModalData, setRejectModalData] = useState(null);
+  const [rejectionReasonText, setRejectionReasonText] = useState(PRE_ADDED_REJECTION_REASONS[0]);
 
   // Calendar Navigation State
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -231,14 +246,15 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  const handleSave = async (e) => {
+  // 💾 Global Single Save Function (Syncs all tabs simultaneously)
+  const handleGlobalSaveAll = async (e) => {
     if (e) e.preventDefault();
     setIsSaving(true);
     setActionStatus('');
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus('🎉 All schedule updates, maintenance mode, media files & settings synced live!');
+      setActionStatus('🎉 All settings across all tabs have been successfully synced live to Customer App!');
     } catch (err) {
       setActionStatus('❌ Error saving: ' + err.message);
     } finally {
@@ -246,7 +262,6 @@ export default function AdminApp() {
     }
   };
 
-  // WhatsApp Slip Dispatch (Studio & WhatsApp label removed, Seal verified)
   const handleAcceptBookingWhatsApp = async (b) => {
     setActionStatus(`Dispatching Final Confirmation Slip to ${b.clientName}...`);
     try {
@@ -278,16 +293,45 @@ export default function AdminApp() {
     }
   };
 
-  const handleManualAcceptBooking = async (b) => {
+  const handleManualStatusChange = async (bookingId, newStatus) => {
     try {
-      await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
-      setActionStatus(`✅ Booking ${b.bookingNumber || b.clientName} marked as CONFIRMED manually!`);
+      await updateDoc(doc(db, "bookings", bookingId), { status: newStatus });
+      setActionStatus(`✅ Booking marked as ${newStatus.toUpperCase()} successfully!`);
     } catch (err) {
-      alert("Error accepting manually: " + err.message);
+      alert("Error updating status: " + err.message);
     }
   };
 
-  // Generate & Download Verified Confirmed Slip (No Studio / WhatsApp Labels, Total Amount added)
+  // 🛑 Execute Rejection with Comment & Optional WhatsApp Alert
+  const handleConfirmRejection = async () => {
+    if (!rejectModalData) return;
+    try {
+      await updateDoc(doc(db, "bookings", rejectModalData.id), {
+        status: "rejected",
+        rejectionReason: rejectionReasonText
+      });
+
+      // Send polite rejection notice via Baileys if online
+      const rejectMsg = 
+        `Dear *${rejectModalData.clientName}*,\n\n` +
+        `Thank you for your booking request (#${rejectModalData.bookingNumber || 'HF-BOOKING'}) for *${rejectModalData.eventDate}* with *HUSNA FAROOQUI*.\n\n` +
+        `*Update on your request:* We are unable to accept this booking.\n` +
+        `*Note:* ${rejectionReasonText}\n\n` +
+        `We truly appreciate your interest and hope to serve you on future dates!`;
+
+      fetch(`${BAILEYS_URL}/api/send-message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: rejectModalData.clientPhone, message: rejectMsg })
+      }).catch(() => {});
+
+      setActionStatus(`❌ Booking ${rejectModalData.bookingNumber || rejectModalData.clientName} marked as REJECTED.`);
+      setRejectModalData(null);
+    } catch (err) {
+      alert("Error rejecting booking: " + err.message);
+    }
+  };
+
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -340,7 +384,7 @@ export default function AdminApp() {
       { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
       { label: 'VANITY KIT', val: b.kitType || 'Luxury Vanity' },
       { label: 'MAIN PACKAGE', val: b.packageName || 'Bridal Makeup' },
-      { label: 'EXTRA GUESTS', val: `${b.extraGuestsCount || 0} Person(s) (+₹${b.extraGuestsCost || 0})` },
+      { label: 'EXTRA GUESTS', val: `${b.extraGuestsCount || 0} Custom Guest(s) (+₹${b.extraGuestsCost || 0})` },
       { label: 'VENUE LOCATION', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
       { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' },
       { label: 'APPLIED PROMO', val: b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0} OFF)` : 'No Promo' }
@@ -357,7 +401,7 @@ export default function AdminApp() {
       ctx.fillText(row.label, 100, startY + 8);
 
       ctx.fillStyle = idx === 0 ? '#065f46' : '#0f172a';
-      ctx.font = idx === 0 ? 'bold 24px monospace' : 'bold 22px sans-serif';
+      ctx.font = idx === 0 ? 'bold 25px monospace' : 'bold 23px sans-serif';
 
       let displayVal = row.val;
       while (ctx.measureText(displayVal).width > 580 && displayVal.length > 4) {
@@ -367,7 +411,6 @@ export default function AdminApp() {
       startY += 76;
     });
 
-    // Total Amount Box
     ctx.fillStyle = '#fefce8';
     ctx.fillRect(80, 1100, 920, 175);
     ctx.strokeStyle = '#b48a3c';
@@ -377,13 +420,12 @@ export default function AdminApp() {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#854d0e';
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('TOTAL CONFIRMED AMOUNT', 540, 1150);
+    ctx.fillText('FINAL CONFIRMED AMOUNT', 540, 1150);
 
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 64px serif';
     ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, 1225);
 
-    // Official Verification Seal
     ctx.fillStyle = '#f8fafc';
     ctx.fillRect(80, 1310, 920, 130);
     ctx.strokeStyle = 'rgba(180, 138, 60, 0.4)';
@@ -427,7 +469,7 @@ export default function AdminApp() {
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} (${(file.size / 1024 / 1024).toFixed(1)}MB). Click 'Save All Changes' to publish.`);
+        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} (${(file.size / 1024 / 1024).toFixed(1)}MB). Remember to click Save All Settings.`);
       };
       reader.readAsDataURL(file);
     }
@@ -452,7 +494,7 @@ export default function AdminApp() {
             }
           }
         });
-        setActionStatus(`Loaded image for ${pkgKey}. Click 'Save All Changes' to publish.`);
+        setActionStatus(`Loaded image for ${pkgKey}. Remember to click Save All Settings.`);
       };
       reader.readAsDataURL(file);
     }
@@ -475,15 +517,12 @@ export default function AdminApp() {
       const extra = customNumbersInput.split(',').map(n => n.trim()).filter(Boolean);
       numbers = [...new Set([...numbers, ...extra])];
     }
-
     if (numbers.length === 0) {
       alert("No client phone numbers found to broadcast.");
       return;
     }
-
     setSendingPromo(true);
     setActionStatus(`Starting broadcast to ${numbers.length} clients...`);
-
     try {
       await fetch(`${BAILEYS_URL}/api/broadcast`, {
         method: 'POST',
@@ -498,7 +537,6 @@ export default function AdminApp() {
     }
   };
 
-  // Calendar Calculation Helpers
   const year = calendarDate.getFullYear();
   const month = calendarDate.getMonth();
   const firstDayIndex = new Date(year, month, 1).getDay();
@@ -509,7 +547,6 @@ export default function AdminApp() {
     const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const matches = bookingsList.filter(b => b.eventDate === formatted);
     if (matches.length === 0) return { hasBookings: false, list: [] };
-
     const isConfirmed = matches.some(b => b.status === 'confirmed');
     return {
       hasBookings: true,
@@ -521,41 +558,109 @@ export default function AdminApp() {
   };
 
   const adminBgClass = isAdminDarkMode ? "bg-[#030712] text-[#f8fafc]" : "bg-[#f8fafc] text-[#0f172a]";
-  const adminCardBg = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border border-white/10 shadow-2xl text-[#f8fafc]" : "bg-white border border-slate-200 shadow-lg text-[#0f172a]";
+  const adminCardBg = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border border-white/[0.12] shadow-2xl text-[#f8fafc]" : "bg-white border border-slate-200 shadow-xl text-[#0f172a]";
   const adminInnerCard = isAdminDarkMode ? "bg-black/40 border border-white/10 text-[#f8fafc]" : "bg-slate-50 border border-slate-200 text-[#0f172a]";
-  const adminInputBg = isAdminDarkMode ? "bg-black/40 border border-white/20 text-white placeholder-slate-400" : "bg-white border border-slate-300 text-slate-900 placeholder-slate-500";
+  const adminInputBg = isAdminDarkMode ? "bg-black/40 border border-white/20 text-white placeholder-slate-400 focus:border-cyan-400" : "bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:border-blue-500";
   const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
 
   if (!isAuthenticated) {
     return (
-      <div className={`min-h-screen ${adminBgClass} flex items-center justify-center p-4`}>
+      <div className={`min-h-screen ${adminBgClass} flex items-center justify-center p-4 relative overflow-hidden`}>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
         <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-3xl border text-center space-y-4 shadow-2xl ${adminCardBg}`}>
-          <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto border border-cyan-500/20">
-            <Lock className="w-7 h-7 animate-bounce" />
+          <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg">
+            <Lock className="w-8 h-8 animate-bounce" />
           </div>
           <h2 className="text-xl font-bold">Admin Portal</h2>
           <p className={`text-xs ${adminMuted}`}>Master Studio Management Console</p>
           <input type="password" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
-          <button type="submit" className="w-full py-3 bg-cyan-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95">Unlock Console</button>
+          <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Unlock Console</button>
         </form>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300`}>
+    <div className={`min-h-screen ${adminBgClass} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden`}>
       
+      {/* Ambient Liquid Glow Orbs */}
+      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
+
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+      {/* 🛑 Rejection Confirmation Modal with Professional Quick Reasons */}
+      {rejectModalData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className={`max-w-lg w-full rounded-3xl p-6 border shadow-2xl space-y-4 ${isAdminDarkMode ? 'bg-[#0f1424] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <Ban className="w-5 h-5 text-rose-400" />
+                <h3 className="font-bold text-base">Reject Booking: {rejectModalData.bookingNumber || rejectModalData.clientName}</h3>
+              </div>
+              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+
+            <p className={`text-xs ${adminMuted}`}>
+              Are you sure you want to decline this booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>?
+            </p>
+
+            <div>
+              <label className="block text-[11px] font-bold text-slate-300 mb-1">Select or Type Reason for Client:</label>
+              <textarea
+                rows={3}
+                value={rejectionReasonText}
+                onChange={e => setRejectionReasonText(e.target.value)}
+                className={`w-full p-3 rounded-2xl text-xs border ${adminInputBg}`}
+              />
+            </div>
+
+            {/* Quick 6 Pre-Added Reasons */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Response Templates:</span>
+              <div className="grid grid-cols-1 gap-1 max-h-36 overflow-y-auto pr-1">
+                {PRE_ADDED_REJECTION_REASONS.map((reason, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setRejectionReasonText(reason)}
+                    className={`text-left p-2 rounded-xl text-[11px] border transition ${rejectionReasonText === reason ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'}`}
+                  >
+                    • {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setRejectModalData(null)}
+                className="px-4 py-2 rounded-xl bg-white/10 text-xs font-bold text-slate-300 hover:bg-white/20"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRejection}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg active:scale-95"
+              >
+                Confirm Rejection & Notify
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 💎 Header */}
       <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
+          <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 shadow-md">
             <Crown className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-sm">{draft.studioName || "HUSNA FAROOQUI"} Console</h1>
-            <p className={`text-[11px] ${adminMuted}`}>Live Firebase Synced Admin Console</p>
+            <h1 className="font-bold text-sm sm:text-base">{draft.studioName || "HUSNA FAROOQUI"} Console</h1>
+            <p className={`text-[11px] ${adminMuted}`}>Master Studio Control Hub</p>
           </div>
         </div>
 
@@ -569,7 +674,7 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
-        {/* 🚀 Horizontal Scrollable Tabs Bar */}
+        {/* 🚀 Glass Scrollable Tabs Bar */}
         <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200/40 dark:border-white/10 scrollbar-thin">
           {ADMIN_TABS.map(tab => {
             const isActive = activeTab === tab.id;
@@ -595,13 +700,13 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 1: LIVE BOOKINGS */}
+        {/* TAB 1: LIVE BOOKINGS (ACCEPT, PENDING, REJECT + CONFLICT ALERT) */}
         {activeTab === 'bookings' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400">Incoming Customer Bookings Queue</h3>
-                <p className={`text-xs ${adminMuted}`}>Review requests, check date conflicts, dispatch WhatsApp slips or accept manually.</p>
+                <p className={`text-xs ${adminMuted}`}>Accept, hold as pending, or reject bookings with polite templates.</p>
               </div>
               <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
                 {bookingsList.length} Total Bookings
@@ -626,8 +731,12 @@ export default function AdminApp() {
                             <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
                               {b.bookingNumber || '#HF-PENDING'}
                             </span>
-                            <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'}`}>
-                              {b.status === 'confirmed' ? '✅ Confirmed' : '⏳ Pending Review'}
+                            <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                              b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 
+                              b.status === 'rejected' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 
+                              'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                            }`}>
+                              {b.status === 'confirmed' ? '✅ Confirmed' : b.status === 'rejected' ? '❌ Rejected' : '⏳ Pending Review'}
                             </span>
                           </div>
                           
@@ -653,12 +762,13 @@ export default function AdminApp() {
                         <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-amber-400 font-mono">{b.eventDate}</strong></div>
                         <div className="flex justify-between"><span className={adminMuted}>Package:</span><span>{b.packageName}</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span>{b.kitType}</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span>{b.extraGuestsCount || 0} Person(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span>{b.extraGuestsCount || 0} Custom Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span>{b.zoneName}</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
                         <div className="flex justify-between pt-1 border-t border-white/5"><span className="font-bold">Total Amount:</span><strong className="text-cyan-400 font-mono text-sm">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
                       </div>
 
+                      {/* Complete Action Buttons: WhatsApp Slip, Accept, Pending, Reject, Slip */}
                       <div className="space-y-2 pt-1">
                         <button
                           type="button"
@@ -669,25 +779,46 @@ export default function AdminApp() {
                           <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
                         </button>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                           <button
                             type="button"
-                            onClick={() => handleManualAcceptBooking(b)}
+                            onClick={() => handleManualStatusChange(b.id, 'confirmed')}
                             className="py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
                           >
                             <Check className="w-3.5 h-3.5" />
-                            <span>Manual Accept</span>
+                            <span>Accept</span>
                           </button>
 
                           <button
                             type="button"
-                            onClick={() => handleGenerateSlipJpgOnDemand(b)}
+                            onClick={() => handleManualStatusChange(b.id, 'pending')}
                             className="py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
                           >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Generate Slip (.JPG)</span>
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Pending</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRejectModalData(b);
+                              setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
+                            }}
+                            className="py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
+                          >
+                            <Ban className="w-3.5 h-3.5" />
+                            <span>Reject</span>
                           </button>
                         </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateSlipJpgOnDemand(b)}
+                          className="w-full py-2 bg-white/10 hover:bg-white/15 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Generate & Download Confirmed Slip (.JPG)</span>
+                        </button>
                       </div>
 
                     </div>
@@ -698,7 +829,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: INTERACTIVE MONTHLY BOOKING CALENDAR (COLOR-CODED VISUAL SCHEDULE) */}
+        {/* TAB 2: INTERACTIVE MONTHLY CALENDAR */}
         {activeTab === 'calendar_view' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -711,36 +842,25 @@ export default function AdminApp() {
                 </p>
               </div>
 
-              {/* Month Navigation Controls */}
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCalendarDate(new Date(year, month - 1, 1))}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition"
-                >
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
                   <ChevronLeft className="w-4 h-4 text-cyan-400" />
                 </button>
                 <span className="font-bold text-xs sm:text-sm font-mono min-w-[130px] text-center text-white">
                   {monthNames[month]} {year}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setCalendarDate(new Date(year, month + 1, 1))}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition"
-                >
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
                   <ChevronRightIcon className="w-4 h-4 text-cyan-400" />
                 </button>
               </div>
             </div>
 
-            {/* Calendar Legend */}
             <div className="flex items-center gap-4 text-xs">
               <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" /><span className={adminMuted}>Confirmed Booking</span></div>
               <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm" /><span className={adminMuted}>Pending Inquiry</span></div>
               <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-600" /><span className={adminMuted}>Free Slot</span></div>
             </div>
 
-            {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
                 <span key={d} className="text-[11px] font-bold text-slate-400 py-1 uppercase">{d}</span>
@@ -779,7 +899,6 @@ export default function AdminApp() {
               })}
             </div>
 
-            {/* Selected Date Detail Drawer */}
             {selectedCalendarDay && (
               <div className={`p-4 rounded-2xl border space-y-3 animate-fade-in ${adminInnerCard}`}>
                 <div className="flex justify-between items-center">
@@ -809,7 +928,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: APP DOWN / MAINTENANCE MODE MASTER TOGGLE */}
+        {/* TAB 3: APP DOWN / MAINTENANCE */}
         {activeTab === 'app_maintenance' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
@@ -817,7 +936,7 @@ export default function AdminApp() {
                 <Wrench className="w-4 h-4" /> App Down & Maintenance Mode Controller
               </h3>
               <p className={`text-xs ${adminMuted} mt-0.5`}>
-                Turn on to politely lock customer app with an elegant maintenance notice during updates or holidays.
+                Turn on to politely lock customer app with an elegant maintenance notice during updates.
               </p>
             </div>
 
@@ -830,7 +949,7 @@ export default function AdminApp() {
                 <p className={`text-xs ${adminMuted} max-w-lg leading-relaxed`}>
                   {draft.isAppDown 
                     ? "🔴 ON: Customer App is locked. Visitors see a polite glassmorphism maintenance banner stating system upgrades are in progress."
-                    : "🟢 OFF: Customer App is fully active, accepting estimates, lookbook browsing and live bookings."}
+                    : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
                 </p>
               </div>
 
@@ -1076,7 +1195,7 @@ export default function AdminApp() {
                       </div>
 
                       <div>
-                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>⏱️ Expiry Date & Time (Countdown Timer)</span>
+                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>⏱️ Expiry Date & Time</span>
                         <input
                           type="datetime-local"
                           value={c.expiryDate || ''}
@@ -1114,7 +1233,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 6: TRANSFORMATIONS & 20MB SAFE MEDIA ENGINE */}
+        {/* TAB 6: TRANSFORMATIONS (20MB) */}
         {activeTab === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1678,18 +1797,29 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* Master Save Button */}
-        <button
-          type="button"
-          disabled={isSaving}
-          onClick={handleSave}
-          className="w-full py-4 bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-400 text-neutral-950 font-bold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
-        >
-          <Save className="w-4 h-4" />
-          <span>{isSaving ? 'Syncing...' : 'Save All Changes Live to Customer App'}</span>
-        </button>
-
       </div>
+
+      {/* 🚀 Floating Master Single Save Bar (Saves all tabs at once) */}
+      <div className="fixed bottom-4 left-0 right-0 z-40 px-4 sm:px-8 max-w-6xl mx-auto pointer-events-none">
+        <div className="p-2 sm:p-3 rounded-3xl bg-[#080d1e]/90 backdrop-blur-3xl border border-white/20 shadow-2xl flex items-center justify-between pointer-events-auto gap-3">
+          <div className="hidden sm:flex items-center gap-2 pl-3">
+            <Sparkles className="w-4 h-4 text-cyan-400 animate-spin" style={{ animationDuration: '4s' }} />
+            <span className="text-xs font-bold text-slate-200">Global Admin Engine</span>
+            <span className="text-[11px] text-slate-400">• All tabs edits are preserved</span>
+          </div>
+
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={handleGlobalSaveAll}
+            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 hover:from-cyan-300 hover:to-indigo-300 text-neutral-950 font-bold text-xs rounded-2xl shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            <span>{isSaving ? 'Syncing Everything...' : 'Save All Settings Live'}</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 }
