@@ -4,7 +4,7 @@ import {
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
   Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
-  SlidersHorizontal, CheckCircle2, XCircle
+  SlidersHorizontal, CheckCircle2, XCircle, Clock
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -101,11 +101,12 @@ const DEFAULT_CONFIG = {
     "📍 Serving South Delhi, Noida, Gurugram, Central Delhi & Amroha • Pre-Bookings Open"
   ],
 
+  // 🏷️ Promo Coupons with Expiry Timers
   validCoupons: {
-    "BRIDE2026": { type: "percent", value: 10, label: "10% Seasonal Wedding Discount", maxUses: 1, enabled: true },
-    "HUSNA15": { type: "percent", value: 15, label: "15% Special Bridal Promo", maxUses: 1, enabled: true },
-    "ROYAL1000": { type: "flat", value: 1000, label: "₹1,000 Flat Off on Packages", maxUses: 5, enabled: true },
-    "WELCOME500": { type: "flat", value: 500, label: "₹500 Flat First-Booking Offer", maxUses: "unlimited", enabled: true }
+    "BRIDE2026": { type: "percent", value: 10, label: "10% Seasonal Wedding Discount", maxUses: 1, enabled: true, expiryDate: "2026-12-31T23:59" },
+    "HUSNA15": { type: "percent", value: 15, label: "15% Special Bridal Promo", maxUses: 1, enabled: true, expiryDate: "2026-11-15T23:59" },
+    "ROYAL1000": { type: "flat", value: 1000, label: "₹1,000 Flat Off on Packages", maxUses: 5, enabled: true, expiryDate: "2026-10-31T23:59" },
+    "WELCOME500": { type: "flat", value: 500, label: "₹500 Flat First-Booking Offer", maxUses: "unlimited", enabled: true, expiryDate: "" }
   },
 
   pricingByKit: {
@@ -149,20 +150,21 @@ const DEFAULT_TEMPLATES = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-const TAB_OPTIONS = [
-  { id: 'bookings', label: '📋 Live Bookings & Queue' },
-  { id: 'toggles_master', label: '🎛️ Master Feature Toggles' },
-  { id: 'packages_text', label: '✏️ Package Titles (Luxury vs HD)' },
-  { id: 'kit_images', label: '🖼️ Package Images (Luxury vs HD)' },
-  { id: 'coupons', label: '🏷️ Promo Coupons & Code Toggles' },
-  { id: 'traffic_logs', label: '📊 Visitor Traffic & Instagram Logs' },
-  { id: 'gallery', label: '📸 Transformations, Videos & GIFs' },
-  { id: 'promotions', label: '📢 WhatsApp Campaign Studio' },
-  { id: 'announcements', label: '📢 Top Announcements Ticker' },
-  { id: 'convenience', label: '🚗 Travel Fees & Zones' },
-  { id: 'prices', label: '💄 Package Rates Manager' },
-  { id: 'theme', label: '🎨 Themes & Typography' },
-  { id: 'profile', label: '📱 Studio Profile & Contact' }
+// 📋 Admin Scrollable Tab Definition
+const ADMIN_TABS = [
+  { id: 'bookings', label: '📋 Live Bookings' },
+  { id: 'coupons', label: '🏷️ Promo Coupons & Timers' },
+  { id: 'toggles_master', label: '🎛️ Master Toggles' },
+  { id: 'packages_text', label: '✏️ Package Titles' },
+  { id: 'kit_images', label: '🖼️ Package Images' },
+  { id: 'traffic_logs', label: '📊 Visitor Logs' },
+  { id: 'gallery', label: '📸 Videos & GIFs' },
+  { id: 'promotions', label: '📢 WhatsApp Studio' },
+  { id: 'announcements', label: '📢 Announcements' },
+  { id: 'convenience', label: '🚗 Travel Fees' },
+  { id: 'prices', label: '💄 Package Rates' },
+  { id: 'theme', label: '🎨 Themes & Fonts' },
+  { id: 'profile', label: '📱 Profile' }
 ];
 
 export default function AdminApp() {
@@ -227,7 +229,7 @@ export default function AdminApp() {
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus('🎉 All package texts, toggles, images, coupons & settings synced live!');
+      setActionStatus('🎉 All promo timers, package texts, toggles & settings synced live!');
     } catch (err) {
       setActionStatus('❌ Error saving: ' + err.message);
     } finally {
@@ -377,7 +379,7 @@ export default function AdminApp() {
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300`}>
       
-      {/* 💎 Header with Quick Dropdown */}
+      {/* 💎 Header */}
       <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
@@ -399,25 +401,24 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
-        {/* 🚀 Navigation Dropdown Selector */}
-        <div className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md ${adminCardBg}`}>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <ListFilter className="w-4 h-4 text-cyan-400 shrink-0" />
-            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Select Section to Edit:</span>
-          </div>
-
-          <div className="relative w-full sm:w-80">
-            <select
-              value={activeTab}
-              onChange={(e) => setActiveTab(e.target.value)}
-              className={`w-full p-2.5 px-4 pr-10 rounded-xl text-xs font-bold border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/40 ${isAdminDarkMode ? 'bg-black/60 border-cyan-400/40 text-cyan-300' : 'bg-slate-100 border-slate-300 text-slate-900'}`}
-            >
-              {TAB_OPTIONS.map(opt => (
-                <option key={opt.id} value={opt.id}>{opt.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-cyan-400 pointer-events-none" />
-          </div>
+        {/* 🚀 Sleek Horizontal Scrollable Tabs Bar */}
+        <div className="flex gap-2 overflow-x-auto pb-2 border-b border-slate-200/40 dark:border-white/10 scrollbar-thin">
+          {ADMIN_TABS.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all duration-200 active:scale-95 flex items-center gap-1.5 ${
+                  isActive 
+                    ? 'bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 shadow-lg shadow-cyan-500/25 border border-white/30' 
+                    : `${adminMuted} hover:text-cyan-400 bg-white/[0.04] border border-white/5`
+                }`}
+              >
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {actionStatus && (
@@ -466,7 +467,156 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: MASTER FEATURE & SECTION TOGGLES */}
+        {/* TAB 2: PROMO COUPONS & EXPIRY TIMERS (EDITABLE DATES) */}
+        {activeTab === 'coupons' && (
+          <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Tag className="w-4 h-4" /> Promo Coupons Manager & Expiry Timers
+                </h3>
+                <p className={`text-xs ${adminMuted}`}>Set coupon discounts, redemption limits, active status and expiry timer dates.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const code = prompt("Enter Coupon Code:");
+                  if (code) {
+                    const clean = code.toUpperCase().trim();
+                    setDraft({
+                      ...draft,
+                      validCoupons: {
+                        ...draft.validCoupons,
+                        [clean]: {
+                          type: "percent",
+                          value: 10,
+                          label: "Special Seasonal Promo",
+                          maxUses: 1,
+                          enabled: true,
+                          expiryDate: "2026-12-31T23:59"
+                        }
+                      }
+                    });
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Coupon
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
+                const isCodeActive = c.enabled !== false;
+                return (
+                  <div key={code} className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-cyan-400 font-bold text-base">{code}</span>
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                          {isCodeActive ? 'ACTIVE' : 'DISABLED'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDraft({
+                            ...draft,
+                            validCoupons: {
+                              ...draft.validCoupons,
+                              [code]: { ...c, enabled: !isCodeActive }
+                            }
+                          })}
+                          className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
+                        >
+                          {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                          <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
+                        </button>
+
+                        <button onClick={() => {
+                          const copy = { ...draft.validCoupons };
+                          delete copy[code];
+                          setDraft({ ...draft, validCoupons: copy });
+                        }} className="text-rose-400 p-2 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>Discount Type</span>
+                        <select
+                          value={c.type || 'percent'}
+                          onChange={e => setDraft({
+                            ...draft,
+                            validCoupons: {
+                              ...draft.validCoupons,
+                              [code]: { ...c, type: e.target.value }
+                            }
+                          })}
+                          className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
+                        >
+                          <option value="percent">% Percent Off</option>
+                          <option value="flat">₹ Flat Discount</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
+                        <input
+                          type="number"
+                          value={c.value || 0}
+                          onChange={e => setDraft({
+                            ...draft,
+                            validCoupons: {
+                              ...draft.validCoupons,
+                              [code]: { ...c, value: Number(e.target.value) }
+                            }
+                          })}
+                          className={`w-full p-2 rounded-xl font-mono text-cyan-400 text-xs font-bold border ${adminInputBg}`}
+                        />
+                      </div>
+
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>⏱️ Expiry Date & Time (Countdown Timer)</span>
+                        <input
+                          type="datetime-local"
+                          value={c.expiryDate || ''}
+                          onChange={e => setDraft({
+                            ...draft,
+                            validCoupons: {
+                              ...draft.validCoupons,
+                              [code]: { ...c, expiryDate: e.target.value }
+                            }
+                          })}
+                          className={`w-full p-2 rounded-xl text-xs font-mono text-amber-400 border ${adminInputBg}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Promo Display Description / Label</span>
+                      <input
+                        type="text"
+                        value={c.label || ''}
+                        onChange={e => setDraft({
+                          ...draft,
+                          validCoupons: {
+                            ...draft.validCoupons,
+                            [code]: { ...c, label: e.target.value }
+                          }
+                        })}
+                        className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: MASTER FEATURE & SECTION TOGGLES */}
         {activeTab === 'toggles_master' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div>
@@ -514,7 +664,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: PACKAGE TITLES & DESCRIPTIONS (WITH KIT SWITCHER: LUXURY VS HD) */}
+        {/* TAB 4: PACKAGE TITLES & TEXT EDITOR */}
         {activeTab === 'packages_text' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -525,7 +675,6 @@ export default function AdminApp() {
                 <p className={`text-xs ${adminMuted} mt-0.5`}>Customise package titles and descriptions separately for International Luxury vs Premium HD kits.</p>
               </div>
 
-              {/* Kit Switcher Pill in Admin */}
               <div className="inline-flex p-1 rounded-xl bg-black/50 border border-white/10 gap-1 self-start">
                 <button
                   type="button"
@@ -593,7 +742,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 4: PACKAGE IMAGES & SEPARATE KIT PHOTOS */}
+        {/* TAB 5: PACKAGE IMAGES & SEPARATE KIT PHOTOS */}
         {activeTab === 'kit_images' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
@@ -603,7 +752,6 @@ export default function AdminApp() {
               <p className={`text-xs ${adminMuted} mt-0.5`}>Upload any format photo or paste image URL for each package.</p>
             </div>
 
-            {/* International Kit Images */}
             <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Photos</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -632,7 +780,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* HD Drugstore Kit Images */}
             <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Photos</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -659,73 +806,6 @@ export default function AdminApp() {
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: PROMO COUPONS (WITH INDIVIDUAL ENABLE/DISABLE TOGGLE) */}
-        {activeTab === 'coupons' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-xs uppercase text-cyan-400">Promo Coupons & Individual Toggles</h3>
-                <p className={`text-xs ${adminMuted}`}>Enable, disable, or configure specific discount promo codes.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const code = prompt("Enter Coupon Code:");
-                  if (code) {
-                    const clean = code.toUpperCase().trim();
-                    setDraft({ ...draft, validCoupons: { ...draft.validCoupons, [clean]: { type: "percent", value: 10, label: "Special Offer", enabled: true } } });
-                  }
-                }}
-                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs"
-              >
-                + Add Coupon
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
-                const isCodeActive = c.enabled !== false;
-                return (
-                  <div key={code} className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${adminInnerCard}`}>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-cyan-400 font-bold text-sm">{code}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                          {isCodeActive ? 'ACTIVE' : 'DISABLED'}
-                        </span>
-                      </div>
-                      <p className={`text-xs ${adminMuted}`}>{c.type === 'percent' ? `${c.value}% OFF` : `₹${c.value} OFF`} • {c.label}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setDraft({
-                          ...draft,
-                          validCoupons: {
-                            ...draft.validCoupons,
-                            [code]: { ...c, enabled: !isCodeActive }
-                          }
-                        })}
-                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
-                      >
-                        {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                        <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
-                      </button>
-
-                      <button onClick={() => {
-                        const copy = { ...draft.validCoupons };
-                        delete copy[code];
-                        setDraft({ ...draft, validCoupons: copy });
-                      }} className="text-rose-400 p-2 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
         )}
