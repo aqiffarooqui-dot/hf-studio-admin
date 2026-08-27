@@ -15,6 +15,7 @@ const DEFAULT_CONFIG = {
   adminPin: "8760",
   studioName: "HUSNA FAROOQUI",
   artistTagline: "Celebrity & Bridal Makeup Artist",
+  studioLogo: "",
   profilePhotoType: "image",
   profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80",
   whatsappNumber: "919997210876",
@@ -213,7 +214,7 @@ const PRE_ADDED_REJECTION_REASONS = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-// 📁 Folder Grid Directory Cards Definition
+// 📁 Folder Directory Cards Definition
 const ADMIN_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
@@ -230,7 +231,7 @@ const ADMIN_FOLDERS = [
   { id: 'convenience', label: 'Travel Fees & Zones', icon: Car, desc: 'Edit venue travel charges per area' },
   { id: 'prices', label: 'Package Rates Manager', icon: Percent, desc: 'Adjust rates for Luxury vs HD kit looks' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, desc: 'Aesthetic skins, fonts & mode defaults' },
-  { id: 'profile', label: 'Studio Identity & Contact', icon: User, desc: 'Artist title, avatar & social handles' }
+  { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, artist title & contact' }
 ];
 
 export default function AdminApp() {
@@ -238,7 +239,6 @@ export default function AdminApp() {
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
   
-  // Navigation: null = Folder Grid Directory View | String = Inside specific Folder Card
   const [activeFolderId, setActiveFolderId] = useState(null);
   const [editingKitTab, setEditingKitTab] = useState('international');
   
@@ -300,7 +300,7 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
   };
 
-  // 💾 Per-Card Specific Save Engine (Saves individual section instantly)
+  // 💾 Per-Card Specific Save Engine
   const handleSaveSpecificCard = async (sectionName) => {
     setSavingSection(sectionName);
     setActionStatus('');
@@ -383,7 +383,7 @@ export default function AdminApp() {
     }
   };
 
-  // 📄 Dynamic Status-Aware Slip Generator (Accepted, Pending, Rejected + Rejection Note)
+  // 📄 Minimalist Status-Aware Slip Generator
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -397,7 +397,7 @@ export default function AdminApp() {
 
     const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
     bgGrad.addColorStop(0, '#ffffff');
-    bgGrad.addColorStop(1, '#f8fafc');
+    bgGrad.addColorStop(1, '#fafafa');
     ctx.fillStyle = bgGrad;
     ctx.fillRect(20, 20, 1040, 1680);
 
@@ -405,37 +405,33 @@ export default function AdminApp() {
     const isConfirmed = b.status === 'confirmed';
 
     ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#b48a3c');
-    ctx.lineWidth = 6;
-    ctx.strokeRect(36, 36, 1008, 1648);
-
-    ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(48, 48, 984, 1624);
+    ctx.lineWidth = 4;
+    ctx.strokeRect(40, 40, 1000, 1640);
 
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#996515';
-    ctx.font = 'bold 52px serif';
-    ctx.fillText('HUSNA FAROOQUI', 540, 120);
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 46px serif';
+    ctx.fillText((draft.studioName || 'HUSNA FAROOQUI').toUpperCase(), 540, 120);
 
-    ctx.fillStyle = '#be123c';
-    ctx.font = '600 24px sans-serif';
-    ctx.fillText('Celebrity & Bridal Makeup Artist', 540, 165);
+    ctx.fillStyle = '#b48a3c';
+    ctx.font = '600 20px sans-serif';
+    ctx.fillText('Your Beauty, Our Expertise', 540, 160);
 
-    ctx.strokeStyle = 'rgba(180, 138, 60, 0.4)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(140, 200);
-    ctx.lineTo(940, 200);
+    ctx.moveTo(180, 195);
+    ctx.lineTo(900, 195);
     ctx.stroke();
 
     ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
-    ctx.font = 'bold 28px sans-serif';
+    ctx.font = 'bold 24px sans-serif';
     ctx.fillText(
       isRejected 
-        ? '❌ BOOKING STATUS: DECLINED / REJECTED ❌' 
-        : (isConfirmed ? '✨ OFFICIAL CONFIRMED APPOINTMENT SLIP ✨' : '⏳ PENDING BOOKING REQUEST SLIP ⏳'), 
+        ? 'BOOKING STATUS: DECLINED / REJECTED' 
+        : (isConfirmed ? 'OFFICIAL CONFIRMED APPOINTMENT SLIP' : 'PENDING BOOKING REQUEST SLIP'), 
       540, 
-      250
+      240
     );
 
     const rows = [
@@ -443,83 +439,135 @@ export default function AdminApp() {
       { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
       { label: 'CONTACT NUMBER', val: b.clientPhone || 'Not Provided' },
       { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
-      { label: 'VANITY TIER', val: b.kitType || 'Luxury Vanity' },
-      { label: 'MAIN PACKAGE', val: b.packageName || 'Bridal Makeup' },
-      { label: 'EXTRA GUESTS', val: `${b.extraGuestsCount || 0} Custom Guest(s) (+₹${b.extraGuestsCost || 0})` },
-      { label: 'VENUE LOCATION', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
-      { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' },
-      { label: 'APPLIED PROMO', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0} OFF)` : 'No Promo' }
+      { label: 'MAIN LOOK TIER', val: b.kitType || 'Luxury Vanity' },
+      { label: 'MAIN LOOK PACKAGE', val: b.packageName || 'Bridal Makeup' },
+      { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
+      { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' }
     ];
 
-    let startY = 320;
+    let startY = 310;
     rows.forEach((row, idx) => {
       ctx.fillStyle = idx === 0 
-        ? (isRejected ? 'rgba(244, 63, 94, 0.12)' : (isConfirmed ? 'rgba(16, 185, 129, 0.15)' : 'rgba(6, 182, 212, 0.12)')) 
-        : (idx % 2 === 0 ? 'rgba(241, 245, 249, 0.8)' : '#ffffff');
-      ctx.fillRect(80, startY - 30, 920, 60);
+        ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : '#f0f9ff')) 
+        : (idx % 2 === 0 ? '#f8fafc' : '#ffffff');
+      ctx.fillRect(80, startY - 26, 920, 56);
 
       ctx.textAlign = 'left';
       ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#0284c7')) : '#64748b';
-      ctx.font = idx === 0 ? 'bold 22px monospace' : 'bold 21px sans-serif';
-      ctx.fillText(row.label, 100, startY + 8);
+      ctx.font = idx === 0 ? 'bold 19px monospace' : 'bold 18px sans-serif';
+      ctx.fillText(row.label, 100, startY + 9);
 
       ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : '#0369a1')) : '#0f172a';
-      ctx.font = idx === 0 ? 'bold 24px monospace' : 'bold 22px sans-serif';
+      ctx.font = idx === 0 ? 'bold 21px monospace' : 'bold 20px sans-serif';
 
       let displayVal = row.val;
-      while (ctx.measureText(displayVal).width > 580 && displayVal.length > 4) {
+      while (ctx.measureText(displayVal).width > 560 && displayVal.length > 4) {
         displayVal = displayVal.substring(0, displayVal.length - 4) + '...';
       }
-      ctx.fillText(displayVal, 390, startY + 8);
-      startY += 74;
+      ctx.fillText(displayVal, 380, startY + 9);
+      startY += 64;
     });
 
-    // Total Amount Box
-    ctx.fillStyle = '#fefce8';
-    ctx.fillRect(80, 1090, 920, 160);
-    ctx.strokeStyle = '#b48a3c';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(80, 1090, 920, 160);
+    // Extra Guests Breakdown
+    if (b.extraGuestsList && b.extraGuestsList.length > 0) {
+      startY += 10;
+      ctx.fillStyle = '#fdf4ff';
+      ctx.fillRect(80, startY - 26, 920, 48);
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#854d0e';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('TOTAL AMOUNT', 540, 1135);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#9333ea';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 100, startY + 6);
 
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 64px serif';
-    ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, 1210);
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText(`+₹${(b.extraGuestsCost || 0).toLocaleString('en-IN')}`, 980, startY + 6);
+      startY += 54;
 
-    // Dynamic Status / Rejection Note Box
-    ctx.fillStyle = isRejected ? '#ffe4e6' : '#f8fafc';
-    ctx.fillRect(80, 1280, 920, 160);
-    ctx.strokeStyle = isRejected ? '#f43f5e' : 'rgba(180, 138, 60, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(80, 1280, 920, 160);
+      b.extraGuestsList.slice(0, 4).forEach((g, gIdx) => {
+        const raw = draft.pricingByKit[g.kit]?.[g.packageKey] || 2500;
+        const finalP = draft.guestDiscount?.enabled !== false ? Math.round(raw * (1 - (draft.guestDiscount?.discountPercent ?? 15) / 100)) : raw;
+        const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
+        const pkgName = draft.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
 
-    if (isRejected) {
-      ctx.fillStyle = '#be123c';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('REJECTION REASON / REMARKS:', 540, 1320);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(80, startY - 20, 920, 40);
 
-      ctx.fillStyle = '#475569';
-      ctx.font = 'italic 18px sans-serif';
-      let note = b.rejectionReason || "Slot unavailable for the requested date. Please contact studio.";
-      ctx.fillText(note.substring(0, 90), 540, 1365);
-      if (note.length > 90) ctx.fillText(note.substring(90, 180), 540, 1395);
-    } else {
-      ctx.fillStyle = isConfirmed ? '#047857' : '#0284c7';
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText(isConfirmed ? '✔ OFFICIAL DIGITAL VERIFICATION SEAL • MASTER ARTISTRY CONFIRMED' : '⏳ PENDING STUDIO VERIFICATION', 540, 1340);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#475569';
+        ctx.font = '16px sans-serif';
+        ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${pkgName}`, 120, startY + 6);
 
-      ctx.fillStyle = '#475569';
-      ctx.font = '20px sans-serif';
-      ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1390);
+        ctx.textAlign = 'right';
+        ctx.font = '17px monospace';
+        ctx.fillText(`₹${finalP.toLocaleString('en-IN')}`, 980, startY + 6);
+        startY += 44;
+      });
     }
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '16px sans-serif';
-    ctx.fillText(`Generated on ${new Date().toLocaleDateString()} • Verified Studio Record`, 540, 1490);
+    // Applied Promo
+    if (b.appliedCoupon && b.appliedCoupon !== 'None') {
+      startY += 6;
+      ctx.fillStyle = '#ecfdf5';
+      ctx.fillRect(80, startY - 24, 920, 48);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#059669';
+      ctx.font = 'bold 18px sans-serif';
+      ctx.fillText(`APPLIED PROMO: ${b.appliedCoupon}`, 100, startY + 7);
+
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText(`-₹${(b.discountAmount || 0).toLocaleString('en-IN')}`, 980, startY + 7);
+      startY += 58;
+    }
+
+    // Total Amount Box
+    startY += 10;
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(80, startY, 920, 140);
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(80, startY, 920, 140);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('TOTAL AMOUNT', 540, startY + 45);
+
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 56px serif';
+    ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
+
+    // Dynamic Remarks Box if Rejected
+    if (isRejected) {
+      startY += 160;
+      ctx.fillStyle = '#fff1f2';
+      ctx.fillRect(80, startY, 920, 110);
+      ctx.strokeStyle = '#f43f5e';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(80, startY, 920, 110);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#be123c';
+      ctx.font = 'bold 19px sans-serif';
+      ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 35);
+
+      ctx.fillStyle = '#475569';
+      ctx.font = 'italic 16px sans-serif';
+      let note = b.rejectionReason || "Slot unavailable for requested date.";
+      ctx.fillText(note.substring(0, 95), 540, startY + 75);
+    }
+
+    // Minimal Signature Footer
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '17px sans-serif';
+    ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1630);
+
+    ctx.fillStyle = '#b48a3c';
+    ctx.font = 'italic 16px sans-serif';
+    ctx.fillText('Your Beauty, Our Expertise', 540, 1660);
 
     const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
     const downloadLink = document.createElement('a');
@@ -546,7 +594,7 @@ export default function AdminApp() {
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'} (${(file.size / 1024 / 1024).toFixed(1)}MB). Click 'Save This Section' below.`);
+        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'}. Click Save below.`);
       };
       reader.readAsDataURL(file);
     }
@@ -571,7 +619,7 @@ export default function AdminApp() {
             }
           }
         });
-        setActionStatus(`Loaded image for ${pkgKey}. Click 'Save This Section' below.`);
+        setActionStatus(`Loaded image for ${pkgKey}. Click Save below.`);
       };
       reader.readAsDataURL(file);
     }
@@ -588,50 +636,15 @@ export default function AdminApp() {
     }
   };
 
-  const handleSendBroadcast = async () => {
-    let numbers = bookingsList.map(b => b.clientPhone);
-    if (customNumbersInput.trim()) {
-      const extra = customNumbersInput.split(',').map(n => n.trim()).filter(Boolean);
-      numbers = [...new Set([...numbers, ...extra])];
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDraft({ ...draft, studioLogo: reader.result });
+      };
+      reader.readAsDataURL(file);
     }
-    if (numbers.length === 0) {
-      alert("No client phone numbers found to broadcast.");
-      return;
-    }
-    setSendingPromo(true);
-    setActionStatus(`Starting broadcast to ${numbers.length} clients...`);
-    try {
-      await fetch(`${BAILEYS_URL}/api/broadcast`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipients: numbers, templateText: selectedTemplateText })
-      });
-      setActionStatus(`🎉 Broadcast started in background for ${numbers.length} clients!`);
-    } catch (err) {
-      setActionStatus(`⚠️ Failed to connect to WhatsApp Gateway: ${err.message}`);
-    } finally {
-      setSendingPromo(false);
-    }
-  };
-
-  const year = calendarDate.getFullYear();
-  const month = calendarDate.getMonth();
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  const getDayBookingStatus = (day) => {
-    const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const matches = bookingsList.filter(b => b.eventDate === formatted);
-    if (matches.length === 0) return { hasBookings: false, list: [] };
-    const isConfirmed = matches.some(b => b.status === 'confirmed');
-    return {
-      hasBookings: true,
-      isConfirmed,
-      count: matches.length,
-      list: matches,
-      dateStr: formatted
-    };
   };
 
   const activeColorThemeKey = draft.theme?.colorTheme || 'liquid_glass';
@@ -643,35 +656,18 @@ export default function AdminApp() {
   const adminInputBg = isAdminDarkMode ? "bg-black/40 border border-white/20 text-white placeholder-slate-400 focus:border-cyan-400" : "bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:border-blue-500";
   const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
 
-  if (!isAuthenticated) {
-    return (
-      <div className={`min-h-screen ${adminBgClass} flex items-center justify-center p-4 relative overflow-hidden`}>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
-        <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-3xl border text-center space-y-4 shadow-2xl ${adminCardBg}`}>
-          <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg">
-            <Lock className="w-8 h-8 animate-bounce" />
-          </div>
-          <h2 className="text-xl font-bold">Admin Portal</h2>
-          <p className={`text-xs ${adminMuted}`}>Master Studio Management Console</p>
-          <input type="password" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
-          <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Unlock Console</button>
-        </form>
-      </div>
-    );
-  }
-
   const activeFolderObj = ADMIN_FOLDERS.find(f => f.id === activeFolderId);
 
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-24 transition-colors duration-300 relative overflow-x-hidden`}>
       
-      {/* Ambient Liquid Glow Orbs (Synced with Theme) */}
+      {/* Ambient Liquid Glow Orbs */}
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* 🛑 Rejection Confirmation Modal with 6 Professional Quick Templates */}
+      {/* Rejection Modal */}
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className={`max-w-lg w-full rounded-3xl p-6 border shadow-2xl space-y-4 ${isAdminDarkMode ? 'bg-[#0f1424] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
@@ -736,9 +732,16 @@ export default function AdminApp() {
       {/* 💎 Header */}
       <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 shadow-md">
-            <Crown className="w-5 h-5" />
-          </div>
+          {draft.studioLogo ? (
+            <div className="w-10 h-10 rounded-2xl bg-white/10 p-1 border border-white/20 overflow-hidden shadow-md">
+              <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 shadow-md">
+              <Crown className="w-5 h-5" />
+            </div>
+          )}
+
           <div>
             <h1 className={`font-bold text-sm sm:text-base bg-gradient-to-r ${currentTheme.accentGradient} bg-clip-text text-transparent`}>
               {draft.studioName || "HUSNA FAROOQUI"} Console
@@ -757,7 +760,7 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
         
-        {/* Breadcrumb / Folder Back Bar */}
+        {/* Breadcrumb Bar */}
         <div className="flex items-center justify-between">
           {activeFolderId ? (
             <button
@@ -765,7 +768,7 @@ export default function AdminApp() {
               className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-bold flex items-center gap-2 text-cyan-400 border border-white/10 transition"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to Directory Cards</span>
+              <span>Back to Master Folders</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -787,7 +790,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* 📁 VIEW 1: INTERACTIVE FOLDER CARDS DIRECTORY GRID (WHEN NO FOLDER IS OPENED) */}
+        {/* 📁 VIEW 1: FOLDER CARDS DIRECTORY GRID */}
         {!activeFolderId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
             {ADMIN_FOLDERS.map(f => {
@@ -824,7 +827,9 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* 🗂️ VIEW 2: INSIDE SPECIFIC FOLDER CARD (WITH PER-CARD SAVE BUTTON) */}
+        {/* 🗂️ VIEW 2: INSIDE SPECIFIC FOLDER CARD (PER-CARD SAVE) */}
+
+        {/* TAB: BOOKINGS */}
         {activeFolderId === 'bookings' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -957,7 +962,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: INTERACTIVE CALENDAR */}
+        {/* TAB: CALENDAR */}
         {activeFolderId === 'calendar_view' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1056,7 +1061,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: MAINTENANCE MODE */}
+        {/* TAB: MAINTENANCE MODE */}
         {activeFolderId === 'app_maintenance' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
@@ -1107,7 +1112,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 4: FLOATING BANNER */}
+        {/* TAB: FLOATING BANNER */}
         {activeFolderId === 'floating' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -1232,7 +1237,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 5: PROMO COUPONS */}
+        {/* TAB: PROMO COUPONS */}
         {activeFolderId === 'coupons' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1391,7 +1396,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 6: TRANSFORMATIONS (20MB) */}
+        {/* TAB: TRANSFORMATIONS */}
         {activeFolderId === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1486,7 +1491,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 7: PACKAGE IMAGES */}
+        {/* TAB: PACKAGE IMAGES */}
         {activeFolderId === 'kit_images' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
@@ -1564,7 +1569,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 8: PACKAGE TITLES & TEXT */}
+        {/* TAB: PACKAGE TITLES & TEXT */}
         {activeFolderId === 'packages_text' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1652,7 +1657,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 9: MASTER FEATURE TOGGLES */}
+        {/* TAB: MASTER FEATURE TOGGLES */}
         {activeFolderId === 'toggles_master' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div>
@@ -1710,7 +1715,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 10: VISITOR TRAFFIC LOGS */}
+        {/* TAB: VISITOR TRAFFIC LOGS */}
         {activeFolderId === 'traffic_logs' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1748,7 +1753,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 11: PROMOTIONS */}
+        {/* TAB: PROMOTIONS */}
         {activeFolderId === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -1772,7 +1777,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 12: TOP ANNOUNCEMENTS */}
+        {/* TAB: TOP ANNOUNCEMENTS */}
         {activeFolderId === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1828,7 +1833,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 13: TRAVEL FEES */}
+        {/* TAB: TRAVEL FEES */}
         {activeFolderId === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1920,7 +1925,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 14: RATES */}
+        {/* TAB: RATES */}
         {activeFolderId === 'prices' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
@@ -1955,7 +1960,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 15: THEMES & FONTS */}
+        {/* TAB: THEMES & FONTS */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts (Synced)</h3>
@@ -2006,10 +2011,47 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 16: PROFILE */}
+        {/* TAB: PROFILE & LOGO UPLOAD */}
         {activeFolderId === 'profile' && (
-          <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
-            <h3 className="font-bold text-xs uppercase text-cyan-400">Profile & Identity</h3>
+          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+            <div>
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
+              </h3>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo & manage Instagram handles.</p>
+            </div>
+
+            {/* Custom Studio Logo Upload Section */}
+            <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
+              <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
+                <Crown className="w-4 h-4" /> Official Studio Brand Logo
+              </span>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+                  {draft.studioLogo ? (
+                    <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <Crown className="w-8 h-8 text-slate-400" />
+                  )}
+                </div>
+
+                <div className="flex-1 w-full space-y-2">
+                  <input
+                    type="text"
+                    placeholder="Paste Logo Image URL"
+                    value={draft.studioLogo || ''}
+                    onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
+                    className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`}
+                  />
+                  <label className="inline-block px-3.5 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25">
+                    Upload Logo File
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Display Title</label>
@@ -2024,14 +2066,10 @@ export default function AdminApp() {
                 <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, instagramHandle: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs font-mono text-pink-400 border ${adminInputBg}`} />
               </div>
               <div>
-                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Profile Image URL</label>
+                <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Artist Profile Photo URL</label>
                 <input type="text" value={draft.profileImage || ''} onChange={e => setDraft({ ...draft, profileImage: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`} />
               </div>
             </div>
-            <label className="inline-block px-4 py-2 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25">
-              Upload New Profile Photo File
-              <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
-            </label>
 
             <button
               type="button"
@@ -2040,7 +2078,7 @@ export default function AdminApp() {
               className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile Live'}</span>
+              <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile & Logo Live'}</span>
             </button>
           </div>
         )}
