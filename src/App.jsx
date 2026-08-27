@@ -39,7 +39,8 @@ const DEFAULT_CONFIG = {
     enableGallery: true,
     enableBrands: true,
     enableEstimator: true,
-    showLogoOnApp: true
+    showLogoOnApp: true,
+    showProfileOnApp: true
   },
 
   floatingBanner: {
@@ -236,6 +237,34 @@ const ADMIN_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
+// Helper to auto-compress large images under 300KB before Firestore save
+const compressImageFile = (file, maxWidth = 600, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const elem = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        elem.width = width;
+        elem.height = height;
+        const ctx = elem.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(elem.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 export default function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
@@ -415,7 +444,7 @@ export default function AdminApp() {
     }
   };
 
-  // 📄 Multi-Line Dynamic Rejection & Status-Aware Slip Engine
+  // Minimalist Status-Aware Slip Generator
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -568,7 +597,6 @@ export default function AdminApp() {
     ctx.font = 'bold 56px serif';
     ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
 
-    // 🌟 Multi-Line Wrap Rejection / Status Box Engine
     if (isRejected) {
       startY += 160;
       ctx.fillStyle = '#fff1f2';
@@ -647,50 +675,53 @@ export default function AdminApp() {
     }
   };
 
-  const handlePackageImageUpload = (e, kit, pkgKey) => {
+  const handlePackageImageUpload = async (e, kit, pkgKey) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 20971520) {
-        alert("File exceeds 20MB. Please use a smaller image.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      try {
+        const compressedBase64 = await compressImageFile(file, 800, 0.82);
         setDraft({
           ...draft,
           kitImages: {
             ...draft.kitImages,
             [kit]: {
               ...(draft.kitImages?.[kit] || {}),
-              [pkgKey]: String(reader.result)
+              [pkgKey]: compressedBase64
             }
           }
         });
-        setActionStatus(`Loaded image for ${pkgKey}. Click Save below.`);
-      };
-      reader.readAsDataURL(file);
+        setActionStatus(`Loaded optimized image for ${pkgKey}. Click Save below.`);
+      } catch (err) {
+        alert("Image processing error: " + err.message);
+      }
     }
   };
 
-  const handleProfileUpload = (e) => {
+  // Safe Auto-Compressed Profile Photo Upload
+  const handleProfileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDraft({ ...draft, profileImage: reader.result, profilePhotoType: 'image' });
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImageFile(file, 500, 0.85);
+        setDraft({ ...draft, profileImage: compressedBase64, profilePhotoType: 'image' });
+        setActionStatus('Loaded profile picture. Remember to click Save.');
+      } catch (err) {
+        alert("Error loading photo: " + err.message);
+      }
     }
   };
 
-  const handleLogoUpload = (e) => {
+  // Safe Auto-Compressed Logo Upload (Under 200KB)
+  const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setDraft({ ...draft, studioLogo: reader.result });
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressedBase64 = await compressImageFile(file, 400, 0.85);
+        setDraft({ ...draft, studioLogo: compressedBase64 });
+        setActionStatus('Loaded studio logo. Remember to click Save.');
+      } catch (err) {
+        alert("Error loading logo: " + err.message);
+      }
     }
   };
 
@@ -1802,6 +1833,7 @@ export default function AdminApp() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { key: 'showLogoOnApp', label: 'Show Studio Logo on Main App', desc: 'Render uploaded brand logo in header and splash' },
+                { key: 'showProfileOnApp', label: 'Show Profile Photo on Main App', desc: 'Render artist avatar photo in header' },
                 { key: 'enableAnnouncements', label: 'Top Announcements Ticker', desc: 'Show/hide rotating top announcement bar' },
                 { key: 'enableCoupons', label: 'Promo Coupon System', desc: 'Enable/disable coupon codes application' },
                 { key: 'enableGuestDiscount', label: 'Extra Guest Group Discount', desc: 'Apply automatic savings on multiple guests' },
@@ -2151,16 +2183,16 @@ export default function AdminApp() {
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
               </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo, artist profile picture & manage social handles.</p>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo & artist profile photo.</p>
             </div>
 
             {/* 1. Studio Logo Upload Card */}
             <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
-                  <Crown className="w-4 h-4" /> 1. Official Studio Logo
+                  <Crown className="w-4 h-4" /> 1. Official Studio Logo (Appears in Header & Splash)
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">Appears in Header & Splash</span>
+                <span className="text-[10px] text-slate-400 font-mono">Auto-Compressed</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -2181,7 +2213,7 @@ export default function AdminApp() {
                     className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`}
                   />
                   <label className="inline-block px-3.5 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25 transition">
-                    Upload Logo File
+                    Upload & Compress Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
                 </div>
@@ -2192,7 +2224,7 @@ export default function AdminApp() {
             <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
-                  <ImageIcon className="w-4 h-4" /> 2. Artist Profile Picture
+                  <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
                 </span>
                 <span className="text-[10px] text-slate-400 font-mono">Avatar Card</span>
               </div>
@@ -2211,7 +2243,7 @@ export default function AdminApp() {
                     className={`w-full p-2.5 rounded-xl text-xs font-mono border ${adminInputBg}`}
                   />
                   <label className="inline-block px-3.5 py-1.5 rounded-xl bg-amber-500/15 text-amber-400 text-xs font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25 transition">
-                    Upload Profile Photo
+                    Upload & Compress Profile Photo
                     <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
                 </div>
