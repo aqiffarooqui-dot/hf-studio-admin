@@ -4,7 +4,7 @@ import {
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
   Play, ExternalLink, Phone, Image as ImageIcon, Percent, ToggleLeft, ToggleRight,
   Sliders, Palette, MapPin, Eye, ChevronDown, ListFilter, Car, Volume2, Activity,
-  SlidersHorizontal, CheckCircle2, XCircle, Clock
+  SlidersHorizontal, CheckCircle2, XCircle, Clock, Gift, AlertCircle
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -36,8 +36,10 @@ const DEFAULT_CONFIG = {
     enableEstimator: true
   },
 
+  // 🎈 Floating Offer Banner Controls
   floatingBanner: {
     enabled: true,
+    autoHideOnExpire: false, // true: Hides on expire | false: Shows "Code Expired"
     tag: "SPECIAL WEDDING OFFER",
     title: "Flat 10% OFF Signature Bridal Look",
     code: "BRIDE2026",
@@ -49,7 +51,6 @@ const DEFAULT_CONFIG = {
     discountPercent: 15
   },
 
-  // 📝 Separate Package Titles & Descriptions (International vs Drugstore Kit)
   kitText: {
     international: {
       simple_party: { num: 1, name: "Simple Party Makeup (Luxury)", desc: "Natural dewy skin glow with Dior & NARS, soft contour & luxury hair styling." },
@@ -101,7 +102,6 @@ const DEFAULT_CONFIG = {
     "📍 Serving South Delhi, Noida, Gurugram, Central Delhi & Amroha • Pre-Bookings Open"
   ],
 
-  // 🏷️ Promo Coupons with Expiry Timers
   validCoupons: {
     "BRIDE2026": { type: "percent", value: 10, label: "10% Seasonal Wedding Discount", maxUses: 1, enabled: true, expiryDate: "2026-12-31T23:59" },
     "HUSNA15": { type: "percent", value: 15, label: "15% Special Bridal Promo", maxUses: 1, enabled: true, expiryDate: "2026-11-15T23:59" },
@@ -150,10 +150,11 @@ const DEFAULT_TEMPLATES = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-// 📋 Admin Scrollable Tab Definition
+// 📋 Admin Glass Tab List
 const ADMIN_TABS = [
   { id: 'bookings', label: '📋 Live Bookings' },
-  { id: 'coupons', label: '🏷️ Promo Coupons & Timers' },
+  { id: 'floating', label: '🎈 Floating Banner' },
+  { id: 'coupons', label: '🏷️ Promo Coupons' },
   { id: 'toggles_master', label: '🎛️ Master Toggles' },
   { id: 'packages_text', label: '✏️ Package Titles' },
   { id: 'kit_images', label: '🖼️ Package Images' },
@@ -229,7 +230,7 @@ export default function AdminApp() {
     try {
       const cleanData = JSON.parse(JSON.stringify(draft));
       await updateLiveConfig(cleanData);
-      setActionStatus('🎉 All promo timers, package texts, toggles & settings synced live!');
+      setActionStatus('🎉 All settings, floating banner rules, images & rates pushed live!');
     } catch (err) {
       setActionStatus('❌ Error saving: ' + err.message);
     } finally {
@@ -467,7 +468,127 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 2: PROMO COUPONS & EXPIRY TIMERS (EDITABLE DATES) */}
+        {/* TAB 2: FLOATING BANNER CONTROLS (EXPIRY & AUTO-HIDE LOGIC) */}
+        {activeTab === 'floating' && (
+          <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Gift className="w-4 h-4" /> Bottom Floating Offer Banner Controls
+                </h3>
+                <p className={`text-xs ${adminMuted} mt-0.5`}>
+                  Edit floating banner text, linked promo code, and choose whether to auto-hide or show "Code Expired".
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDraft({
+                  ...draft,
+                  floatingBanner: {
+                    ...(draft.floatingBanner || {}),
+                    enabled: draft.floatingBanner?.enabled === false ? true : false
+                  }
+                })}
+                className={`p-2 rounded-xl flex items-center gap-1.5 font-bold text-xs transition active:scale-95 ${
+                  draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                }`}
+              >
+                {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                <span>{draft.floatingBanner?.enabled !== false ? 'WIDGET ACTIVE' : 'WIDGET DISABLED'}</span>
+              </button>
+            </div>
+
+            {/* Auto-Hide on Expire Toggle */}
+            <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${adminInnerCard}`}>
+              <div className="space-y-0.5">
+                <h4 className="font-bold text-xs text-white">Auto-Hide Widget When Code Expires</h4>
+                <p className={`text-[11px] ${adminMuted}`}>
+                  {draft.floatingBanner?.autoHideOnExpire !== false 
+                    ? "🟢 ON: Banner automatically disappears from screen once the linked coupon code expires." 
+                    : "🔴 OFF: Banner stays visible, but displays '⚠️ Code Expired' badge and disables button."}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDraft({
+                  ...draft,
+                  floatingBanner: {
+                    ...(draft.floatingBanner || {}),
+                    autoHideOnExpire: draft.floatingBanner?.autoHideOnExpire === false ? true : false
+                  }
+                })}
+                className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${
+                  draft.floatingBanner?.autoHideOnExpire !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                }`}
+              >
+                {draft.floatingBanner?.autoHideOnExpire !== false ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                <span>{draft.floatingBanner?.autoHideOnExpire !== false ? 'Auto-Hide (ON)' : 'Show "Expired" (OFF)'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Badge Tag Text</label>
+                <input
+                  type="text"
+                  value={draft.floatingBanner?.tag || ''}
+                  onChange={e => setDraft({
+                    ...draft,
+                    floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
+                  })}
+                  placeholder="e.g. SPECIAL OFFER"
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold text-cyan-400 border ${adminInputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Linked Promo Code</label>
+                <input
+                  type="text"
+                  value={draft.floatingBanner?.code || ''}
+                  onChange={e => setDraft({
+                    ...draft,
+                    floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
+                  })}
+                  placeholder="e.g. BRIDE2026"
+                  className={`w-full p-2.5 rounded-xl text-xs font-mono font-bold text-amber-400 border ${adminInputBg}`}
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Banner Headline / Title</label>
+                <input
+                  type="text"
+                  value={draft.floatingBanner?.title || ''}
+                  onChange={e => setDraft({
+                    ...draft,
+                    floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
+                  })}
+                  placeholder="e.g. Flat 10% OFF Signature Bridal Look"
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Button Action Text</label>
+                <input
+                  type="text"
+                  value={draft.floatingBanner?.actionText || ''}
+                  onChange={e => setDraft({
+                    ...draft,
+                    floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
+                  })}
+                  placeholder="e.g. Apply"
+                  className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: PROMO COUPONS & EXPIRY TIMERS */}
         {activeTab === 'coupons' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -616,7 +737,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 3: MASTER FEATURE & SECTION TOGGLES */}
+        {/* TAB 4: MASTER FEATURE TOGGLES */}
         {activeTab === 'toggles_master' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div>
@@ -664,7 +785,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 4: PACKAGE TITLES & TEXT EDITOR */}
+        {/* TAB 5: PACKAGE TITLES & TEXT EDITOR */}
         {activeTab === 'packages_text' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -742,7 +863,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 5: PACKAGE IMAGES & SEPARATE KIT PHOTOS */}
+        {/* TAB 6: PACKAGE IMAGES & SEPARATE KIT PHOTOS */}
         {activeTab === 'kit_images' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${adminCardBg}`}>
             <div>
@@ -810,7 +931,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 6: VISITOR TRAFFIC & INSTAGRAM LOGS */}
+        {/* TAB 7: VISITOR TRAFFIC & INSTAGRAM LOGS */}
         {activeTab === 'traffic_logs' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -848,7 +969,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 7: TRANSFORMATIONS, VIDEOS & GIFS */}
+        {/* TAB 8: TRANSFORMATIONS, VIDEOS & GIFS */}
         {activeTab === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -933,7 +1054,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 8: PROMOTIONS */}
+        {/* TAB 9: PROMOTIONS */}
         {activeTab === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -957,7 +1078,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 9: TOP ANNOUNCEMENTS TICKER */}
+        {/* TAB 10: TOP ANNOUNCEMENTS TICKER */}
         {activeTab === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1003,7 +1124,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 10: TRAVEL FEES & CONVENIENCE ZONES */}
+        {/* TAB 11: TRAVEL FEES & CONVENIENCE ZONES */}
         {activeTab === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <div className="flex justify-between items-center">
@@ -1085,7 +1206,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 11: RATES */}
+        {/* TAB 12: RATES */}
         {activeTab === 'prices' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
@@ -1110,7 +1231,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 12: THEMES & FONTS */}
+        {/* TAB 13: THEMES & FONTS */}
         {activeTab === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts</h3>
@@ -1151,7 +1272,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB 13: PROFILE */}
+        {/* TAB 14: PROFILE */}
         {activeTab === 'profile' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${adminCardBg}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Profile & Studio Identity</h3>
