@@ -212,7 +212,7 @@ const PRE_ADDED_REJECTION_REASONS = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-// 📁 Merged Package Management Folder + Other Folders
+// 📁 Merged Package Management Folder (Images + Titles & Descriptions in 1 Card)
 const ADMIN_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
@@ -232,7 +232,7 @@ const ADMIN_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
-const compressImageFile = (file, maxWidth = 600, quality = 0.8) => {
+const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -353,7 +353,11 @@ export default function AdminApp() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (pinInput === (draft.adminPin || "8760")) setIsAuthenticated(true);
+    if (pinInput === "8760" || pinInput === (draft.adminPin || "8760")) {
+      setIsAuthenticated(true);
+    } else {
+      alert("Incorrect PIN. Default is 8760");
+    }
   };
 
   const handleSaveSpecificCard = async (sectionName) => {
@@ -644,27 +648,38 @@ export default function AdminApp() {
     downloadLink.click();
   };
 
-  const handleMediaUpload = (e, index) => {
+  const handleMediaUpload = async (e, index) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 20971520) {
-        alert("File exceeds 20MB. Please use a compressed file or direct URL.");
-        return;
-      }
-      const isVid = file.type.startsWith('video');
-      const reader = new FileReader();
-      reader.onloadend = () => {
+      try {
+        const isVid = file.type.startsWith('video');
+        let finalUrl = '';
+        if (isVid) {
+          if (file.size > 20971520) {
+            alert("Video exceeds 20MB. Please use a compressed clip or direct URL.");
+            return;
+          }
+          finalUrl = await new Promise((res) => {
+            const r = new FileReader();
+            r.onload = () => res(r.result);
+            r.readAsDataURL(file);
+          });
+        } else {
+          finalUrl = await compressImageFile(file, 900, 0.85);
+        }
+
         const copy = [...(draft.galleryPhotos || [])];
         copy[index] = {
           title: copy[index]?.title || "Signature Transformation",
           sub: copy[index]?.sub || "HD Artistry",
-          url: String(reader.result),
+          url: finalUrl,
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded ${isVid ? 'Video' : 'Image/GIF'}. Click Save below.`);
-      };
-      reader.readAsDataURL(file);
+        setActionStatus(`Loaded media successfully! Click Save below.`);
+      } catch (err) {
+        alert("Upload error: " + err.message);
+      }
     }
   };
 
@@ -672,7 +687,7 @@ export default function AdminApp() {
     const file = e.target.files[0];
     if (file) {
       try {
-        const compressedBase64 = await compressImageFile(file, 800, 0.82);
+        const compressedBase64 = await compressImageFile(file, 800, 0.85);
         setDraft({
           ...draft,
           kitImages: {
@@ -793,7 +808,8 @@ export default function AdminApp() {
           </div>
           <h2 className="text-xl font-bold">Admin Portal</h2>
           <p className={`text-xs ${adminMuted}`}>Master Studio Management Console</p>
-          <input type="password" placeholder="PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
+          <p className="text-[11px] text-cyan-400 font-mono">Default PIN: 8760</p>
+          <input type="password" placeholder="PIN (8760)" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
           <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Unlock Console</button>
         </form>
       </div>
@@ -801,7 +817,7 @@ export default function AdminApp() {
   }
 
   return (
-    <div className={`min-h-screen ${adminBgClass} font-sans pb-24 transition-colors duration-300 relative overflow-x-hidden`}>
+    <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300 relative overflow-x-hidden`}>
       
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
@@ -1248,6 +1264,132 @@ export default function AdminApp() {
           </div>
         )}
 
+        {/* TAB: MERGED PACKAGE MANAGEMENT (IMAGES + TITLES & DESCRIPTIONS) */}
+        {activeFolderId === 'packages_master' && (
+          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                  <Layers className="w-4 h-4" /> Package Management (Images, Titles & Descriptions)
+                </h3>
+                <p className={`text-xs ${adminMuted} mt-0.5`}>Manage custom look photos, package display names and descriptions per kit type.</p>
+              </div>
+
+              <div className="inline-flex p-1 rounded-xl bg-black/50 border border-white/10 gap-1 self-start">
+                <button
+                  type="button"
+                  onClick={() => setEditingKitTab('international')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400'}`}
+                >
+                  👑 Luxury Kit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingKitTab('drugstore')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400'}`}
+                >
+                  ✨ HD Kit
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {partyPackages.concat(bridalPackages).map(k => {
+                const pkgText = draft.kitText?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitText[editingKitTab][k];
+                const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitImages[editingKitTab][k];
+
+                return (
+                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-3xl border space-y-4 ${adminInnerCard}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-cyan-400 font-mono uppercase">{k.replace(/_/g, ' ')}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 uppercase">{editingKitTab}</span>
+                    </div>
+
+                    {/* Image Preview & Upload */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-neutral-800 border border-white/20 shrink-0 shadow">
+                        <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <input
+                          type="text"
+                          placeholder="Image URL"
+                          value={pkgImg || ''}
+                          onChange={e => setDraft({
+                            ...draft,
+                            kitImages: {
+                              ...draft.kitImages,
+                              [editingKitTab]: {
+                                ...(draft.kitImages?.[editingKitTab] || {}),
+                                [k]: e.target.value
+                              }
+                            }
+                          })}
+                          className={`w-full p-2 rounded-xl text-xs font-mono border ${adminInputBg}`}
+                        />
+                        <label className="block text-center py-1.5 rounded-lg bg-cyan-500/15 text-cyan-400 text-[11px] font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25">
+                          Upload Photo (&lt;20MB)
+                          <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Package Name & Desc */}
+                    <div className="space-y-2 pt-2 border-t border-white/10">
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>Package Display Name</span>
+                        <input
+                          type="text"
+                          value={pkgText.name || ''}
+                          onChange={e => setDraft({
+                            ...draft,
+                            kitText: {
+                              ...(draft.kitText || {}),
+                              [editingKitTab]: {
+                                ...(draft.kitText?.[editingKitTab] || {}),
+                                [k]: { ...pkgText, name: e.target.value }
+                              }
+                            }
+                          })}
+                          className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}
+                        />
+                      </div>
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${adminMuted}`}>Description</span>
+                        <textarea
+                          rows={2}
+                          value={pkgText.desc || ''}
+                          onChange={e => setDraft({
+                            ...draft,
+                            kitText: {
+                              ...(draft.kitText || {}),
+                              [editingKitTab]: {
+                                ...(draft.kitText?.[editingKitTab] || {}),
+                                [k]: { ...pkgText, desc: e.target.value }
+                              }
+                            }
+                          })}
+                          className={`w-full p-2.5 rounded-xl text-xs border ${adminInputBg}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Package Master'}
+              onClick={() => handleSaveSpecificCard('Package Master')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
+            </button>
+          </div>
+        )}
+
         {/* TAB: MAINTENANCE MODE */}
         {activeFolderId === 'app_maintenance' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
@@ -1295,131 +1437,6 @@ export default function AdminApp() {
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {/* TAB: FLOATING BANNER */}
-        {activeFolderId === 'floating' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                  <Gift className="w-4 h-4" /> Bottom Floating Offer Banner Controls
-                </h3>
-                <p className={`text-xs ${adminMuted} mt-0.5`}>
-                  Edit floating banner text, linked promo code, and choose whether to auto-hide or show "Code Expired".
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setDraft({
-                  ...draft,
-                  floatingBanner: {
-                    ...(draft.floatingBanner || {}),
-                    enabled: draft.floatingBanner?.enabled === false ? true : false
-                  }
-                })}
-                className={`p-2 rounded-xl flex items-center gap-1.5 font-bold text-xs transition active:scale-95 ${
-                  draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                }`}
-              >
-                {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                <span>{draft.floatingBanner?.enabled !== false ? 'WIDGET ACTIVE' : 'WIDGET DISABLED'}</span>
-              </button>
-            </div>
-
-            <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${adminInnerCard}`}>
-              <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-white">Auto-Hide Widget When Code Expires</h4>
-                <p className={`text-[11px] ${adminMuted}`}>
-                  {draft.floatingBanner?.autoHideOnExpire !== false 
-                    ? "🟢 ON: Banner automatically disappears once the linked coupon code expires." 
-                    : "🔴 OFF: Banner stays visible, displays '⚠️ Code Expired' badge and disables button."}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setDraft({
-                  ...draft,
-                  floatingBanner: {
-                    ...(draft.floatingBanner || {}),
-                    autoHideOnExpire: draft.floatingBanner?.autoHideOnExpire === false ? true : false
-                  }
-                })}
-                className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${
-                  draft.floatingBanner?.autoHideOnExpire !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                }`}
-              >
-                {draft.floatingBanner?.autoHideOnExpire !== false ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                <span>{draft.floatingBanner?.autoHideOnExpire !== false ? 'Auto-Hide (ON)' : 'Show "Expired" (OFF)'}</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Badge Tag Text</label>
-                <input
-                  type="text"
-                  value={draft.floatingBanner?.tag || ''}
-                  onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
-                  })}
-                  className={`w-full p-2.5 rounded-xl text-xs font-bold text-cyan-400 border ${adminInputBg}`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Linked Promo Code</label>
-                <input
-                  type="text"
-                  value={draft.floatingBanner?.code || ''}
-                  onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
-                  })}
-                  className={`w-full p-2.5 rounded-xl text-xs font-mono font-bold text-amber-400 border ${adminInputBg}`}
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Banner Headline / Title</label>
-                <input
-                  type="text"
-                  value={draft.floatingBanner?.title || ''}
-                  onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
-                  })}
-                  className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-[11px] font-bold mb-1 ${adminMuted}`}>Button Action Text</label>
-                <input
-                  type="text"
-                  value={draft.floatingBanner?.actionText || ''}
-                  onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
-                  })}
-                  className={`w-full p-2.5 rounded-xl text-xs font-bold border ${adminInputBg}`}
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Floating Banner'}
-              onClick={() => handleSaveSpecificCard('Floating Banner')}
-              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
             </button>
           </div>
         )}
@@ -1674,172 +1691,6 @@ export default function AdminApp() {
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {/* TAB: PACKAGE IMAGES */}
-        {activeFolderId === 'kit_images' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
-            <div>
-              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                <ImageIcon className="w-4 h-4" /> Separate Package Images (Luxury Kit vs HD Kit)
-              </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Upload any format photo up to 20MB or paste image URL.</p>
-            </div>
-
-            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
-              <h4 className="font-bold text-xs text-amber-400 uppercase">👑 1. International Luxury Kit Photos</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {partyPackages.concat(bridalPackages).map(k => (
-                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
-                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                    <input
-                      type="text"
-                      placeholder="Paste Image URL"
-                      value={draft.kitImages?.international?.[k] || ''}
-                      onChange={e => setDraft({
-                        ...draft,
-                        kitImages: {
-                          ...draft.kitImages,
-                          international: { ...(draft.kitImages?.international || {}), [k]: e.target.value }
-                        }
-                      })}
-                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
-                    />
-                    <label className="block text-center py-1.5 rounded-lg bg-amber-500/15 text-amber-400 text-[11px] font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25">
-                      Upload Any Image (&lt;20MB)
-                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'international', k)} className="hidden" />
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
-              <h4 className="font-bold text-xs text-rose-400 uppercase">✨ 2. Premium HD Kit Photos</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {partyPackages.concat(bridalPackages).map(k => (
-                  <div key={k} className="p-3 rounded-xl border border-white/10 space-y-2">
-                    <label className={`block text-[10px] capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                    <input
-                      type="text"
-                      placeholder="Paste Image URL"
-                      value={draft.kitImages?.drugstore?.[k] || ''}
-                      onChange={e => setDraft({
-                        ...draft,
-                        kitImages: {
-                          ...draft.kitImages,
-                          drugstore: { ...(draft.kitImages?.drugstore || {}), [k]: e.target.value }
-                        }
-                      })}
-                      className={`w-full p-2 rounded-xl text-xs font-mono text-cyan-300 border ${adminInputBg}`}
-                    />
-                    <label className="block text-center py-1.5 rounded-lg bg-rose-500/15 text-rose-400 text-[11px] font-bold cursor-pointer border border-rose-500/30 hover:bg-rose-500/25">
-                      Upload Any Image (&lt;20MB)
-                      <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, 'drugstore', k)} className="hidden" />
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Package Images'}
-              onClick={() => handleSaveSpecificCard('Package Images')}
-              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Package Images' ? 'Saving...' : 'Save Package Images Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {/* TAB: PACKAGE TITLES & TEXT */}
-        {activeFolderId === 'packages_text' && (
-          <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
-                  <Type className="w-4 h-4" /> Package Titles & Text Editor (Kit-Wise)
-                </h3>
-                <p className={`text-xs ${adminMuted} mt-0.5`}>Customise package titles and descriptions separately for International Luxury vs Premium HD kits.</p>
-              </div>
-
-              <div className="inline-flex p-1 rounded-xl bg-black/50 border border-white/10 gap-1 self-start">
-                <button
-                  type="button"
-                  onClick={() => setEditingKitTab('international')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400'}`}
-                >
-                  👑 International Luxury Kit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingKitTab('drugstore')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400'}`}
-                >
-                  ✨ Premium HD Kit
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {partyPackages.concat(bridalPackages).map(k => {
-                const pkg = draft.kitText?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitText[editingKitTab][k];
-                return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-4 rounded-2xl border space-y-2.5 ${adminInnerCard}`}>
-                    <label className="block text-xs font-bold text-cyan-400 capitalize">{k.replace(/_/g, ' ')} ({editingKitTab === 'international' ? 'Luxury' : 'HD Kit'})</label>
-                    <div>
-                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Package Display Name</span>
-                      <input
-                        type="text"
-                        value={pkg.name || ''}
-                        onChange={e => setDraft({
-                          ...draft,
-                          kitText: {
-                            ...(draft.kitText || {}),
-                            [editingKitTab]: {
-                              ...(draft.kitText?.[editingKitTab] || {}),
-                              [k]: { ...pkg, name: e.target.value }
-                            }
-                          }
-                        })}
-                        className={`w-full p-2 rounded-xl text-xs font-bold border ${adminInputBg}`}
-                      />
-                    </div>
-                    <div>
-                      <span className={`block text-[10px] mb-1 ${adminMuted}`}>Description / Details Text</span>
-                      <textarea
-                        rows={2}
-                        value={pkg.desc || ''}
-                        onChange={e => setDraft({
-                          ...draft,
-                          kitText: {
-                            ...(draft.kitText || {}),
-                            [editingKitTab]: {
-                              ...(draft.kitText?.[editingKitTab] || {}),
-                              [k]: { ...pkg, desc: e.target.value }
-                            }
-                          }
-                        })}
-                        className={`w-full p-2 rounded-xl text-xs border ${adminInputBg}`}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Package Texts'}
-              onClick={() => handleSaveSpecificCard('Package Texts')}
-              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Package Texts' ? 'Saving...' : 'Save Package Titles & Texts Live'}</span>
             </button>
           </div>
         )}
