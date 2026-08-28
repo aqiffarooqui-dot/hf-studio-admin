@@ -189,13 +189,13 @@ const INITIAL_FOLDERS = [
 ];
 
 const MAIN_APP_VERSIONS = [
-  { version: "v2.9.1", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass design system with native iOS SF Symbols styling." },
-  { version: "v2.9.0", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass design system integrated with dynamic backdrop blur." }
+  { version: "v2.9.2", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass visionOS style with adaptive material tinting." },
+  { version: "v2.9.1", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass design system with native iOS SF Symbols styling." }
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v2.7.1", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass admin console with day/night toggle and brand palette." },
-  { version: "v2.7.0", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass admin console with champagne highlights & fluid blur cards." }
+  { version: "v2.7.2", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass visionOS style console with fluid glass cards." },
+  { version: "v2.7.1", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass admin console with day/night toggle and brand palette." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -1017,19 +1017,19 @@ export default function App() {
 
   const adminBgClass = isAdminDarkMode ? "bg-[#1C1C1E] text-[#F8F5F2]" : "bg-[#F8F5F2] text-[#1C1C1E]";
   const cardBgClass = isAdminDarkMode 
-    ? "bg-[#2C2C2E]/60 backdrop-blur-[24px] saturate-[160%] border border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.25)] rounded-[22px] text-[#F8F5F2]" 
-    : "bg-white/45 backdrop-blur-[24px] saturate-[160%] border border-white/40 shadow-[0_8px_30px_rgba(30,20,15,0.08)] rounded-[22px] text-[#1C1C1E]";
+    ? "bg-[#2C2C2E]/70 backdrop-blur-[24px] saturate-[160%] border border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.25)] rounded-[22px] text-[#F8F5F2]" 
+    : "bg-white/50 backdrop-blur-[24px] saturate-[160%] border border-white/40 shadow-[0_8px_30px_rgba(30,20,15,0.08)] rounded-[22px] text-[#1C1C1E]";
   const adminInnerCard = isAdminDarkMode 
-    ? "bg-[#3A3A3C]/50 backdrop-blur-[20px] border border-white/10 text-[#F8F5F2] rounded-[18px]" 
-    : "bg-white/60 backdrop-blur-[20px] border border-white/50 text-[#1C1C1E] rounded-[18px]";
+    ? "bg-[#3A3A3C]/60 backdrop-blur-[20px] border border-white/10 text-[#F8F5F2] rounded-[18px]" 
+    : "bg-white/70 backdrop-blur-[20px] border border-white/50 text-[#1C1C1E] rounded-[18px]";
   const adminInputBg = isAdminDarkMode 
     ? "bg-[#2C2C2E] backdrop-blur-[16px] border border-white/15 text-white placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]" 
-    : "bg-white/80 backdrop-blur-[16px] border border-[#D8B9B1]/40 text-[#1C1C1E] placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]";
+    : "bg-white/90 backdrop-blur-[16px] border border-[#D8B9B1]/40 text-[#1C1C1E] placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]";
   const adminMuted = isAdminDarkMode ? "text-[#98928E]" : "text-[#6E6864]";
 
   const liquidGlassButton = isAdminDarkMode
-    ? "bg-[#3A3A3C]/70 backdrop-blur-[20px] border border-white/15 rounded-[16px] shadow-[0_6px_18px_rgba(0,0,0,0.15)] active:scale-[0.97] transition-all text-[#F8F5F2]"
-    : "bg-white/60 backdrop-blur-[20px] border border-white/40 rounded-[16px] shadow-[0_6px_18px_rgba(90,65,40,0.1)] active:scale-[0.97] transition-all text-[#1C1C1E]";
+    ? "bg-[#3A3A3C]/80 backdrop-blur-[20px] border border-white/15 rounded-[16px] shadow-[0_6px_18px_rgba(0,0,0,0.15)] active:scale-[0.97] transition-all text-[#F8F5F2]"
+    : "bg-white/70 backdrop-blur-[20px] border border-white/40 rounded-[16px] shadow-[0_6px_18px_rgba(90,65,40,0.1)] active:scale-[0.97] transition-all text-[#1C1C1E]";
   
   const primaryCtaButton = "bg-[#B89462]/90 hover:bg-[#B89462] backdrop-blur-[20px] text-white font-bold border border-white/35 rounded-[16px] shadow-[0_6px_18px_rgba(184,148,98,0.25)] active:scale-[0.97] transition-all";
 
@@ -1246,7 +1246,7 @@ export default function App() {
               return (
                 <div
                   key={f.id}
-                  className={cardBgClass + " p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative " + (isReorderMode ? 'ring-2 ring-[#B89462] bg-[#B89462]/10' : 'hover:scale-[1.01]}')}
+                  className={cardBgClass + " p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative " + (isReorderMode ? 'ring-2 ring-[#B89462] bg-[#B89462]/10' : 'hover:scale-[1.01]')}
                 >
                   <div className="flex justify-between items-start">
                     <div 
@@ -2284,7 +2284,7 @@ export default function App() {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], title: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg} />
+                    }} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
                   </div>
 
                   <div>
