@@ -1,4 +1,3 @@
-```jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
@@ -466,7 +465,7 @@ export default function App() {
     setTimeout(async () => {
       clearInterval(interval);
       setIsScanningFinger(false);
-      const secureHash = `SECURE_FP_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+      const secureHash = "SECURE_FP_" + Math.random().toString(36).substring(2, 15) + "_" + Date.now();
       
       const updatedDraft = {
         ...draft,
@@ -488,7 +487,7 @@ export default function App() {
   const handleForgotPasswordSubmit = (e) => {
     e.preventDefault();
     const targetEmail = draft.recoveryEmail || "aqiffarooqui@gmail.com";
-    setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}! Check inbox.`);
+    setForgotPasswordStatus("📧 Master Password Recovery Link & Current PIN dispatched to " + targetEmail + "! Check inbox.");
     setTimeout(() => {
       setShowForgotPasswordModal(false);
       setForgotPasswordStatus('');
@@ -533,42 +532,42 @@ export default function App() {
       };
       const cleanData = JSON.parse(JSON.stringify(payload));
       await updateLiveConfig(cleanData);
-      setActionStatus(`🎉 ${sectionName} saved & synced live to Customer App!`);
+      setActionStatus("🎉 " + sectionName + " saved & synced live to Customer App!");
     } catch (err) {
-      setActionStatus(`❌ Error saving ${sectionName}: ${err.message}`);
+      setActionStatus("❌ Error saving " + sectionName + ": " + err.message);
     } finally {
       setSavingSection('');
     }
   };
 
   const handleAcceptBookingWhatsApp = async (b) => {
-    setActionStatus(`Dispatching Final Confirmation Slip to ${b.clientName}...`);
+    setActionStatus("Dispatching Final Confirmation Slip to " + b.clientName + "...");
     try {
       const confirmSlipMessage = 
-        `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n` +
-        `Dear *${b.clientName}*,\n` +
-        `Your appointment is officially confirmed in our master schedule!\n\n` +
-        `🔢 *Booking Number:* ${b.bookingNumber || '#HF-CONFIRMED'}\n` +
-        `📅 *Confirmed Event Date:* ${b.eventDate}\n` +
-        `💄 *Main Look:* ${b.packageName}\n` +
-        `💎 *Vanity Tier:* ${b.kitType}\n` +
-        `👥 *Extra Family Guests:* ${b.extraGuestsCount || 0} Person(s)\n` +
-        `📍 *Venue Location:* ${b.zoneName}\n` +
-        `🏠 *Exact Address:* ${b.venueAddress}\n` +
-        `💰 *Total Amount:* ₹${b.totalAmount?.toLocaleString('en-IN')}\n\n` +
-        `_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n` +
-        `Our artist team will coordinate final timings with you prior to the date.`;
+        "🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n" +
+        "Dear *" + b.clientName + "*,\n" +
+        "Your appointment is officially confirmed in our master schedule!\n\n" +
+        "🔢 *Booking Number:* " + (b.bookingNumber || '#HF-CONFIRMED') + "\n" +
+        "📅 *Confirmed Event Date:* " + b.eventDate + "\n" +
+        "💄 *Main Look:* " + b.packageName + "\n" +
+        "💎 *Vanity Tier:* " + b.kitType + "\n" +
+        "👥 *Extra Family Guests:* " + (b.extraGuestsCount || 0) + " Person(s)\n" +
+        "📍 *Venue Location:* " + b.zoneName + "\n" +
+        "🏠 *Exact Address:* " + b.venueAddress + "\n" +
+        "💰 *Total Amount:* ₹" + (b.totalAmount?.toLocaleString('en-IN')) + "\n\n" +
+        "_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n" +
+        "Our artist team will coordinate final timings with you prior to the date.";
 
-      await fetch(`${WA_SERVER_URL}/api/send-message`, {
+      await fetch(WA_SERVER_URL + "/api/send-message", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: b.clientPhone, message: confirmSlipMessage })
       });
 
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
-      setActionStatus(`✅ Final Confirmation Slip sent to ${b.clientName} via Cloudflare Tunnel!`);
+      setActionStatus("✅ Final Confirmation Slip sent to " + b.clientName + " via Cloudflare Tunnel!");
     } catch (err) {
-      setActionStatus(`⚠️ Termux server offline. Marking status as confirmed.`);
+      setActionStatus("⚠️ Termux server offline. Marking status as confirmed.");
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
     }
   };
@@ -576,7 +575,7 @@ export default function App() {
   const handleManualStatusChange = async (bookingId, newStatus) => {
     try {
       await updateDoc(doc(db, "bookings", bookingId), { status: newStatus });
-      setActionStatus(`✅ Booking marked as ${newStatus.toUpperCase()} successfully!`);
+      setActionStatus("✅ Booking marked as " + newStatus.toUpperCase() + " successfully!");
     } catch (err) {
       alert("Error updating status: " + err.message);
     }
@@ -591,19 +590,19 @@ export default function App() {
       });
 
       const rejectMsg = 
-        `Dear *${rejectModalData.clientName}*,\n\n` +
-        `Thank you for your booking request (#${rejectModalData.bookingNumber || 'HF-BOOKING'}) for *${rejectModalData.eventDate}* with *H&F Makeup Artist*.\n\n` +
-        `*Update on your request:* We are unable to accept this booking.\n` +
-        `*Note:* ${rejectionReasonText}\n\n` +
-        `We truly appreciate your interest and hope to serve you on future dates!`;
+        "Dear *" + rejectModalData.clientName + "*,\n\n" +
+        "Thank you for your booking request (#" + (rejectModalData.bookingNumber || 'HF-BOOKING') + ") for *" + rejectModalData.eventDate + "* with *H&F Makeup Artist*.\n\n" +
+        "*Update on your request:* We are unable to accept this booking.\n" +
+        "*Note:* " + rejectionReasonText + "\n\n" +
+        "We truly appreciate your interest and hope to serve you on future dates!";
 
-      fetch(`${WA_SERVER_URL}/api/send-message`, {
+      fetch(WA_SERVER_URL + "/api/send-message", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: rejectModalData.clientPhone, message: rejectMsg })
       }).catch(() => {});
 
-      setActionStatus(`❌ Booking marked as REJECTED.`);
+      setActionStatus("❌ Booking marked as REJECTED.");
       setRejectModalData(null);
     } catch (err) {
       alert("Error rejecting booking: " + err.message);
@@ -703,7 +702,7 @@ export default function App() {
         { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
         { label: 'MAIN LOOK TIER', val: b.kitType || 'Luxury Vanity' },
         { label: 'MAIN LOOK PACKAGE', val: b.packageName || 'Bridal Makeup' },
-        { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
+        { label: 'LOCATION ZONE', val: (b.zoneName || 'Delhi NCR') + ' (Fee: ₹' + (b.zoneFee || 350) + ')' },
         { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' }
       ];
 
@@ -738,11 +737,11 @@ export default function App() {
         ctx.textAlign = 'left';
         ctx.fillStyle = '#9333ea';
         ctx.font = 'bold 18px sans-serif';
-        ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 100, startY + 6);
+        ctx.fillText("EXTRA FAMILY GUESTS (" + b.extraGuestsList.length + " PERSONS)", 100, startY + 6);
 
         ctx.textAlign = 'right';
         ctx.font = 'bold 20px monospace';
-        ctx.fillText(`+₹${(b.extraGuestsCost || 0).toLocaleString('en-IN')}`, 980, startY + 6);
+        ctx.fillText("+₹" + (b.extraGuestsCost || 0).toLocaleString('en-IN'), 980, startY + 6);
         startY += 54;
 
         b.extraGuestsList.slice(0, 4).forEach((g, gIdx) => {
@@ -757,11 +756,11 @@ export default function App() {
           ctx.textAlign = 'left';
           ctx.fillStyle = '#756B67';
           ctx.font = '16px sans-serif';
-          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${pkgName}`, 120, startY + 6);
+          ctx.fillText("• Guest #" + (gIdx + 1) + " (" + kitLabel + "): " + pkgName, 120, startY + 6);
 
           ctx.textAlign = 'right';
           ctx.font = '17px monospace';
-          ctx.fillText(`₹${finalP.toLocaleString('en-IN')}`, 980, startY + 6);
+          ctx.fillText("₹" + finalP.toLocaleString('en-IN'), 980, startY + 6);
           startY += 44;
         });
       }
@@ -774,11 +773,11 @@ export default function App() {
         ctx.textAlign = 'left';
         ctx.fillStyle = '#059669';
         ctx.font = 'bold 18px sans-serif';
-        ctx.fillText(`APPLIED PROMO: ${b.appliedCoupon}`, 100, startY + 7);
+        ctx.fillText("APPLIED PROMO: " + b.appliedCoupon, 100, startY + 7);
 
         ctx.textAlign = 'right';
         ctx.font = 'bold 20px monospace';
-        ctx.fillText(`-₹${(b.discountAmount || 0).toLocaleString('en-IN')}`, 980, startY + 7);
+        ctx.fillText("-₹" + (b.discountAmount || 0).toLocaleString('en-IN'), 980, startY + 7);
         startY += 58;
       }
 
@@ -796,7 +795,7 @@ export default function App() {
 
       ctx.fillStyle = '#241E1C';
       ctx.font = 'bold 56px serif';
-      ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
+      ctx.fillText("₹" + b.totalAmount?.toLocaleString('en-IN'), 540, startY + 110);
 
       if (isRejected) {
         startY += 160;
@@ -839,7 +838,7 @@ export default function App() {
       ctx.textAlign = 'center';
       ctx.fillStyle = '#756B67';
       ctx.font = '17px sans-serif';
-      ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1670);
+      ctx.fillText("Base Location: " + draft.baseLocation + " • Instagram: @" + (draft.instagramHandle || 'husna_farooqui_makeup'), 540, 1670);
 
       ctx.fillStyle = '#C9A46A';
       ctx.font = 'italic 16px sans-serif';
@@ -847,7 +846,7 @@ export default function App() {
 
       const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
       const downloadLink = document.createElement('a');
-      downloadLink.download = `${isRejected ? 'Declined' : 'Confirmed'}_Slip_${b.bookingNumber || b.clientName}.jpg`;
+      downloadLink.download = (isRejected ? 'Declined' : 'Confirmed') + '_Slip_' + (b.bookingNumber || b.clientName) + '.jpg';
       downloadLink.href = jpgUrl;
       downloadLink.click();
     };
@@ -898,7 +897,7 @@ export default function App() {
           type: isVid ? 'video' : 'image'
         };
         setDraft({ ...draft, galleryPhotos: copy });
-        setActionStatus(`Loaded media successfully! Click Save below.`);
+        setActionStatus("Loaded media successfully! Click Save below.");
       } catch (err) {
         alert("Upload error: " + err.message);
       }
@@ -920,7 +919,7 @@ export default function App() {
             }
           }
         });
-        setActionStatus(`Loaded optimized image for ${pkgKey}. Click Save below.`);
+        setActionStatus("Loaded optimized image for " + pkgKey + ". Click Save below.");
       } catch (err) {
         alert("Image processing error: " + err.message);
       }
@@ -974,17 +973,17 @@ export default function App() {
       return;
     }
     setSendingPromo(true);
-    setActionStatus(`Starting broadcast to ${numbers.length} clients...`);
+    setActionStatus("Starting broadcast to " + numbers.length + " clients...");
     
     try {
-      await fetch(`${WA_SERVER_URL}/api/broadcast`, {
+      await fetch(WA_SERVER_URL + "/api/broadcast", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipients: numbers, templateText: selectedTemplateText })
       });
-      setActionStatus(`🎉 Broadcast queued in background server!`);
+      setActionStatus("🎉 Broadcast queued in background server!");
     } catch (e) {
-      setActionStatus(`⚠️ Background server unreachable.`);
+      setActionStatus("⚠️ Background server unreachable.");
     }
 
     setSendingPromo(false);
@@ -997,7 +996,7 @@ export default function App() {
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   const getDayBookingStatus = (day) => {
-    const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const formatted = year + "-" + String(month + 1).padStart(2, '0') + "-" + String(day).padStart(2, '0');
     const matches = bookingsList.filter(b => b.eventDate === formatted);
     if (matches.length === 0) return { hasBookings: false, list: [] };
     const isConfirmed = matches.some(b => b.status === 'confirmed');
@@ -1030,16 +1029,16 @@ export default function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className={`min-h-screen ${adminBgClass} flex items-center justify-center p-5 relative overflow-hidden font-sans`}>
+      <div className={"min-h-screen " + adminBgClass + " flex items-center justify-center p-5 relative overflow-hidden font-sans"}>
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D9B8B0]/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
         
         {showForgotPasswordModal ? (
-          <form onSubmit={handleForgotPasswordSubmit} className={`max-w-sm w-full p-8 rounded-[28px] border border-white/50 text-center space-y-4 shadow-[0_12px_40px_rgba(40,25,20,0.1)] ${cardBgClass} animate-fade-in`}>
+          <form onSubmit={handleForgotPasswordSubmit} className={"max-w-sm w-full p-8 rounded-[28px] border border-white/50 text-center space-y-4 shadow-[0_12px_40px_rgba(40,25,20,0.1)] " + cardBgClass + " animate-fade-in"}>
             <div className="w-16 h-16 rounded-[22px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center mx-auto shadow-md">
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
             <h2 className="text-[24px] font-bold tracking-tight">Recover Password</h2>
-            <p className={`text-[13px] ${adminMuted}`}>Your recovery email is permanently secured to <strong>{draft.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
+            <p className={"text-[13px] " + adminMuted}>Your recovery email is permanently secured to <strong>{draft.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
               <div className="p-3.5 rounded-[16px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 text-[13px] font-semibold">
@@ -1047,27 +1046,27 @@ export default function App() {
               </div>
             )}
 
-            <button type="submit" className={`w-full py-3.5 ${primaryCtaButton} text-[14px]`}>Send PIN to Recovery Email</button>
+            <button type="submit" className={"w-full py-3.5 " + primaryCtaButton + " text-[14px]"}>Send PIN to Recovery Email</button>
             <button type="button" onClick={() => setShowForgotPasswordModal(false)} className="text-[13px] text-[#756B67] hover:text-[#241E1C] underline">Back to Login</button>
           </form>
         ) : (
-          <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-[28px] border border-white/50 text-center space-y-5 shadow-[0_12px_40px_rgba(40,25,20,0.1)] ${cardBgClass}`}>
+          <form onSubmit={handleLogin} className={"max-w-sm w-full p-8 rounded-[28px] border border-white/50 text-center space-y-5 shadow-[0_12px_40px_rgba(40,25,20,0.1)] " + cardBgClass}>
             <div className="w-16 h-16 rounded-[22px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center mx-auto shadow-md">
               <Lock className="w-8 h-8 animate-bounce" />
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${adminMuted} mt-1`}>Apple Liquid Glass Studio Console</p>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>Apple Liquid Glass Studio Console</p>
             </div>
-            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-3.5 font-mono text-[#C9A46A] ${adminInputBg}`} />
+            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={"w-full text-center text-[18px] p-3.5 font-mono text-[#C9A46A] " + adminInputBg} />
             
-            <button type="submit" className={`w-full py-3.5 ${primaryCtaButton} text-[14px]`}>Unlock Console</button>
+            <button type="submit" className={"w-full py-3.5 " + primaryCtaButton + " text-[14px]"}>Unlock Console</button>
             
             <div className="space-y-2.5 pt-3 border-t border-white/20">
               <button
                 type="button"
                 onClick={handleBiometricOrFaceLogin}
-                className={`w-full py-3 ${liquidGlassButton} text-[13px] font-bold text-[#C9A46A] flex items-center justify-center gap-2`}
+                className={"w-full py-3 " + liquidGlassButton + " text-[13px] font-bold text-[#C9A46A] flex items-center justify-center gap-2"}
               >
                 <Fingerprint className="w-4 h-4 text-[#C9A46A]" />
                 <span>Login with Fingerprint / Face ID</span>
@@ -1088,7 +1087,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen ${adminBgClass} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden`}>
+    <div className={"min-h-screen " + adminBgClass + " font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden"}>
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-[#D9B8B0]/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-[#C9A46A]/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
@@ -1105,7 +1104,7 @@ export default function App() {
               <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-[#756B67] hover:text-[#241E1C]"><X className="w-5 h-5" /></button>
             </div>
 
-            <p className={`text-[13px] ${adminMuted}`}>
+            <p className={"text-[13px] " + adminMuted}>
               Are you sure you want to decline this booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>?
             </p>
 
@@ -1115,7 +1114,7 @@ export default function App() {
                 rows={3}
                 value={rejectionReasonText}
                 onChange={e => setRejectionReasonText(e.target.value)}
-                className={`w-full p-3.5 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                className={"w-full p-3.5 rounded-[16px] text-[13px] border " + adminInputBg}
               />
             </div>
 
@@ -1127,7 +1126,7 @@ export default function App() {
                     key={idx}
                     type="button"
                     onClick={() => setRejectionReasonText(reason)}
-                    className={`text-left p-2.5 rounded-[14px] text-[12px] border transition ${rejectionReasonText === reason ? 'bg-[#C9A46A]/20 text-[#241E1C] border-[#C9A46A]/50 font-semibold shadow-sm' : 'bg-white/40 border-white/40 text-[#756B67] hover:bg-white/70'}`}
+                    className={"text-left p-2.5 rounded-[14px] text-[12px] border transition " + (rejectionReasonText === reason ? 'bg-[#C9A46A]/20 text-[#241E1C] border-[#C9A46A]/50 font-semibold shadow-sm' : 'bg-white/40 border-white/40 text-[#756B67] hover:bg-white/70')}
                   >
                     • {reason}
                   </button>
@@ -1139,7 +1138,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setRejectModalData(null)}
-                className={`px-4 py-2.5 rounded-[14px] ${liquidGlassButton} text-[13px] font-bold text-[#756B67]`}
+                className={"px-4 py-2.5 rounded-[14px] " + liquidGlassButton + " text-[13px] font-bold text-[#756B67]"}
               >
                 Cancel
               </button>
@@ -1171,7 +1170,7 @@ export default function App() {
             <h1 className="font-bold text-[16px] sm:text-[18px] text-[#241E1C] tracking-tight">
               H&F Makeup Artist Console
             </h1>
-            <p className={`text-[12px] ${adminMuted}`}>Master Directory & Liquid Glass Center</p>
+            <p className={"text-[12px] " + adminMuted}>Master Directory & Liquid Glass Center</p>
           </div>
         </div>
 
@@ -1184,7 +1183,7 @@ export default function App() {
                 }
                 setIsReorderMode(!isReorderMode);
               }}
-              className={`px-4 py-2.5 rounded-[16px] text-[13px] font-bold flex items-center gap-1.5 transition ${isReorderMode ? 'bg-[#C9A46A] text-white shadow-[0_6px_18px_rgba(201,164,106,0.3)]' : liquidGlassButton + ' text-[#241E1C]'}`}
+              className={"px-4 py-2.5 rounded-[16px] text-[13px] font-bold flex items-center gap-1.5 transition " + (isReorderMode ? 'bg-[#C9A46A] text-white shadow-[0_6px_18px_rgba(201,164,106,0.3)]' : liquidGlassButton + ' text-[#241E1C]')}
             >
               <Edit3 className="w-4 h-4" />
               <span>{isReorderMode ? 'Save Order' : 'Edit Order'}</span>
@@ -1200,7 +1199,7 @@ export default function App() {
           {activeFolderId ? (
             <button
               onClick={() => setActiveFolderId(null)}
-              className={`px-4 py-2.5 rounded-[16px] ${liquidGlassButton} text-[13px] font-bold flex items-center gap-2 text-[#C9A46A] transition`}
+              className={"px-4 py-2.5 rounded-[16px] " + liquidGlassButton + " text-[13px] font-bold flex items-center gap-2 text-[#C9A46A] transition"}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Master Folders</span>
@@ -1236,12 +1235,12 @@ export default function App() {
               return (
                 <div
                   key={f.id}
-                  className={`${cardBgClass} p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative ${isReorderMode ? 'ring-2 ring-[#C9A46A] bg-[#C9A46A]/5' : 'hover:scale-[1.01]'}`}
+                  className={cardBgClass + " p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative " + (isReorderMode ? 'ring-2 ring-[#C9A46A] bg-[#C9A46A]/5' : 'hover:scale-[1.01]')}
                 >
                   <div className="flex justify-between items-start">
                     <div 
                       onClick={() => !isReorderMode && setActiveFolderId(f.id)} 
-                      className={`w-13 h-13 rounded-[20px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center group-hover:scale-110 transition-transform ${!isReorderMode ? 'cursor-pointer' : ''}`}
+                      className={"w-13 h-13 rounded-[20px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center group-hover:scale-110 transition-transform " + (!isReorderMode ? 'cursor-pointer' : '')}
                     >
                       <Icon className="w-6 h-6" />
                     </div>
@@ -1279,7 +1278,7 @@ export default function App() {
                         </span>
                       )}
                     </div>
-                    <p className={`text-[13px] mt-1.5 leading-relaxed ${adminMuted}`}>{f.desc}</p>
+                    <p className={"text-[13px] mt-1.5 leading-relaxed " + adminMuted}>{f.desc}</p>
                   </div>
                 </div>
               );
@@ -1288,30 +1287,30 @@ export default function App() {
         )}
 
         {activeFolderId === 'general' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div>
               <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                 <Settings className="w-4 h-4" /> General & Security Settings
               </h3>
-              <p className={`text-[13px] ${adminMuted} mt-1`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
             </div>
 
-            <div className={`p-6 rounded-[22px] border border-white/40 space-y-4 ${adminInnerCard}`}>
+            <div className={"p-6 rounded-[22px] border border-white/40 space-y-4 " + adminInnerCard}>
               <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
                 <Fingerprint className="w-4 h-4 text-[#C9A46A]" /> Hardware Fingerprint Scanner Integration
               </h4>
-              <p className={`text-[13px] ${adminMuted}`}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
+              <p className={"text-[13px] " + adminMuted}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
 
               <div className="p-5 rounded-[18px] bg-white/50 border border-white/60 text-center space-y-3.5 shadow-sm">
                 <div className="w-16 h-16 rounded-[22px] bg-[#C9A46A]/15 text-[#C9A46A] flex items-center justify-center mx-auto border border-[#C9A46A]/30 shadow-md">
-                  <Fingerprint className={`w-8 h-8 ${isScanningFinger ? 'animate-pulse text-[#C9A46A]' : ''}`} />
+                  <Fingerprint className={"w-8 h-8 " + (isScanningFinger ? 'animate-pulse text-[#C9A46A]' : '')} />
                 </div>
                 
                 {isScanningFinger ? (
                   <div className="space-y-2">
                     <p className="text-[13px] font-bold text-[#C9A46A]">Scanning Fingerprint... ({scanProgress}%)</p>
                     <div className="w-48 h-2 bg-white/60 rounded-full mx-auto overflow-hidden shadow-inner">
-                      <div className="h-full bg-[#C9A46A] transition-all duration-300" style={{ width: `${scanProgress}%` }} />
+                      <div className="h-full bg-[#C9A46A] transition-all duration-300" style={{ width: scanProgress + '%' }} />
                     </div>
                   </div>
                 ) : (
@@ -1322,7 +1321,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleRegisterFingerprintScan}
-                      className={`px-6 py-3 ${primaryCtaButton} text-[13px]`}
+                      className={"px-6 py-3 " + primaryCtaButton + " text-[13px]"}
                     >
                       {draft.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
                     </button>
@@ -1336,7 +1335,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, biometricEnabled: !draft.biometricEnabled })}
-                    className={`px-3 py-1.5 rounded-[12px] font-bold text-[12px] ${draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-800 border border-rose-500/40'}`}
+                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-800 border border-rose-500/40')}
                   >
                     {draft.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
@@ -1347,7 +1346,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, faceIdEnabled: !draft.faceIdEnabled })}
-                    className={`px-3 py-1.5 rounded-[12px] font-bold text-[12px] ${draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-800 border border-rose-500/40'}`}
+                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-800 border border-rose-500/40')}
                   >
                     {draft.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
@@ -1355,18 +1354,18 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-6 rounded-[22px] border border-white/40 space-y-3.5 ${adminInnerCard}`}>
+            <div className={"p-6 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
               <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-[#C9A46A]" /> Main App Version & History
               </h4>
-              <p className={`text-[13px] ${adminMuted}`}>Deployment timeline and release changes for Customer Main App.</p>
+              <p className={"text-[13px] " + adminMuted}>Deployment timeline and release changes for Customer Main App.</p>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                 {MAIN_APP_VERSIONS.map((ver, vIdx) => (
                   <div key={vIdx} className="p-3.5 rounded-[16px] bg-white/50 border border-white/60 text-[13px] space-y-1 shadow-sm">
                     <div className="flex justify-between items-center">
                       <span className="font-bold font-mono text-[#C9A46A]">{ver.version}</span>
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/30' : 'bg-slate-200 text-slate-700'}`}>
+                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/30' : 'bg-slate-200 text-slate-700')}>
                         {ver.status}
                       </span>
                     </div>
@@ -1377,18 +1376,18 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-6 rounded-[22px] border border-white/40 space-y-3.5 ${adminInnerCard}`}>
+            <div className={"p-6 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
               <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-[#C9A46A]" /> Admin App Version & History
               </h4>
-              <p className={`text-[13px] ${adminMuted}`}>Deployment timeline and release changes for Admin Console.</p>
+              <p className={"text-[13px] " + adminMuted}>Deployment timeline and release changes for Admin Console.</p>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                 {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
                   <div key={vIdx} className="p-3.5 rounded-[16px] bg-white/50 border border-white/60 text-[13px] space-y-1 shadow-sm">
                     <div className="flex justify-between items-center">
                       <span className="font-bold font-mono text-[#C9A46A]">{ver.version}</span>
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/30' : 'bg-slate-200 text-slate-700'}`}>
+                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/30' : 'bg-slate-200 text-slate-700')}>
                         {ver.status}
                       </span>
                     </div>
@@ -1399,66 +1398,66 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-6 rounded-[22px] border border-white/40 space-y-3 ${adminInnerCard}`}>
+            <div className={"p-6 rounded-[22px] border border-white/40 space-y-3 " + adminInnerCard}>
               <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
                 <Mail className="w-4 h-4 text-[#C9A46A]" /> Permanent Recovery Email ID
               </h4>
-              <p className={`text-[13px] ${adminMuted}`}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
+              <p className={"text-[13px] " + adminMuted}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
               
               <input
                 type="email"
                 value={draft.recoveryEmail || "aqiffarooqui@gmail.com"}
                 onChange={e => setDraft({ ...draft, recoveryEmail: e.target.value })}
-                className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-[#C9A46A] border ${adminInputBg}`}
+                className={"w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-[#C9A46A] border " + adminInputBg}
               />
             </div>
 
-            <form onSubmit={handlePasswordChange} className={`p-6 rounded-[22px] border border-white/40 space-y-4 ${adminInnerCard}`}>
+            <form onSubmit={handlePasswordChange} className={"p-6 rounded-[22px] border border-white/40 space-y-4 " + adminInnerCard}>
               <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
                 <Key className="w-4 h-4 text-[#C9A46A]" /> Change Admin PIN Password
               </h4>
 
               <div className="space-y-3.5">
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>Current PIN</label>
+                  <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Current PIN</label>
                   <input
                     type="password"
                     required
                     placeholder="Enter current PIN"
                     value={oldPinInput}
                     onChange={e => setOldPinInput(e.target.value)}
-                    className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                    className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>New PIN (Min 4 digits)</label>
+                    <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>New PIN (Min 4 digits)</label>
                     <input
                       type="password"
                       required
                       placeholder="Enter new PIN"
                       value={newPinInput}
                       onChange={e => setNewPinInput(e.target.value)}
-                      className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                      className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                     />
                   </div>
                   <div>
-                    <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>Confirm New PIN</label>
+                    <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Confirm New PIN</label>
                     <input
                       type="password"
                       required
                       placeholder="Confirm new PIN"
                       value={confirmPinInput}
                       onChange={e => setConfirmPinInput(e.target.value)}
-                      className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                      className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className={`w-full py-3.5 ${primaryCtaButton} text-[13px]`}
+                  className={"w-full py-3.5 " + primaryCtaButton + " text-[13px]"}
                 >
                   Update Admin Password
                 </button>
@@ -1469,7 +1468,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'General Settings'}
               onClick={() => handleSaveSpecificCard('General Settings')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'General Settings' ? 'Saving...' : 'Save General & Security Settings Live'}</span>
@@ -1478,24 +1477,24 @@ export default function App() {
         )}
 
         {activeFolderId === 'bookings' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A]">Incoming Customer Bookings Queue</h3>
-                <p className={`text-[13px] ${adminMuted} mt-1`}>Filter by status or event date, review, accept, or reject bookings.</p>
+                <p className={"text-[13px] " + adminMuted + " mt-1"}>Filter by status or event date, review, accept, or reject bookings.</p>
               </div>
               <span className="text-[13px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/40 px-3.5 py-1.5 rounded-full shadow-sm">
                 {filteredBookingsList.length} / {bookingsList.length} Bookings
               </span>
             </div>
 
-            <div className={`p-5 rounded-[22px] border border-white/40 grid grid-cols-1 sm:grid-cols-2 gap-4 ${adminInnerCard}`}>
+            <div className={"p-5 rounded-[22px] border border-white/40 grid grid-cols-1 sm:grid-cols-2 gap-4 " + adminInnerCard}>
               <div>
-                <label className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Filter by Status</label>
+                <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Filter by Status</label>
                 <select
                   value={bookingStatusFilter}
                   onChange={e => setBookingStatusFilter(e.target.value)}
-                  className={`w-full p-3 rounded-[16px] text-[13px] font-bold border ${adminInputBg}`}
+                  className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}
                 >
                   <option value="all">🌟 All Statuses</option>
                   <option value="confirmed">✅ Confirmed / Accepted</option>
@@ -1505,19 +1504,19 @@ export default function App() {
               </div>
 
               <div>
-                <label className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Filter by Event Date</label>
+                <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Filter by Event Date</label>
                 <div className="flex gap-2.5">
                   <input
                     type="date"
                     value={bookingDateFilter}
                     onChange={e => setBookingDateFilter(e.target.value)}
-                    className={`flex-1 p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                    className={"flex-1 p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                   />
                   {bookingDateFilter && (
                     <button
                       type="button"
                       onClick={() => setBookingDateFilter('')}
-                      className={`px-4 py-3 rounded-[16px] ${liquidGlassButton} text-[13px] font-bold text-rose-600`}
+                      className={"px-4 py-3 rounded-[16px] " + liquidGlassButton + " text-[13px] font-bold text-rose-600"}
                     >
                       Clear
                     </button>
@@ -1536,18 +1535,18 @@ export default function App() {
                     : null;
 
                   return (
-                    <div key={b.id} className={`p-6 rounded-[24px] border border-white/40 space-y-4 ${adminInnerCard} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/50' : ''}`}>
+                    <div key={b.id} className={"p-6 rounded-[24px] border border-white/40 space-y-4 " + adminInnerCard + (conflictingConfirmedBooking ? ' ring-2 ring-rose-500/50' : '')}>
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-mono text-[12px] font-bold text-[#C9A46A] bg-[#C9A46A]/15 px-2.5 py-1 rounded-[10px] border border-[#C9A46A]/30">
                               {b.bookingNumber || '#HF-PENDING'}
                             </span>
-                            <span className={`text-[11px] font-bold uppercase px-3 py-1 rounded-full ${
+                            <span className={"text-[11px] font-bold uppercase px-3 py-1 rounded-full " + (
                               b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 
                               b.status === 'rejected' ? 'bg-rose-500/20 text-rose-800 border border-rose-500/40' : 
                               'bg-amber-500/20 text-amber-900 border border-amber-500/40'
-                            }`}>
+                            )}>
                               {b.status === 'confirmed' ? '✅ Confirmed' : b.status === 'rejected' ? '❌ Rejected' : '⏳ Pending Review'}
                             </span>
                           </div>
@@ -1630,7 +1629,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className={`w-full py-2.5 ${liquidGlassButton} text-[#241E1C] font-bold text-[12px] flex items-center justify-center gap-2`}
+                          className={"w-full py-2.5 " + liquidGlassButton + " text-[#241E1C] font-bold text-[12px] flex items-center justify-center gap-2"}
                         >
                           <Download className="w-4 h-4" />
                           <span>Generate & Download Status Slip (.JPG)</span>
@@ -1645,13 +1644,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'feedbacks' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" /> Client Feedback & Suggestions Box
                 </h3>
-                <p className={`text-[13px] ${adminMuted}`}>Reviews, ratings, and creative suggestions submitted by clients.</p>
+                <p className={"text-[13px] " + adminMuted}>Reviews, ratings, and creative suggestions submitted by clients.</p>
               </div>
               <span className="text-[13px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/40 px-3.5 py-1.5 rounded-full shadow-sm">
                 {feedbacksList.length} Feedbacks
@@ -1663,7 +1662,7 @@ export default function App() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedbacksList.map(item => (
-                  <div key={item.id} className={`p-5 rounded-[22px] border border-white/40 space-y-3 ${adminInnerCard}`}>
+                  <div key={item.id} className={"p-5 rounded-[22px] border border-white/40 space-y-3 " + adminInnerCard}>
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-1 text-amber-500">
@@ -1696,25 +1695,25 @@ export default function App() {
         )}
 
         {activeFolderId === 'calendar_view' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Calendar className="w-4 h-4" /> Interactive Monthly Booking Calendar
                 </h3>
-                <p className={`text-[13px] ${adminMuted} mt-1`}>
+                <p className={"text-[13px] " + adminMuted + " mt-1"}>
                   Visual color tags show free vs booked dates (🟢 Green = Confirmed / Busy, 🟡 Amber = Pending).
                 </p>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className={`p-2.5 rounded-[14px] ${liquidGlassButton} active:scale-90 transition`}>
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className={"p-2.5 rounded-[14px] " + liquidGlassButton + " active:scale-90 transition"}>
                   <ChevronLeft className="w-4 h-4 text-[#C9A46A]" />
                 </button>
                 <span className="font-bold text-[14px] font-mono min-w-[140px] text-center text-[#241E1C]">
                   {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className={`p-2.5 rounded-[14px] ${liquidGlassButton} active:scale-90 transition`}>
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className={"p-2.5 rounded-[14px] " + liquidGlassButton + " active:scale-90 transition"}>
                   <ChevronRight className="w-4 h-4 text-[#C9A46A]" />
                 </button>
               </div>
@@ -1726,7 +1725,7 @@ export default function App() {
               ))}
 
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty_${i}`} className="h-20 sm:h-24 rounded-[18px] bg-transparent" />
+                <div key={"empty_" + i} className="h-20 sm:h-24 rounded-[18px] bg-transparent" />
               ))}
 
               {Array.from({ length: totalDaysInMonth }).map((_, i) => {
@@ -1734,22 +1733,22 @@ export default function App() {
                 const status = getDayBookingStatus(day);
                 return (
                   <div
-                    key={`day_${day}`}
+                    key={"day_" + day}
                     onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
-                    className={`h-20 sm:h-24 rounded-[18px] p-2 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
+                    className={"h-20 sm:h-24 rounded-[18px] p-2 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer " + (
                       status.hasBookings 
                         ? (status.isConfirmed 
                             ? 'bg-emerald-500/20 border-emerald-500/50 hover:scale-105 shadow-md shadow-emerald-500/10' 
                             : 'bg-amber-500/20 border-amber-500/50 hover:scale-105 shadow-md shadow-amber-500/10')
-                        : `${adminInnerCard} hover:border-white/60 opacity-80`
-                    }`}
+                        : adminInnerCard + ' hover:border-white/60 opacity-80'
+                    )}
                   >
-                    <span className={`text-[13px] font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-900' : 'text-amber-950') : 'text-[#241E1C]'}`}>
+                    <span className={"text-[13px] font-bold font-mono " + (status.hasBookings ? (status.isConfirmed ? 'text-emerald-900' : 'text-amber-950') : 'text-[#241E1C]')}>
                       {day}
                     </span>
 
                     {status.hasBookings && (
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ${status.isConfirmed ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white'}`}>
+                      <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm " + (status.isConfirmed ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white')}>
                         {status.count} Booked
                       </span>
                     )}
@@ -1759,11 +1758,11 @@ export default function App() {
             </div>
 
             {selectedCalendarDay && (
-              <div className={`p-5 rounded-[22px] border border-white/40 space-y-3.5 animate-fade-in ${adminInnerCard}`}>
+              <div className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 animate-fade-in " + adminInnerCard}>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2.5">
                     <span className="font-mono font-bold text-[14px] text-[#C9A46A]">Date: {selectedCalendarDay.dateStr}</span>
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${selectedCalendarDay.isConfirmed ? 'bg-emerald-500/25 text-emerald-900' : 'bg-amber-500/25 text-amber-950'}`}>
+                    <span className={"text-[11px] font-bold px-2.5 py-0.5 rounded-full " + (selectedCalendarDay.isConfirmed ? 'bg-emerald-500/25 text-emerald-900' : 'bg-amber-500/25 text-amber-950')}>
                       {selectedCalendarDay.isConfirmed ? 'LOCKED / CONFIRMED' : 'PENDING REVIEW'}
                     </span>
                   </div>
@@ -1788,27 +1787,27 @@ export default function App() {
         )}
 
         {activeFolderId === 'packages_master' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Layers className="w-4 h-4" /> Package Management (Images, Titles & Descriptions)
                 </h3>
-                <p className={`text-[13px] ${adminMuted} mt-1`}>Manage custom look photos, package display names and descriptions per kit type.</p>
+                <p className={"text-[13px] " + adminMuted + " mt-1"}>Manage custom look photos, package display names and descriptions per kit type.</p>
               </div>
 
               <div className="inline-flex p-1.5 rounded-[18px] bg-white/40 border border-white/60 gap-1.5 self-start shadow-sm">
                 <button
                   type="button"
                   onClick={() => setEditingKitTab('international')}
-                  className={`px-4 py-2 rounded-[14px] text-[13px] font-bold transition ${editingKitTab === 'international' ? 'bg-[#C9A46A] text-white shadow' : 'text-[#756B67]'}`}
+                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'international' ? 'bg-[#C9A46A] text-white shadow' : 'text-[#756B67]')}
                 >
                   👑 Luxury Kit
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditingKitTab('drugstore')}
-                  className={`px-4 py-2 rounded-[14px] text-[13px] font-bold transition ${editingKitTab === 'drugstore' ? 'bg-[#C9A46A] text-white shadow' : 'text-[#756B67]'}`}
+                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'drugstore' ? 'bg-[#C9A46A] text-white shadow' : 'text-[#756B67]')}
                 >
                   ✨ HD Kit
                 </button>
@@ -1821,7 +1820,7 @@ export default function App() {
                 const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitImages[editingKitTab][k];
 
                 return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-6 rounded-[24px] border border-white/40 space-y-4 ${adminInnerCard}`}>
+                  <div key={editingKitTab + "_" + k} className={"p-6 rounded-[24px] border border-white/40 space-y-4 " + adminInnerCard}>
                     <div className="flex items-center justify-between">
                       <span className="text-[12px] font-bold text-[#C9A46A] font-mono uppercase tracking-wider">{k.replace(/_/g, ' ')}</span>
                       <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/60 text-[#756B67] uppercase font-bold border border-white/80">{editingKitTab}</span>
@@ -1846,7 +1845,7 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-2.5 rounded-[12px] text-[12px] font-mono border ${adminInputBg}`}
+                          className={"w-full p-2.5 rounded-[12px] text-[12px] font-mono border " + adminInputBg}
                         />
                         <label className="block text-center py-2 rounded-[12px] bg-[#C9A46A]/20 text-[#241E1C] text-[12px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
                           Upload Photo (&lt;20MB)
@@ -1857,7 +1856,7 @@ export default function App() {
 
                     <div className="space-y-3 pt-3 border-t border-black/10">
                       <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${adminMuted}`}>Package Display Name</span>
+                        <span className={"block text-[11px] mb-1 font-bold " + adminMuted}>Package Display Name</span>
                         <input
                           type="text"
                           value={pkgText.name || ''}
@@ -1871,11 +1870,11 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3 rounded-[16px] text-[13px] font-bold border ${adminInputBg}`}
+                          className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}
                         />
                       </div>
                       <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${adminMuted}`}>Description</span>
+                        <span className={"block text-[11px] mb-1 font-bold " + adminMuted}>Description</span>
                         <textarea
                           rows={2}
                           value={pkgText.desc || ''}
@@ -1889,7 +1888,7 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                          className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                         />
                       </div>
                     </div>
@@ -1902,7 +1901,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Package Master'}
               onClick={() => handleSaveSpecificCard('Package Master')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
@@ -1911,23 +1910,23 @@ export default function App() {
         )}
 
         {activeFolderId === 'app_maintenance' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div>
               <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                 <Wrench className="w-4 h-4" /> App Down & Maintenance Controller
               </h3>
-              <p className={`text-[13px] ${adminMuted} mt-1`}>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>
                 Turn on to politely lock customer app with an elegant maintenance notice during upgrades.
               </p>
             </div>
 
-            <div className={`p-6 rounded-[22px] border border-white/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 ${adminInnerCard}`}>
+            <div className={"p-6 rounded-[22px] border border-white/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 " + adminInnerCard}>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2.5">
-                  <span className={`w-3.5 h-3.5 rounded-full ${draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
+                  <span className={"w-3.5 h-3.5 rounded-full " + (draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500')} />
                   <h4 className="font-bold text-[16px] text-[#241E1C]">App Down / Maintenance Mode</h4>
                 </div>
-                <p className={`text-[13px] ${adminMuted} max-w-lg leading-relaxed`}>
+                <p className={"text-[13px] " + adminMuted + " max-w-lg leading-relaxed"}>
                   {draft.isAppDown 
                     ? "🔴 ON: Customer App is locked. Visitors see a polite glassmorphism maintenance banner stating system upgrades are in progress."
                     : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
@@ -1937,11 +1936,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setDraft({ ...draft, isAppDown: !draft.isAppDown })}
-                className={`px-6 py-3.5 rounded-[18px] font-bold text-[13px] flex items-center gap-2.5 transition-all duration-200 active:scale-95 shadow-md ${
+                className={"px-6 py-3.5 rounded-[18px] font-bold text-[13px] flex items-center gap-2.5 transition-all duration-200 active:scale-95 shadow-md " + (
                   draft.isAppDown 
                     ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30' 
                     : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
-                }`}
+                )}
               >
                 {draft.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                 <span>{draft.isAppDown ? 'MAINTENANCE MODE (ON)' : 'APP IS LIVE (ACTIVE)'}</span>
@@ -1952,7 +1951,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Maintenance Mode'}
               onClick={() => handleSaveSpecificCard('Maintenance Mode')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
@@ -1961,15 +1960,15 @@ export default function App() {
         )}
 
         {activeFolderId === 'floating' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div>
               <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                 <Gift className="w-4 h-4" /> Floating Promo Offer Banner Controller
               </h3>
-              <p className={`text-[13px] ${adminMuted} mt-1`}>Configure bottom-right floating offer pill text, code and activation status.</p>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure bottom-right floating offer pill text, code and activation status.</p>
             </div>
 
-            <div className={`p-6 rounded-[22px] border border-white/40 space-y-4 ${adminInnerCard}`}>
+            <div className={"p-6 rounded-[22px] border border-white/40 space-y-4 " + adminInnerCard}>
               <div className="flex items-center justify-between">
                 <span className="font-bold text-[14px] text-[#241E1C]">Enable Floating Promo Banner Widget</span>
                 <button
@@ -1981,7 +1980,7 @@ export default function App() {
                       enabled: !(draft.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={`px-4 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-2 ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40'}`}
+                  className={"px-4 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-2 " + (draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}
                 >
                   {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
@@ -1990,7 +1989,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>Badge Tag</label>
+                  <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Badge Tag</label>
                   <input
                     type="text"
                     value={draft.floatingBanner?.tag || ''}
@@ -1998,11 +1997,11 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
                     })}
-                    className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                    className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                   />
                 </div>
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>Promo Code</label>
+                  <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Promo Code</label>
                   <input
                     type="text"
                     value={draft.floatingBanner?.code || ''}
@@ -2010,13 +2009,13 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
                     })}
-                    className={`w-full p-3 rounded-[16px] text-[13px] font-mono font-bold text-[#C9A46A] border ${adminInputBg}`}
+                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono font-bold text-[#C9A46A] border " + adminInputBg}
                   />
                 </div>
               </div>
 
               <div>
-                <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>Banner Title</label>
+                <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Banner Title</label>
                 <input
                   type="text"
                   value={draft.floatingBanner?.title || ''}
@@ -2024,12 +2023,12 @@ export default function App() {
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
                   })}
-                  className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                  className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                 />
               </div>
 
               <div>
-                <label className={`block text-[11px] font-bold mb-1.5 ${adminMuted}`}>Action Button Text</label>
+                <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Action Button Text</label>
                 <input
                   type="text"
                   value={draft.floatingBanner?.actionText || ''}
@@ -2037,7 +2036,7 @@ export default function App() {
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
                   })}
-                  className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                  className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                 />
               </div>
             </div>
@@ -2046,7 +2045,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Floating Banner'}
               onClick={() => handleSaveSpecificCard('Floating Banner')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
@@ -2055,13 +2054,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'coupons' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Tag className="w-4 h-4" /> Promo Coupons Manager & Expiry Timers
                 </h3>
-                <p className={`text-[13px] ${adminMuted}`}>Set coupon discounts, active status and expiry timer dates.</p>
+                <p className={"text-[13px] " + adminMuted}>Set coupon discounts, active status and expiry timer dates.</p>
               </div>
               <button
                 type="button"
@@ -2085,7 +2084,7 @@ export default function App() {
                     });
                   }
                 }}
-                className={`px-4 py-2.5 ${primaryCtaButton} text-[13px] flex items-center gap-1.5`}
+                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
               >
                 <Plus className="w-4 h-4" /> Add Coupon
               </button>
@@ -2095,11 +2094,11 @@ export default function App() {
               {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
-                  <div key={code} className={`p-5 rounded-[22px] border border-white/40 space-y-3.5 ${adminInnerCard}`}>
+                  <div key={code} className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
                         <span className="font-mono text-[#C9A46A] font-bold text-[16px]">{code}</span>
-                        <span className={`text-[11px] px-3 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40'}`}>
+                        <span className={"text-[11px] px-3 py-0.5 rounded-full font-bold " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}>
                           {isCodeActive ? 'ACTIVE' : 'DISABLED'}
                         </span>
                       </div>
@@ -2114,7 +2113,7 @@ export default function App() {
                               [code]: { ...c, enabled: !isCodeActive }
                             }
                           })}
-                          className={`px-3.5 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40'}`}
+                          className={"px-3.5 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-1.5 transition active:scale-95 " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}
                         >
                           {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                           <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
@@ -2130,7 +2129,7 @@ export default function App() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                       <div>
-                        <span className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Discount Type</span>
+                        <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Discount Type</span>
                         <select
                           value={c.type || 'percent'}
                           onChange={e => setDraft({
@@ -2140,7 +2139,7 @@ export default function App() {
                               [code]: { ...c, type: e.target.value }
                             }
                           })}
-                          className={`w-full p-3 rounded-[16px] text-[13px] font-bold border ${adminInputBg}`}
+                          className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}
                         >
                           <option value="percent">% Percent Off</option>
                           <option value="flat">₹ Flat Discount</option>
@@ -2148,7 +2147,7 @@ export default function App() {
                       </div>
 
                       <div>
-                        <span className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
+                        <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
                         <input
                           type="number"
                           value={c.value || 0}
@@ -2159,12 +2158,12 @@ export default function App() {
                               [code]: { ...c, value: Number(e.target.value) }
                             }
                           })}
-                          className={`w-full p-3 rounded-[16px] font-mono text-[#C9A46A] text-[13px] font-bold border ${adminInputBg}`}
+                          className={"w-full p-3 rounded-[16px] font-mono text-[#C9A46A] text-[13px] font-bold border " + adminInputBg}
                         />
                       </div>
 
                       <div>
-                        <span className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>⏱️ Expiry Date & Time</span>
+                        <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>⏱️ Expiry Date & Time</span>
                         <input
                           type="datetime-local"
                           value={c.expiryDate || ''}
@@ -2175,13 +2174,13 @@ export default function App() {
                               [code]: { ...c, expiryDate: e.target.value }
                             }
                           })}
-                          className={`w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border ${adminInputBg}`}
+                          className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border " + adminInputBg}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <span className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Promo Display Description / Label</span>
+                      <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Promo Display Description / Label</span>
                       <input
                         type="text"
                         value={c.label || ''}
@@ -2192,7 +2191,7 @@ export default function App() {
                             [code]: { ...c, label: e.target.value }
                           }
                         })}
-                        className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                        className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
                       />
                     </div>
                   </div>
@@ -2204,7 +2203,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Coupons'}
               onClick={() => handleSaveSpecificCard('Coupons')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Coupons' ? 'Saving...' : 'Save Promo Coupons Live'}</span>
@@ -2213,13 +2212,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'gallery' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Film className="w-4 h-4" /> Transformations, Videos & GIFs Studio (20MB Max)
                 </h3>
-                <p className={`text-[13px] ${adminMuted}`}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
+                <p className={"text-[13px] " + adminMuted}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
               </div>
               <button
                 type="button"
@@ -2232,7 +2231,7 @@ export default function App() {
                     ]
                   });
                 }}
-                className={`px-4 py-2.5 ${primaryCtaButton} text-[13px] flex items-center gap-1.5`}
+                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
               >
                 <Plus className="w-4 h-4" /> Add Card
               </button>
@@ -2240,7 +2239,7 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(draft.galleryPhotos || []).map((item, idx) => (
-                <div key={idx} className={`p-5 rounded-[22px] border border-white/40 space-y-3.5 ${adminInnerCard}`}>
+                <div key={idx} className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-bold text-[#C9A46A] font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
                     <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-600 p-1.5 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
@@ -2248,42 +2247,42 @@ export default function App() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Type</label>
+                      <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Type</label>
                       <select value={item.type || 'video'} onChange={e => {
                         const copy = [...draft.galleryPhotos];
                         copy[idx] = { ...copy[idx], type: e.target.value };
                         setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={`w-full p-3 rounded-[16px] text-[13px] font-bold border ${adminInputBg}`}>
+                      }} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}>
                         <option value="video">🎥 Auto-play Video</option>
                         <option value="image">🖼️ Image / Animated GIF</option>
                       </select>
                     </div>
                     <div>
-                      <label className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Subtitle</label>
+                      <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Subtitle</label>
                       <input type="text" value={item.sub || ''} onChange={e => {
                         const copy = [...draft.galleryPhotos];
                         copy[idx] = { ...copy[idx], sub: e.target.value };
                         setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`} />
+                      }} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
                     </div>
                   </div>
 
                   <div>
-                    <label className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Title</label>
+                    <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Title</label>
                     <input type="text" value={item.title || ''} onChange={e => {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], title: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={`w-full p-3 rounded-[16px] text-[13px] font-bold border ${adminInputBg}`} />
+                    }} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg} />
                   </div>
 
                   <div>
-                    <label className={`block text-[11px] mb-1.5 font-bold ${adminMuted}`}>Direct URL (Video, GIF, or Image link)</label>
+                    <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Direct URL (Video, GIF, or Image link)</label>
                     <input type="text" value={item.url || ''} onChange={e => {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={`w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border ${adminInputBg}`} />
+                    }} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border " + adminInputBg} />
                   </div>
 
                   <label className="block text-center py-2.5 rounded-[14px] bg-[#C9A46A]/20 text-[#241E1C] text-[13px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
@@ -2298,7 +2297,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Gallery Media'}
               onClick={() => handleSaveSpecificCard('Gallery Media')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
@@ -2307,12 +2306,12 @@ export default function App() {
         )}
 
         {activeFolderId === 'toggles_master' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div>
               <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
               </h3>
-              <p className={`text-[13px] ${adminMuted} mt-1`}>Enable or disable any tab, section or feature on the customer app.</p>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>Enable or disable any tab, section or feature on the customer app.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2329,10 +2328,10 @@ export default function App() {
               ].map(toggle => {
                 const isEnabled = draft.toggles?.[toggle.key] !== false;
                 return (
-                  <div key={toggle.key} className={`p-4.5 rounded-[20px] border border-white/40 flex items-center justify-between gap-3.5 ${adminInnerCard}`}>
+                  <div key={toggle.key} className={"p-4.5 rounded-[20px] border border-white/40 flex items-center justify-between gap-3.5 " + adminInnerCard}>
                     <div className="space-y-1">
                       <h4 className="font-bold text-[13px] text-[#241E1C]">{toggle.label}</h4>
-                      <p className={`text-[12px] ${adminMuted}`}>{toggle.desc}</p>
+                      <p className={"text-[12px] " + adminMuted}>{toggle.desc}</p>
                     </div>
                     <button
                       type="button"
@@ -2343,7 +2342,7 @@ export default function App() {
                           [toggle.key]: !isEnabled
                         }
                       })}
-                      className={`px-3.5 py-2 rounded-[14px] flex items-center gap-1.5 font-bold text-[12px] transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40'}`}
+                      className={"px-3.5 py-2 rounded-[14px] flex items-center gap-1.5 font-bold text-[12px] transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}
                     >
                       {isEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                       <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
@@ -2357,7 +2356,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Master Toggles'}
               onClick={() => handleSaveSpecificCard('Master Toggles')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
@@ -2366,13 +2365,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'traffic_logs' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Activity className="w-4 h-4" /> Live Traffic & Instagram Visitor Logs
                 </h3>
-                <p className={`text-[13px] ${adminMuted}`}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
+                <p className={"text-[13px] " + adminMuted}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
               </div>
               <span className="text-[13px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/40 px-3.5 py-1.5 rounded-full shadow-sm">
                 {visitorLogs.length} Recent Visits Logged
@@ -2384,13 +2383,13 @@ export default function App() {
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                 {visitorLogs.map(log => (
-                  <div key={log.id} className={`p-4 rounded-[18px] border border-white/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[13px] ${adminInnerCard}`}>
+                  <div key={log.id} className={"p-4 rounded-[18px] border border-white/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[13px] " + adminInnerCard}>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2.5">
                         <span className="font-bold text-[#C9A46A] font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
                         <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/60 text-[#241E1C] font-bold border border-white/80">Active Visit</span>
                       </div>
-                      <p className={`text-[12px] truncate max-w-md ${adminMuted}`}>{log.userAgent}</p>
+                      <p className={"text-[12px] truncate max-w-md " + adminMuted}>{log.userAgent}</p>
                     </div>
                     <span className="text-[12px] text-[#C9A46A] font-mono font-medium">
                       {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
@@ -2403,7 +2402,7 @@ export default function App() {
         )}
 
         {activeFolderId === 'promotions' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
               <Megaphone className="w-4 h-4" /> WhatsApp Broadcast Studio
             </h3>
@@ -2411,7 +2410,7 @@ export default function App() {
               rows={6}
               value={selectedTemplateText}
               onChange={e => setSelectedTemplateText(e.target.value)}
-              className={`w-full p-4 rounded-[20px] text-[13px] font-mono text-[#241E1C] border ${adminInputBg}`}
+              className={"w-full p-4 rounded-[20px] text-[13px] font-mono text-[#241E1C] border " + adminInputBg}
             />
             <button
               type="button"
@@ -2426,18 +2425,18 @@ export default function App() {
         )}
 
         {activeFolderId === 'announcements' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Volume2 className="w-4 h-4" /> Top Announcement Lines Ticker
                 </h3>
-                <p className={`text-[13px] ${adminMuted}`}>Edit rotating top banner messages displayed to clients.</p>
+                <p className={"text-[13px] " + adminMuted}>Edit rotating top banner messages displayed to clients.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setDraft({ ...draft, announcements: [...(draft.announcements || []), "✨ New studio announcement line ✨"] })}
-                className={`px-4 py-2.5 ${primaryCtaButton} text-[13px] flex items-center gap-1.5`}
+                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
               >
                 <Plus className="w-4 h-4" /> Add Line
               </button>
@@ -2455,7 +2454,7 @@ export default function App() {
                       copy[idx] = e.target.value;
                       setDraft({ ...draft, announcements: copy });
                     }}
-                    className={`flex-1 p-3.5 rounded-[16px] text-[13px] border ${adminInputBg}`}
+                    className={"flex-1 p-3.5 rounded-[16px] text-[13px] border " + adminInputBg}
                   />
                   <button
                     type="button"
@@ -2472,7 +2471,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Announcements'}
               onClick={() => handleSaveSpecificCard('Announcements')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements Live'}</span>
@@ -2481,13 +2480,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'convenience' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                   <Car className="w-4 h-4" /> Travel Fees & Convenience Zones
                 </h3>
-                <p className={`text-[13px] ${adminMuted}`}>Manage venue travel charges for customer locations.</p>
+                <p className={"text-[13px] " + adminMuted}>Manage venue travel charges for customer locations.</p>
               </div>
               <button
                 type="button"
@@ -2504,7 +2503,7 @@ export default function App() {
                     });
                   }
                 }}
-                className={`px-4 py-2.5 ${primaryCtaButton} text-[13px] flex items-center gap-1.5`}
+                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
               >
                 <Plus className="w-4 h-4" /> Add Zone
               </button>
@@ -2512,7 +2511,7 @@ export default function App() {
 
             <div className="space-y-3.5">
               {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={`p-4.5 rounded-[20px] border border-white/40 flex flex-col sm:flex-row items-center justify-between gap-3.5 ${adminInnerCard}`}>
+                <div key={zKey} className={"p-4.5 rounded-[20px] border border-white/40 flex flex-col sm:flex-row items-center justify-between gap-3.5 " + adminInnerCard}>
                   <div className="flex-1 w-full space-y-1">
                     <span className="text-[11px] font-mono text-[#C9A46A] uppercase font-bold">Zone Key: {zKey}</span>
                     <input
@@ -2525,7 +2524,7 @@ export default function App() {
                           [zKey]: { ...zData, name: e.target.value }
                         }
                       })}
-                      className={`w-full p-3 rounded-[16px] text-[13px] font-semibold border ${adminInputBg}`}
+                      className={"w-full p-3 rounded-[16px] text-[13px] font-semibold border " + adminInputBg}
                     />
                   </div>
 
@@ -2541,7 +2540,7 @@ export default function App() {
                           [zKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
-                      className={`w-32 p-3 rounded-[16px] font-mono text-[#C9A46A] font-bold text-[13px] border ${adminInputBg}`}
+                      className={"w-32 p-3 rounded-[16px] font-mono text-[#C9A46A] font-bold text-[13px] border " + adminInputBg}
                     />
                     <button
                       type="button"
@@ -2563,7 +2562,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Travel Fees'}
               onClick={() => handleSaveSpecificCard('Travel Fees')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
@@ -2572,13 +2571,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'prices' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <h3 className="font-bold text-[14px] uppercase text-[#C9A46A]">👑 International Luxury Vanity Kit (₹)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
               {partyPackages.concat(bridalPackages).map(k => (
                 <div key={k}>
-                  <label className={`block text-[11px] mb-1.5 capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[16px] font-mono text-[#C9A46A] text-[13px] font-bold border ${adminInputBg}`} />
+                  <label className={"block text-[11px] mb-1.5 capitalize font-bold " + adminMuted}>{k.replace(/_/g, ' ')}</label>
+                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-[#C9A46A] text-[13px] font-bold border " + adminInputBg} />
                 </div>
               ))}
             </div>
@@ -2587,8 +2586,8 @@ export default function App() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
               {partyPackages.concat(bridalPackages).map(k => (
                 <div key={k}>
-                  <label className={`block text-[11px] mb-1.5 capitalize font-bold ${adminMuted}`}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[16px] font-mono text-rose-700 text-[13px] font-bold border ${adminInputBg}`} />
+                  <label className={"block text-[11px] mb-1.5 capitalize font-bold " + adminMuted}>{k.replace(/_/g, ' ')}</label>
+                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-rose-700 text-[13px] font-bold border " + adminInputBg} />
                 </div>
               ))}
             </div>
@@ -2597,7 +2596,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Package Rates'}
               onClick={() => handleSaveSpecificCard('Package Rates')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Rates' ? 'Saving...' : 'Save Package Rates Live'}</span>
@@ -2606,12 +2605,12 @@ export default function App() {
         )}
 
         {activeFolderId === 'theme' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-5 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
             <h3 className="font-bold text-[14px] uppercase text-[#C9A46A]">Aesthetic Themes & Fonts (Synced)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Color Theme</label>
-                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[16px] text-[13px] font-bold text-[#C9A46A] border ${adminInputBg}`}>
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Color Theme</label>
+                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#C9A46A] border " + adminInputBg}>
                   <option value="liquid_glass">💎 Liquid Glass iOS</option>
                   <option value="one_ui_9">✨ Samsung One UI 9</option>
                   <option value="gold_rose">👑 Royal Gold Rose</option>
@@ -2623,8 +2622,8 @@ export default function App() {
               </div>
 
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Font Family</label>
-                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3 rounded-[16px] text-[13px] font-bold text-[#C9A46A] border ${adminInputBg}`}>
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Font Family</label>
+                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#C9A46A] border " + adminInputBg}>
                   <option value="sans">Plus Jakarta Sans</option>
                   <option value="outfit">Outfit (iOS Glass Minimal)</option>
                   <option value="serif">Playfair Display (Royal)</option>
@@ -2635,8 +2634,8 @@ export default function App() {
               </div>
 
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Default Customer Mode</label>
-                <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3 rounded-[16px] text-[13px] font-bold border ${adminInputBg}`}>
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Default Customer Mode</label>
+                <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}>
                   <option value="light">☀️ Light Mode (#FFF9F6)</option>
                   <option value="dark">🌙 Dark Mode</option>
                 </select>
@@ -2647,7 +2646,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Theme & Styles'}
               onClick={() => handleSaveSpecificCard('Theme & Styles')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts Live'}</span>
@@ -2656,15 +2655,15 @@ export default function App() {
         )}
 
         {activeFolderId === 'profile' && (
-          <div className={`p-7 rounded-[28px] border border-white/50 space-y-6 ${cardBgClass}`}>
+          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
             <div>
               <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
                 <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
               </h3>
-              <p className={`text-[13px] ${adminMuted} mt-1`}>Configure official studio title, upload custom logo & artist profile photo.</p>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure official studio title, upload custom logo & artist profile photo.</p>
             </div>
 
-            <div className={`p-5 rounded-[22px] border border-white/40 space-y-3.5 ${adminInnerCard}`}>
+            <div className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-bold text-[#C9A46A] uppercase flex items-center gap-2">
                   <Crown className="w-4 h-4" /> 1. Official Studio Logo (Header & Splash)
@@ -2687,7 +2686,7 @@ export default function App() {
                     placeholder="Paste Logo Image URL"
                     value={draft.studioLogo || ''}
                     onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
-                    className={`w-full p-3 rounded-[16px] text-[13px] font-mono border ${adminInputBg}`}
+                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono border " + adminInputBg}
                   />
                   <label className="inline-block px-4 py-2 rounded-[14px] bg-[#C9A46A]/20 text-[#241E1C] text-[13px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
                     Upload & Compress Logo File
@@ -2697,7 +2696,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-5 rounded-[22px] border border-white/40 space-y-3.5 ${adminInnerCard}`}>
+            <div className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-bold text-[#C9A46A] uppercase flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
@@ -2716,7 +2715,7 @@ export default function App() {
                     placeholder="Paste Profile Photo URL"
                     value={draft.profileImage || ''}
                     onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
-                    className={`w-full p-3 rounded-[16px] text-[13px] font-mono border ${adminInputBg}`}
+                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono border " + adminInputBg}
                   />
                   <label className="inline-block px-4 py-2 rounded-[14px] bg-[#C9A46A]/20 text-[#241E1C] text-[13px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
                     Upload & Compress Profile Photo
@@ -2728,20 +2727,20 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Display Title</label>
-                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`} />
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Display Title</label>
+                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
               </div>
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Booking Contact Number</label>
-                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border ${adminInputBg}`} />
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Booking Contact Number</label>
+                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border " + adminInputBg} />
               </div>
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3 rounded-[16px] text-[13px] font-mono text-pink-600 border ${adminInputBg}`} />
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Instagram Handle</label>
+                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-pink-600 border " + adminInputBg} />
               </div>
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${adminMuted}`}>Artist Tagline / Subtitle</label>
-                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3 rounded-[16px] text-[13px] border ${adminInputBg}`} />
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Artist Tagline / Subtitle</label>
+                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
               </div>
             </div>
 
@@ -2749,7 +2748,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Studio Profile'}
               onClick={() => handleSaveSpecificCard('Studio Profile')}
-              className={`w-full py-4 ${primaryCtaButton} text-[14px] flex items-center justify-center gap-2`}
+              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile & Logo Live'}</span>
@@ -2761,5 +2760,3 @@ export default function App() {
     </div>
   );
 }
-
-```
