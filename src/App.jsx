@@ -7,7 +7,7 @@ import {
   ListFilter, Car, Volume2, Activity, SlidersHorizontal, CheckCircle2, 
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
-  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings
+  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -17,7 +17,7 @@ const DEFAULT_CONFIG = {
   recoveryEmail: "aqiffarooqui@gmail.com",
   biometricEnabled: false,
   faceIdEnabled: false,
-  registeredFingerprintHash: "",
+  registeredCredentialId: "",
   studioName: "H&F Makeup Artist",
   artistTagline: "Beauty, Styled Your Way",
   studioLogo: "",
@@ -220,8 +220,7 @@ const DEFAULT_TEMPLATES = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-// 🎯 Properly Sequenced Master Folders Directory
-const ADMIN_FOLDERS = [
+const INITIAL_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'general', label: 'General & Security Settings', icon: Settings, desc: 'Biometric, Face ID, Fingerprint Scan Registration & Recovery' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
@@ -277,6 +276,9 @@ export default function AdminApp() {
   
   const [activeFolderId, setActiveFolderId] = useState(null);
   const [editingKitTab, setEditingKitTab] = useState('international');
+  
+  // 📂 Reorderable Folders State
+  const [adminFolders, setAdminFolders] = useState(INITIAL_FOLDERS);
    
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
@@ -385,7 +387,7 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Strict Fingerprint Scan & WebAuthn Verification
+  // 👆 Browser WebAuthn Fingerprint Hardware Authentication
   const handleBiometricOrFaceLogin = async () => {
     if (!draft.biometricEnabled || !draft.registeredFingerprintHash) {
       alert("⚠️ No Fingerprint registered yet! Please unlock with PIN, go to General Settings, and scan your finger to register.");
@@ -421,7 +423,7 @@ export default function AdminApp() {
     alert("⚠️ Fingerprint hardware scan failed or cancelled. Please use your PIN.");
   };
 
-  // 👆 Register Fingerprint Scan in General Settings
+  // 👆 Register Fingerprint Scan in General Settings with WebAuthn or Local Storage
   const handleRegisterFingerprintScan = async () => {
     setIsScanningFinger(true);
     setScanProgress(0);
@@ -567,6 +569,17 @@ export default function AdminApp() {
     } catch (err) {
       alert("Error rejecting booking: " + err.message);
     }
+  };
+
+  // 📂 Move Folder Card Up or Down
+  const moveFolderOrder = (index, direction) => {
+    const newFolders = [...adminFolders];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newFolders.length) return;
+    const temp = newFolders[index];
+    newFolders[index] = newFolders[targetIndex];
+    newFolders[targetIndex] = temp;
+    setAdminFolders(newFolders);
   };
 
   // 🖼️ Admin Canvas Slip Generator (Matches Main App with Logo, Watermark & Rejection Remarks)
@@ -983,7 +996,7 @@ export default function AdminApp() {
   const adminInputBg = isAdminDarkMode ? "bg-black/40 border border-white/20 text-white placeholder-slate-400 focus:border-cyan-400" : "bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:border-blue-500";
   const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
 
-  const activeFolderObj = ADMIN_FOLDERS.find(f => f.id === activeFolderId);
+  const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
 
   if (!isAuthenticated) {
     return (
@@ -1025,7 +1038,7 @@ export default function AdminApp() {
                 className="w-full py-3 bg-white/10 hover:bg-white/15 text-xs font-bold text-cyan-400 rounded-2xl flex items-center justify-center gap-2 border border-white/15 active:scale-95 transition"
               >
                 <Fingerprint className="w-4 h-4 text-cyan-400" />
-                <span>Login with Fingerprint / Face ID (iOS)</span>
+                <span>Login with Fingerprint / Face ID</span>
               </button>
 
               <button
@@ -1156,7 +1169,7 @@ export default function AdminApp() {
           ) : (
             <div className="flex items-center gap-2">
               <Folder className="w-4 h-4 text-cyan-400" />
-              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">Master Control Cards Directory</h3>
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">Master Control Cards Directory (Use ⬆️ ⬇️ arrows to reorder cards)</h3>
             </div>
           )}
 
@@ -1173,35 +1186,59 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* 📁 VIEW 1: FOLDER CARDS DIRECTORY GRID */}
+        {/* 📁 VIEW 1: REORDERABLE FOLDER CARDS DIRECTORY GRID */}
         {!activeFolderId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
-            {ADMIN_FOLDERS.map(f => {
+            {adminFolders.map((f, index) => {
               const Icon = f.icon;
               const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
 
               return (
                 <div
                   key={f.id}
-                  onClick={() => setActiveFolderId(f.id)}
-                  className={`${cardBgClass} rounded-3xl p-5 hover:scale-[1.02] active:scale-95 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-3 group`}
+                  className={`${cardBgClass} rounded-3xl p-5 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between space-y-3 group relative`}
                 >
                   <div className="flex justify-between items-start">
-                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div 
+                      onClick={() => setActiveFolderId(f.id)} 
+                      className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform cursor-pointer"
+                    >
                       <Icon className="w-6 h-6" />
                     </div>
-                    {count !== null && (
-                      <span className="text-xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 px-2.5 py-0.5 rounded-full">
-                        {count} Active
-                      </span>
-                    )}
+
+                    <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
+                      <button
+                        type="button"
+                        disabled={index === 0}
+                        onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
+                        title="Move Up"
+                        className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={index === adminFolders.length - 1}
+                        onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
+                        title="Move Down"
+                        className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-bold text-sm sm:text-base group-hover:text-cyan-300 transition-colors flex items-center justify-between">
-                      <span>{f.label}</span>
-                      <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </h4>
+                  <div onClick={() => setActiveFolderId(f.id)} className="cursor-pointer">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-bold text-sm sm:text-base group-hover:text-cyan-300 transition-colors">
+                        {f.label}
+                      </h4>
+                      {count !== null && (
+                        <span className="text-xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 px-2.5 py-0.5 rounded-full">
+                          {count} Active
+                        </span>
+                      )}
+                    </div>
                     <p className={`text-xs mt-1 leading-relaxed ${adminMuted}`}>{f.desc}</p>
                   </div>
                 </div>
@@ -1222,7 +1259,7 @@ export default function AdminApp() {
               <p className={`text-xs ${adminMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
             </div>
 
-            {/* Biometric, Face ID & Fingerprint Scan Registration */}
+            {/* Fingerprint Scanner Registration */}
             <div className={`p-5 rounded-2xl border space-y-4 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
                 <Fingerprint className="w-4 h-4 text-cyan-400" /> Biometric & Fingerprint Scanner Registration
