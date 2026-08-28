@@ -161,13 +161,6 @@ const PRE_ADDED_REJECTION_REASONS = [
   "Thank you for your interest! Unfortunately, we are not operational at the requested venue location on this date."
 ];
 
-const DEFAULT_TEMPLATES = [
-  { title: "Special Wedding Promo", text: "✨ Special Wedding Offer from H&F Makeup Artist! Use code BRIDE2026 for flat discount on your bridal look. Book now!" }
-];
-
-const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
-const bridalPackages = ['engagement_bride', 'royal_bridal'];
-
 const INITIAL_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'general', label: 'General & Security Settings', icon: Settings, desc: 'Biometric, Face ID, Fingerprint Scan Registration & Recovery' },
@@ -186,16 +179,6 @@ const INITIAL_FOLDERS = [
   { id: 'prices', label: 'Package Rates Manager', icon: Percent, desc: 'Adjust rates for Luxury vs HD kit looks' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, desc: 'Aesthetic skins, fonts & mode defaults' },
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
-];
-
-const MAIN_APP_VERSIONS = [
-  { version: "v2.9.2", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass visionOS style with adaptive material tinting." },
-  { version: "v2.9.1", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass design system with native iOS SF Symbols styling." }
-];
-
-const ADMIN_APP_VERSIONS = [
-  { version: "v2.7.2", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass visionOS style console with fluid glass cards." },
-  { version: "v2.7.1", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass admin console with day/night toggle and brand palette." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -244,10 +227,6 @@ export default function App() {
   const [bookingsList, setBookingsList] = useState([]);
   const [feedbacksList, setFeedbacksList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
-  const [promoTemplates, setPromoTemplates] = useState(DEFAULT_TEMPLATES);
-  const [selectedTemplateText, setSelectedTemplateText] = useState(DEFAULT_TEMPLATES[0].text);
-  const [customNumbersInput, setCustomNumbersInput] = useState('');
-  const [sendingPromo, setSendingPromo] = useState(false);
   const [savingSection, setSavingSection] = useState('');
   const [actionStatus, setActionStatus] = useState('');
 
@@ -960,33 +939,6 @@ export default function App() {
         alert("Error deleting: " + err.message);
       }
     }
-  };
-
-  const handleSendBroadcast = async () => {
-    let numbers = bookingsList.map(b => b.clientPhone);
-    if (customNumbersInput.trim()) {
-      const extra = customNumbersInput.split(',').map(n => n.trim()).filter(Boolean);
-      numbers = [...new Set([...numbers, ...extra])];
-    }
-    if (numbers.length === 0) {
-      alert("No client phone numbers found to broadcast.");
-      return;
-    }
-    setSendingPromo(true);
-    setActionStatus("Starting broadcast to " + numbers.length + " clients...");
-    
-    try {
-      await fetch(WA_SERVER_URL + "/api/broadcast", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipients: numbers, templateText: selectedTemplateText })
-      });
-      setActionStatus("🎉 Broadcast queued in background server!");
-    } catch (e) {
-      setActionStatus("⚠️ Background server unreachable.");
-    }
-
-    setSendingPromo(false);
   };
 
   const year = calendarDate.getFullYear();
@@ -2419,18 +2371,22 @@ export default function App() {
             </h3>
             <textarea
               rows={6}
-              value={selectedTemplateText}
-              onChange={e => setSelectedTemplateText(e.target.value)}
+              value={draft.announcements?.[0] || ""}
+              onChange={e => {
+                const updated = [...(draft.announcements || [])];
+                updated[0] = e.target.value;
+                setDraft({...draft, announcements: updated});
+              }}
               className={"w-full p-4 rounded-[20px] text-[13px] font-mono border " + adminInputBg}
             />
             <button
               type="button"
-              disabled={sendingPromo}
-              onClick={handleSendBroadcast}
+              disabled={false}
+              onClick={() => handleSaveSpecificCard('Broadcast Studio')}
               className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-[14px] rounded-[20px] shadow-[0_10px_30px_rgba(219,39,119,0.3)] active:scale-95 flex items-center justify-center gap-2 transition"
             >
               <Send className="w-4 h-4" />
-              <span>{sendingPromo ? 'Broadcasting...' : 'Broadcast WhatsApp Campaign'}</span>
+              <span>Save Broadcast Settings</span>
             </button>
           </div>
         )}
