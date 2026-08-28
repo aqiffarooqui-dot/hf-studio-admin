@@ -155,75 +155,52 @@ const DEFAULT_CONFIG = {
 const THEME_STYLES = {
   real_ios_glass: {
     accentGradient: "from-sky-400 via-blue-500 to-indigo-500",
-    btnPrimary: "bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-lg shadow-blue-500/20 border border-white/30",
+    btnPrimary: "bg-[#007AFF] hover:bg-blue-600 text-white font-semibold shadow-lg rounded-[14px]",
     accentText: "text-blue-500 dark:text-blue-400",
     accentBorder: "border-blue-500/40 dark:border-blue-400/30",
-    glow: "shadow-blue-500/20",
-    activeNav: "bg-blue-600 text-white font-bold shadow-md",
-    badgeBg: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30"
+    activeNav: "bg-[#007AFF] text-white font-bold shadow-md"
   },
   liquid_glass: {
     accentGradient: "from-cyan-400 via-sky-300 to-indigo-400",
-    btnPrimary: "bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-neutral-950 font-bold shadow-xl shadow-cyan-500/25 border border-white/40",
+    btnPrimary: "bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold shadow-xl",
     accentText: "text-cyan-500 dark:text-cyan-400",
-    accentBorder: "border-cyan-500/40 dark:border-cyan-400/30",
-    glow: "shadow-cyan-500/30",
-    activeNav: "bg-cyan-500 text-neutral-950 font-bold shadow-lg shadow-cyan-500/30",
-    badgeBg: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
+    accentBorder: "border-cyan-500/40"
   },
   one_ui_9: {
     accentGradient: "from-amber-400 via-rose-400 to-amber-500",
-    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md shadow-amber-500/25 border border-amber-300/40",
+    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md",
     accentText: "text-amber-600 dark:text-amber-400",
-    accentBorder: "border-amber-500/30",
-    glow: "shadow-amber-500/20",
-    activeNav: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md",
-    badgeBg: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+    accentBorder: "border-amber-500/30"
   },
   gold_rose: {
     accentGradient: "from-amber-400 via-rose-400 to-amber-500",
     btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md",
     accentText: "text-rose-600 dark:text-rose-400",
-    accentBorder: "border-rose-500/30",
-    glow: "shadow-rose-500/20",
-    activeNav: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow",
-    badgeBg: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
+    accentBorder: "border-rose-500/30"
   },
   google_minimal: {
     accentGradient: "from-blue-500 via-teal-400 to-emerald-400",
-    btnPrimary: "bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md",
+    btnPrimary: "bg-blue-600 text-white font-semibold shadow-md",
     accentText: "text-blue-600 dark:text-blue-400",
-    accentBorder: "border-blue-500/30",
-    glow: "shadow-blue-500/20",
-    activeNav: "bg-blue-600 text-white font-bold shadow-md",
-    badgeBg: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30"
+    accentBorder: "border-blue-500/30"
   },
   champagne: {
     accentGradient: "from-amber-200 via-yellow-400 to-amber-500",
-    btnPrimary: "bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold shadow-lg shadow-amber-400/20",
+    btnPrimary: "bg-amber-400 text-neutral-950 font-bold shadow-lg",
     accentText: "text-amber-600 dark:text-amber-400",
-    accentBorder: "border-amber-400/30",
-    glow: "shadow-amber-400/20",
-    activeNav: "bg-amber-400 text-neutral-950 font-bold shadow",
-    badgeBg: "bg-amber-400/15 text-amber-700 dark:text-amber-300 border-amber-400/30"
+    accentBorder: "border-amber-400/30"
   },
   emerald: {
     accentGradient: "from-emerald-400 via-teal-300 to-emerald-500",
-    btnPrimary: "bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold shadow-lg shadow-emerald-500/20",
+    btnPrimary: "bg-emerald-500 text-neutral-950 font-bold shadow-lg",
     accentText: "text-emerald-600 dark:text-emerald-400",
-    accentBorder: "border-emerald-500/30",
-    glow: "shadow-emerald-500/20",
-    activeNav: "bg-emerald-500 text-neutral-950 font-bold shadow",
-    badgeBg: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+    accentBorder: "border-emerald-500/30"
   },
   violet: {
     accentGradient: "from-purple-400 via-pink-400 to-rose-400",
-    btnPrimary: "bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg shadow-purple-500/25",
+    btnPrimary: "bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg",
     accentText: "text-purple-600 dark:text-purple-400",
-    accentBorder: "border-purple-500/30",
-    glow: "shadow-purple-500/20",
-    activeNav: "bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow",
-    badgeBg: "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30"
+    accentBorder: "border-purple-500/30"
   }
 };
 
@@ -267,13 +244,11 @@ const INITIAL_FOLDERS = [
 ];
 
 const MAIN_APP_VERSIONS = [
-  { version: "v3.0.0", date: "August 29, 2026", status: "Active Live Production", changes: "Real iOS Glass theme, screen zoom scaling & seamless multi-theme sync." },
-  { version: "v2.9.3", date: "August 29, 2026", status: "Archived", changes: "Full unified multi-theme switcher live synced across Admin and Main App." }
+  { version: "v3.1.0", date: "August 29, 2026", status: "Active Live Production", changes: "Real iOS Glass theme, screen zoom scaling & seamless multi-theme sync." }
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.0.0", date: "August 29, 2026", status: "Active Live Production", changes: "iOS Settings pill style cards, delete confirmations, select all & advanced search." },
-  { version: "v2.7.3", date: "August 29, 2026", status: "Archived", changes: "Unified theme engine sync added for live cross-app reflection." }
+  { version: "v3.1.0", date: "August 29, 2026", status: "Active Live Production", changes: "iOS Settings pill style cards, delete confirmations, select all & advanced search." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -306,7 +281,9 @@ const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
 const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('hf_admin_auth') === 'true';
+  });
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
@@ -332,13 +309,12 @@ export default function App() {
   const [newPinInput, setNewPinInput] = useState('');
   const [confirmPinInput, setConfirmPinInput] = useState('');
 
-  // New Admin Features State
-  const [screenZoom, setScreenZoom] = useState(100); // 80% to 130%
+  const [screenZoom, setScreenZoom] = useState(100);
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingDateFilter, setBookingDateFilter] = useState('');
   const [bookingSearchQuery, setBookingSearchQuery] = useState('');
   const [selectedBookings, setSelectedBookings] = useState([]);
-  const [deleteConfirmModal, setDeleteConfirmModal] = useState(null); // { type: 'single' | 'batch', id: ... }
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState(null);
 
   const [rejectModalData, setRejectModalData] = useState(null);
   const [rejectionReasonText, setRejectionReasonText] = useState(PRE_ADDED_REJECTION_REASONS[0]);
@@ -347,6 +323,33 @@ export default function App() {
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
   const canvasRef = useRef(null);
+
+  // Handle Browser Popstate for Back Button Support inside SPA Folders
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (activeFolderId) {
+        e.preventDefault();
+        setActiveFolderId(null);
+        window.history.pushState(null, '', window.location.href);
+      }
+    };
+
+    if (activeFolderId) {
+      window.history.pushState({ folder: activeFolderId }, '', window.location.href);
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeFolderId]);
+
+  const openFolder = (id) => {
+    window.history.pushState({ folder: id }, '', window.location.href);
+    setActiveFolderId(id);
+  };
+
+  const closeFolder = () => {
+    setActiveFolderId(null);
+  };
 
   useEffect(() => {
     async function load() {
@@ -433,6 +436,7 @@ export default function App() {
     e.preventDefault();
     if (pinInput === (draft.adminPin || "8760")) {
       setIsAuthenticated(true);
+      localStorage.setItem('hf_admin_auth', 'true');
     } else {
       alert("Incorrect PIN. Please enter your correct 4-digit security PIN.");
     }
@@ -468,6 +472,7 @@ export default function App() {
       });
       
       setIsAuthenticated(true);
+      localStorage.setItem('hf_admin_auth', 'true');
       setActionStatus("✅ Fingerprint Hardware Scanner Verified!");
     } catch (err) {
       console.warn("WebAuthn biometric auth error or cancelled:", err);
@@ -903,7 +908,6 @@ export default function App() {
   const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.real_ios_glass;
   const currentFontFamily = FONT_MAP[draft.theme?.fontFamily] || FONT_MAP.sans;
 
-  // Real iOS Settings Grouped Pill UI Styles
   const iosBg = isAdminDarkMode ? "bg-black text-[#F2F2F7]" : "bg-[#F2F2F7] text-[#1C1C1E]";
   const iosGroupCard = isAdminDarkMode 
     ? "bg-[#1C1C1E] border border-white/10 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.4)] overflow-hidden" 
@@ -978,7 +982,6 @@ export default function App() {
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[20px] animate-fade-in">
           <div className={"max-w-sm w-full rounded-[24px] p-6 text-center space-y-4 shadow-2xl " + (isAdminDarkMode ? 'bg-[#1C1C1E] text-white' : 'bg-white text-black')}>
@@ -1030,7 +1033,6 @@ export default function App() {
         </div>
       )}
 
-      {/* iOS Style Navigation Header */}
       <header className={"sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-5 sm:px-8 py-3.5 flex justify-between items-center shadow-sm transition-colors duration-300 " + (isAdminDarkMode ? 'bg-[#1C1C1E]/80 border-white/10 text-white' : 'bg-[#F2F2F7]/85 border-black/10 text-[#1C1C1E]')}>
         <div className="flex items-center gap-3">
           {draft.studioLogo ? (
@@ -1052,7 +1054,6 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2.5">
-          {/* Screen Zoom / Scale Selector */}
           <div className={"hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[14px] border " + (isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-black/10 shadow-sm')}>
             <ZoomIn className="w-3.5 h-3.5 text-blue-500" />
             <select
@@ -1091,7 +1092,7 @@ export default function App() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           {activeFolderId ? (
             <button
-              onClick={() => setActiveFolderId(null)}
+              onClick={closeFolder}
               className={"px-4 py-2 rounded-[14px] text-[13px] font-bold flex items-center gap-2 text-[#007AFF] " + (isAdminDarkMode ? 'bg-white/10' : 'bg-white shadow-sm')}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -1130,7 +1131,7 @@ export default function App() {
                 return (
                   <div
                     key={f.id}
-                    onClick={() => !isReorderMode && setActiveFolderId(f.id)}
+                    onClick={() => !isReorderMode && openFolder(f.id)}
                     className={"flex items-center justify-between p-3.5 sm:p-4 rounded-[16px] transition-all duration-200 cursor-pointer group " + (
                       isReorderMode 
                         ? 'bg-blue-500/10 ring-2 ring-blue-500 my-1' 
@@ -1609,7 +1610,7 @@ export default function App() {
                 </h3>
                 <p className={"text-[13px] " + iosMuted}>Reviews, ratings, and creative suggestions submitted by clients.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] px-3 py-1 rounded-full">
+              <span className="text-[13px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] px-3.5 py-1.5 rounded-full">
                 {feedbacksList.length} Feedbacks
               </span>
             </div>
@@ -2240,7 +2241,7 @@ export default function App() {
                     }} className={"w-full p-2.5 rounded-[12px] text-xs font-mono text-[#007AFF] " + iosInputBg} />
                   </div>
 
-                  <label className="block text-center py-2 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition shadow-sm">
+                  <label className="block text-center py-2.5 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition shadow-sm">
                     Upload Video / GIF / Image (&lt;20MB)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
@@ -2297,7 +2298,7 @@ export default function App() {
                           [toggle.key]: !isEnabled
                         }
                       })}
-                      className={"px-3 py-1.5 rounded-[10px] flex items-center gap-1 font-bold text-xs transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600')}
+                      className={"px-3.5 py-2 rounded-[14px] flex items-center gap-1 font-bold text-xs transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600')}
                     >
                       {isEnabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                       <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
@@ -2328,7 +2329,7 @@ export default function App() {
                 </h3>
                 <p className={"text-[13px] " + iosMuted}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] px-3 py-1 rounded-full">
+              <span className="text-[13px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] px-3.5 py-1.5 rounded-full">
                 {visitorLogs.length} Recent Visits Logged
               </span>
             </div>
@@ -2412,7 +2413,7 @@ export default function App() {
                       copy[idx] = e.target.value;
                       setDraft({ ...draft, announcements: copy });
                     }}
-                    className={"flex-1 p-3 rounded-[14px] text-[13px] " + iosInputBg}
+                    className={"flex-1 p-3.5 rounded-[14px] text-[13px] " + iosInputBg}
                   />
                   <button
                     type="button"
@@ -2469,9 +2470,9 @@ export default function App() {
 
             <div className="space-y-3">
               {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={"p-4 rounded-[16px] border flex flex-col sm:flex-row items-center justify-between gap-3 " + (isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200')}>
+                <div key={zKey} className={"p-4 rounded-[16px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 " + (isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200')}>
                   <div className="flex-1 w-full space-y-1">
-                    <span className="text-[10px] font-mono text-[#007AFF] uppercase font-bold">Zone Key: {zKey}</span>
+                    <span className="text-[11px] font-mono text-[#007AFF] uppercase font-bold">Zone Key: {zKey}</span>
                     <input
                       type="text"
                       value={zData.name}
@@ -2507,7 +2508,7 @@ export default function App() {
                         delete copy[zKey];
                         setDraft({ ...draft, convenienceZones: copy });
                       }}
-                      className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[10px]"
+                      className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
