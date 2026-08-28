@@ -323,6 +323,17 @@ export default function App() {
 
   const canvasRef = useRef(null);
 
+  // Real-time Notification Sound & Vibration Function for New Bookings
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+      audio.play().catch(e => console.log("Audio play blocked by browser:", e));
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    } catch (e) {
+      console.log("Audio error:", e);
+    }
+  };
+
   useEffect(() => {
     async function load() {
       try {
@@ -362,6 +373,11 @@ export default function App() {
     try {
       const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            playNotificationSound();
+          }
+        });
         setBookingsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
       return () => unsubscribe();
