@@ -279,7 +279,7 @@ const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   });
 };
 
-const WA_SERVER_URL = "https://ran-environment-palm-screensaver.trycloudflare.com";
+const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
