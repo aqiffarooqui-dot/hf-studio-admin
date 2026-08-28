@@ -209,16 +209,19 @@ const PRE_ADDED_REJECTION_REASONS = [
   "Thank you for your interest! Unfortunately, we are not operational at the requested venue location on this date."
 ];
 
+const DEFAULT_TEMPLATES = [
+  { title: "Special Wedding Promo", text: "✨ Special Wedding Offer from Husna Farooqui Studio! Use code BRIDE2026 for flat discount on your bridal look. Book now!" }
+];
+
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
-// 📁 Merged Package Management Folder (Images + Titles & Descriptions in 1 Card)
 const ADMIN_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
   { id: 'packages_master', label: 'Package Management (Images & Titles)', icon: Layers, desc: 'Manage package photos, names and descriptions per kit' },
-  { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos (20MB)' },
+  { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, desc: 'Edit bottom offer pill & auto-hide rules' },
   { id: 'coupons', label: 'Promo Coupons & Timers', icon: Tag, desc: 'Manage discount codes, timers & active status' },
@@ -263,10 +266,10 @@ export default function AdminApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
-  
+   
   const [activeFolderId, setActiveFolderId] = useState(null);
   const [editingKitTab, setEditingKitTab] = useState('international');
-  
+   
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
   const [feedbacksList, setFeedbacksList] = useState([]);
@@ -609,13 +612,13 @@ export default function AdminApp() {
 
       ctx.fillStyle = '#475569';
       ctx.font = 'italic 16px sans-serif';
-      
+       
       const fullReason = b.rejectionReason || "Slot unavailable for requested date. Please connect with studio.";
       const words = fullReason.split(' ');
       let line1 = '';
       let line2 = '';
       let line3 = '';
-      
+       
       for (let n = 0; n < words.length; n++) {
         const testLine = line1 + words[n] + ' ';
         if (ctx.measureText(testLine).width < 820 && !line2) {
@@ -659,9 +662,10 @@ export default function AdminApp() {
             alert("Video exceeds 20MB. Please use a compressed clip or direct URL.");
             return;
           }
-          finalUrl = await new Promise((res) => {
+          finalUrl = await new Promise((res, rej) => {
             const r = new FileReader();
             r.onload = () => res(r.result);
+            r.onerror = rej;
             r.readAsDataURL(file);
           });
         } else {
@@ -818,7 +822,7 @@ export default function AdminApp() {
 
   return (
     <div className={`min-h-screen ${adminBgClass} font-sans pb-28 transition-colors duration-300 relative overflow-x-hidden`}>
-      
+       
       <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
@@ -916,7 +920,7 @@ export default function AdminApp() {
       </header>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
-        
+         
         {/* Breadcrumb Bar */}
         <div className="flex items-center justify-between">
           {activeFolderId ? (
@@ -1010,7 +1014,7 @@ export default function AdminApp() {
 
                   return (
                     <div key={b.id} className={`p-5 rounded-3xl border space-y-3 ${adminInnerCard} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/50' : ''}`}>
-                      
+                       
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -1025,7 +1029,7 @@ export default function AdminApp() {
                               {b.status === 'confirmed' ? '✅ Confirmed' : b.status === 'rejected' ? '❌ Rejected' : '⏳ Pending Review'}
                             </span>
                           </div>
-                          
+                           
                           <h4 className="font-bold text-base mt-2">{b.clientName}</h4>
                           <p className="text-xs text-slate-400 font-mono">📞 {b.clientPhone}</p>
                         </div>
