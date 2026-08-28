@@ -279,6 +279,8 @@ const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   });
 };
 
+const WA_SERVER_URL = "https://ran-environment-palm-screensaver.trycloudflare.com";
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
@@ -595,14 +597,14 @@ export default function App() {
         `_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n` +
         `Our artist team will coordinate final timings with you prior to the date.`;
 
-      await fetch('http://localhost:3005/api/send-message', {
+      await fetch(`${WA_SERVER_URL}/api/send-message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: b.clientPhone, message: confirmSlipMessage })
       });
 
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
-      setActionStatus(`✅ Final Confirmation Slip sent to ${b.clientName} via Background Server!`);
+      setActionStatus(`✅ Final Confirmation Slip sent to ${b.clientName} via Cloudflare Tunnel!`);
     } catch (err) {
       setActionStatus(`⚠️ Termux server offline. Marking status as confirmed.`);
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
@@ -633,7 +635,7 @@ export default function App() {
         `*Note:* ${rejectionReasonText}\n\n` +
         `We truly appreciate your interest and hope to serve you on future dates!`;
 
-      fetch('http://localhost:3005/api/send-message', {
+      fetch(`${WA_SERVER_URL}/api/send-message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: rejectModalData.clientPhone, message: rejectMsg })
@@ -1013,7 +1015,7 @@ export default function App() {
     setActionStatus(`Starting broadcast to ${numbers.length} clients...`);
     
     try {
-      await fetch('http://localhost:3005/api/broadcast', {
+      await fetch(`${WA_SERVER_URL}/api/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ recipients: numbers, templateText: selectedTemplateText })
