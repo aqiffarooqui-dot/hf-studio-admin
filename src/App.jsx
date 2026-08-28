@@ -15,9 +15,9 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limi
 const DEFAULT_CONFIG = {
   adminPin: "8760",
   recoveryEmail: "aqiffarooqui@gmail.com",
-  biometricEnabled: true,
-  faceIdEnabled: true,
-  registeredFingerprintHash: "ACTIVE_DEVICE_FP",
+  biometricEnabled: false,
+  faceIdEnabled: false,
+  registeredFingerprintHash: "",
   studioName: "H&F Makeup Artist",
   artistTagline: "Beauty, Styled Your Way",
   studioLogo: "",
@@ -393,46 +393,51 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Strict Hardware Fingerprint & WebAuthn Authentication
+  // 👆 Strictly Enforce Hardware WebAuthn Authentication on Login Button
   const handleBiometricOrFaceLogin = async () => {
-    if (!draft.registeredFingerprintHash) {
-      alert("⚠️ No Fingerprint registered in Admin General Settings yet! Please unlock with PIN first, go to General Settings, and scan your finger.");
+    if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+      alert("⚠️ Biometric authentication is not supported on this browser/device.");
       return;
     }
 
-    if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      try {
-        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        if (available) {
-          const challenge = new Uint8Array(32);
-          window.crypto.getRandomValues(challenge);
-          
-          await navigator.credentials.get({
-            publicKey: {
-              challenge,
-              timeout: 60000,
-              userVerification: "required",
-              authenticatorSelection: {
-                authenticatorAttachment: "platform",
-                userVerification: "required"
-              }
-            }
-          });
-          
-          setIsAuthenticated(true);
-          setActionStatus("✅ Hardware Fingerprint Authenticated Successfully!");
-          return;
-        }
-      } catch (err) {
-        console.warn("WebAuthn biometric cancelled:", err);
+    try {
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (!available) {
+        alert("⚠️ No fingerprint or platform authenticator found on this device.");
+        return;
       }
+
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+      
+      // Request hardware assertion prompt
+      await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          timeout: 60000,
+          userVerification: "required",
+          authenticatorSelection: {
+            authenticatorAttachment: "platform",
+            userVerification: "required"
+          }
+        }
+      });
+      
+      setIsAuthenticated(true);
+      setActionStatus("✅ Hardware Fingerprint Authenticated Successfully!");
+    } catch (err) {
+      console.warn("WebAuthn biometric auth error or cancelled:", err);
+      alert("⚠️ Fingerprint scan cancelled or not recognized. Please use your PIN.");
     }
-    
-    alert("⚠️ Fingerprint hardware scan failed or cancelled. Please use your PIN.");
   };
 
-  // 👆 Register Fingerprint Scan with navigator.credentials.create (Native Phone Hardware Prompt)
+  // 👆 Register Fingerprint Scan with navigator.credentials.create (Triggers Hardware Prompt)
   const handleRegisterFingerprintScan = async () => {
+    if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
+      alert("⚠️ Biometric hardware API is not supported in this browser context.");
+      return;
+    }
+
     setIsScanningFinger(true);
     setScanProgress(0);
 
@@ -447,33 +452,35 @@ export default function AdminApp() {
     }, 400);
 
     try {
-      if (window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        if (available) {
-          const challenge = new Uint8Array(32);
-          window.crypto.getRandomValues(challenge);
-          
-          await navigator.credentials.create({
-            publicKey: {
-              challenge,
-              rp: { name: "H&F Makeup Artist Admin" },
-              user: {
-                id: new TextEncoder().encode("admin_husna"),
-                name: "admin@husna.com",
-                displayName: "Husna Farooqui Admin"
-              },
-              pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-              timeout: 60000,
-              authenticatorSelection: {
-                authenticatorAttachment: "platform",
-                userVerification: "required"
-              }
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      if (available) {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        
+        await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { name: "H&F Makeup Artist Admin" },
+            user: {
+              id: new TextEncoder().encode("admin_husna"),
+              name: "admin@husna.com",
+              displayName: "Husna Farooqui Admin"
+            },
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+            timeout: 60000,
+            authenticatorSelection: {
+              authenticatorAttachment: "platform",
+              userVerification: "required"
             }
-          });
-        }
+          }
+        });
       }
     } catch (err) {
-      console.warn("Hardware credential creation notice:", err);
+      console.warn("Hardware credential registration notice:", err);
+      clearInterval(interval);
+      setIsScanningFinger(false);
+      alert("⚠️ Fingerprint registration was cancelled or failed by device. Please try again.");
+      return;
     }
 
     setTimeout(async () => {
