@@ -15,9 +15,9 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limi
 const DEFAULT_CONFIG = {
   adminPin: "8760",
   recoveryEmail: "aqiffarooqui@gmail.com",
-  biometricEnabled: false,
-  faceIdEnabled: false,
-  registeredFingerprintHash: "",
+  biometricEnabled: true,
+  faceIdEnabled: true,
+  registeredFingerprintHash: "ACTIVE_DEVICE_FP",
   studioName: "H&F Makeup Artist",
   artistTagline: "Beauty, Styled Your Way",
   studioLogo: "",
@@ -277,7 +277,6 @@ export default function AdminApp() {
   const [activeFolderId, setActiveFolderId] = useState(null);
   const [editingKitTab, setEditingKitTab] = useState('international');
   
-  // 📂 Reorder Mode State & Folders
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [adminFolders, setAdminFolders] = useState(INITIAL_FOLDERS);
    
@@ -390,14 +389,14 @@ export default function AdminApp() {
     if (pinInput === (draft.adminPin || "8760")) {
       setIsAuthenticated(true);
     } else {
-      alert("Incorrect PIN. Please enter your correct 4-digit security PIN or use registered fingerprint.");
+      alert("Incorrect PIN. Please enter your correct 4-digit security PIN.");
     }
   };
 
-  // 👆 Hardware Fingerprint & WebAuthn Scan Handler (Samsung / iOS Native Prompt)
+  // 👆 Strict Hardware Fingerprint & WebAuthn Authentication
   const handleBiometricOrFaceLogin = async () => {
-    if (!draft.biometricEnabled || !draft.registeredFingerprintHash) {
-      alert("⚠️ No Fingerprint registered yet! Please unlock with PIN first, go to General Settings, and scan your finger.");
+    if (!draft.registeredFingerprintHash) {
+      alert("⚠️ No Fingerprint registered in Admin General Settings yet! Please unlock with PIN first, go to General Settings, and scan your finger.");
       return;
     }
 
@@ -429,13 +428,7 @@ export default function AdminApp() {
       }
     }
     
-    // Fallback if hardware prompt is unavailable in current webview context
-    if (draft.registeredFingerprintHash) {
-      setIsAuthenticated(true);
-      setActionStatus("✅ Stored Local Fingerprint Verified!");
-    } else {
-      alert("⚠️ Fingerprint scanner not ready or cancelled. Please use PIN.");
-    }
+    alert("⚠️ Fingerprint hardware scan failed or cancelled. Please use your PIN.");
   };
 
   // 👆 Register Fingerprint Scan with navigator.credentials.create (Native Phone Hardware Prompt)
