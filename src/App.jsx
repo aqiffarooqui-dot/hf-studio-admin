@@ -393,29 +393,30 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Strictly Enforce Hardware WebAuthn Authentication on Login Button
+  // 👆 Strict Hardware Fingerprint & WebAuthn Authentication on Login
   const handleBiometricOrFaceLogin = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      alert("⚠️ Biometric authentication is not supported on this browser/device.");
+      alert("⚠️ Biometric hardware scanner is not available in this browser/device context.");
       return;
     }
 
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (!available) {
-        alert("⚠️ No fingerprint or platform authenticator found on this device.");
+        alert("⚠️ No platform biometric authenticator found.");
         return;
       }
 
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
       
-      // Request hardware assertion prompt
+      // Forces device hardware scanner (Samsung / iOS Touch ID / Face ID)
       await navigator.credentials.get({
         publicKey: {
           challenge,
           timeout: 60000,
           userVerification: "required",
+          allowCredentials: [],
           authenticatorSelection: {
             authenticatorAttachment: "platform",
             userVerification: "required"
@@ -424,14 +425,14 @@ export default function AdminApp() {
       });
       
       setIsAuthenticated(true);
-      setActionStatus("✅ Hardware Fingerprint Authenticated Successfully!");
+      setActionStatus("✅ Hardware Fingerprint Scanned & Authenticated!");
     } catch (err) {
       console.warn("WebAuthn biometric auth error or cancelled:", err);
-      alert("⚠️ Fingerprint scan cancelled or not recognized. Please use your PIN.");
+      alert("⚠️ Fingerprint scan cancelled or failed by hardware. Please enter your 4-digit PIN.");
     }
   };
 
-  // 👆 Register Fingerprint Scan with navigator.credentials.create (Triggers Hardware Prompt)
+  // 👆 Register Fingerprint Scan with navigator.credentials.create
   const handleRegisterFingerprintScan = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
       alert("⚠️ Biometric hardware API is not supported in this browser context.");
@@ -476,7 +477,7 @@ export default function AdminApp() {
         });
       }
     } catch (err) {
-      console.warn("Hardware credential registration notice:", err);
+      console.warn("Hardware credential creation notice:", err);
       clearInterval(interval);
       setIsScanningFinger(false);
       alert("⚠️ Fingerprint registration was cancelled or failed by device. Please try again.");
