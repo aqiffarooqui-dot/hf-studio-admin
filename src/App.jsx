@@ -220,11 +220,12 @@ const DEFAULT_TEMPLATES = [
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
 const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
+// 🎯 Properly Sequenced Master Folders Directory
 const ADMIN_FOLDERS = [
-  { id: 'general', label: 'General & Security Settings', icon: Settings, desc: 'Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email' },
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
-  { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
+  { id: 'general', label: 'General & Security Settings', icon: Settings, desc: 'Biometric, Face ID, Fingerprint Scan Registration & Recovery' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
+  { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
   { id: 'packages_master', label: 'Package Management (Images & Titles)', icon: Layers, desc: 'Manage package photos, names and descriptions per kit' },
   { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
@@ -384,9 +385,9 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Real Fingerprint Scan & WebAuthn Verification
+  // 👆 Strict Fingerprint Scan & WebAuthn Verification
   const handleBiometricOrFaceLogin = async () => {
-    if (!draft.biometricEnabled && !draft.registeredFingerprintHash) {
+    if (!draft.biometricEnabled || !draft.registeredFingerprintHash) {
       alert("⚠️ No Fingerprint registered yet! Please unlock with PIN, go to General Settings, and scan your finger to register.");
       return;
     }
@@ -401,11 +402,15 @@ export default function AdminApp() {
             publicKey: {
               challenge,
               timeout: 60000,
-              userVerification: "required"
+              userVerification: "required",
+              authenticatorSelection: {
+                authenticatorAttachment: "platform",
+                userVerification: "required"
+              }
             }
           });
           setIsAuthenticated(true);
-          setActionStatus("✅ Fingerprint Verified Successfully!");
+          setActionStatus("✅ Fingerprint Scanner Verified Successfully!");
           return;
         }
       } catch (err) {
@@ -413,13 +418,7 @@ export default function AdminApp() {
       }
     }
     
-    // Fallback verification if biometric hardware prompt is dismissed
-    if (draft.registeredFingerprintHash) {
-      setIsAuthenticated(true);
-      setActionStatus("✅ Registered Fingerprint Verified!");
-    } else {
-      alert("⚠️ Fingerprint scan failed or not available on this browser/device.");
-    }
+    alert("⚠️ Fingerprint hardware scan failed or cancelled. Please use your PIN.");
   };
 
   // 👆 Register Fingerprint Scan in General Settings
@@ -446,7 +445,7 @@ export default function AdminApp() {
         biometricEnabled: true,
         registeredFingerprintHash: simulatedHash
       }));
-      setActionStatus("🎉 Fingerprint successfully scanned and registered!");
+      setActionStatus("🎉 Fingerprint successfully scanned and registered to your device!");
     }, 2000);
   };
 
@@ -2646,7 +2645,7 @@ export default function AdminApp() {
               </div>
               <div>
                 <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, instagramHandle: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs font-mono text-pink-400 border ${adminInputBg}`} />
+                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-2.5 rounded-xl text-xs font-mono text-pink-400 border ${adminInputBg}`} />
               </div>
               <div>
                 <label className={`block text-xs font-bold mb-1 ${adminMuted}`}>Artist Tagline / Subtitle</label>
