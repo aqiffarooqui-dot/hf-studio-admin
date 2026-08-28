@@ -14,8 +14,8 @@ import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limi
 
 const DEFAULT_CONFIG = {
   adminPin: "8760",
-  studioName: "HUSNA FAROOQUI",
-  artistTagline: "Celebrity & Bridal Makeup Artist",
+  studioName: "H&F Makeup Artist",
+  artistTagline: "Beauty, Styled Your Way",
   studioLogo: "",
   profilePhotoType: "image",
   profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80",
@@ -210,7 +210,7 @@ const PRE_ADDED_REJECTION_REASONS = [
 ];
 
 const DEFAULT_TEMPLATES = [
-  { title: "Special Wedding Promo", text: "✨ Special Wedding Offer from Husna Farooqui Studio! Use code BRIDE2026 for flat discount on your bridal look. Book now!" }
+  { title: "Special Wedding Promo", text: "✨ Special Wedding Offer from H&F Makeup Artist! Use code BRIDE2026 for flat discount on your bridal look. Book now!" }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -359,7 +359,7 @@ export default function AdminApp() {
     if (pinInput === "8760" || pinInput === (draft.adminPin || "8760")) {
       setIsAuthenticated(true);
     } else {
-      alert("Incorrect PIN. Default is 8760");
+      alert("Incorrect PIN.");
     }
   };
 
@@ -381,7 +381,7 @@ export default function AdminApp() {
     setActionStatus(`Dispatching Final Confirmation Slip to ${b.clientName}...`);
     try {
       const confirmSlipMessage = 
-        `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - HUSNA FAROOQUI* 🎉\n\n` +
+        `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n` +
         `Dear *${b.clientName}*,\n` +
         `Your appointment is officially confirmed in our master schedule!\n\n` +
         `🔢 *Booking Number:* ${b.bookingNumber || '#HF-CONFIRMED'}\n` +
@@ -427,7 +427,7 @@ export default function AdminApp() {
 
       const rejectMsg = 
         `Dear *${rejectModalData.clientName}*,\n\n` +
-        `Thank you for your booking request (#${rejectModalData.bookingNumber || 'HF-BOOKING'}) for *${rejectModalData.eventDate}* with *HUSNA FAROOQUI*.\n\n` +
+        `Thank you for your booking request (#${rejectModalData.bookingNumber || 'HF-BOOKING'}) for *${rejectModalData.eventDate}* with *H&F Makeup Artist*.\n\n` +
         `*Update on your request:* We are unable to accept this booking.\n` +
         `*Note:* ${rejectionReasonText}\n\n` +
         `We truly appreciate your interest and hope to serve you on future dates!`;
@@ -469,20 +469,34 @@ export default function AdminApp() {
     ctx.lineWidth = 4;
     ctx.strokeRect(40, 40, 1000, 1680);
 
+    // 🖼️ Render Official Studio Logo on Download Slip Top Center
+    const logoImg = new Image();
+    logoImg.crossOrigin = "anonymous";
+    logoImg.src = draft.studioLogo || DEFAULT_STUDIO_LOGO;
+    logoImg.onload = () => {
+      ctx.drawImage(logoImg, 490, 60, 100, 100);
+      drawSlipContent(ctx, b, isRejected, isConfirmed);
+    };
+    logoImg.onerror = () => {
+      drawSlipContent(ctx, b, isRejected, isConfirmed);
+    };
+  };
+
+  const drawSlipContent = (ctx, b, isRejected, isConfirmed) => {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 46px serif';
-    ctx.fillText((draft.studioName || 'HUSNA FAROOQUI').toUpperCase(), 540, 120);
+    ctx.font = 'bold 42px serif';
+    ctx.fillText('H&F MAKEUP ARTIST', 540, 195);
 
     ctx.fillStyle = '#b48a3c';
     ctx.font = '600 20px sans-serif';
-    ctx.fillText('Your Beauty, Our Expertise', 540, 160);
+    ctx.fillText('Beauty, Styled Your Way', 540, 230);
 
     ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(180, 195);
-    ctx.lineTo(900, 195);
+    ctx.moveTo(180, 255);
+    ctx.lineTo(900, 255);
     ctx.stroke();
 
     ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
@@ -492,7 +506,7 @@ export default function AdminApp() {
         ? 'BOOKING STATUS: DECLINED / REJECTED' 
         : (isConfirmed ? 'OFFICIAL CONFIRMED APPOINTMENT SLIP' : 'PENDING BOOKING REQUEST SLIP'), 
       540, 
-      240
+      300
     );
 
     const rows = [
@@ -506,7 +520,7 @@ export default function AdminApp() {
       { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' }
     ];
 
-    let startY = 310;
+    let startY = 370;
     rows.forEach((row, idx) => {
       ctx.fillStyle = idx === 0 
         ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : '#f0f9ff')) 
@@ -642,7 +656,7 @@ export default function AdminApp() {
 
     ctx.fillStyle = '#b48a3c';
     ctx.font = 'italic 16px sans-serif';
-    ctx.fillText('Your Beauty, Our Expertise', 540, 1700);
+    ctx.fillText('Beauty, Styled Your Way', 540, 1700);
 
     const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
     const downloadLink = document.createElement('a');
@@ -812,8 +826,7 @@ export default function AdminApp() {
           </div>
           <h2 className="text-xl font-bold">Admin Portal</h2>
           <p className={`text-xs ${adminMuted}`}>Master Studio Management Console</p>
-          <p className="text-[11px] text-cyan-400 font-mono">Default PIN: 8760</p>
-          <input type="password" placeholder="PIN (8760)" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
+          <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 ${adminInputBg}`} />
           <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Unlock Console</button>
         </form>
       </div>
@@ -905,7 +918,7 @@ export default function AdminApp() {
 
           <div>
             <h1 className={`font-bold text-sm sm:text-base bg-gradient-to-r ${currentTheme.accentGradient} bg-clip-text text-transparent`}>
-              {draft.studioName || "HUSNA FAROOQUI"} Console
+              H&F Makeup Artist Console
             </h1>
             <p className={`text-[11px] ${adminMuted}`}>Master Directory & Configuration Center</p>
           </div>
@@ -922,7 +935,7 @@ export default function AdminApp() {
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
          
         {/* Breadcrumb Bar */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           {activeFolderId ? (
             <button
               onClick={() => setActiveFolderId(null)}
@@ -993,7 +1006,7 @@ export default function AdminApp() {
         {/* TAB: BOOKINGS */}
         {activeFolderId === 'bookings' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400">Incoming Customer Bookings Queue</h3>
                 <p className={`text-xs ${adminMuted}`}>Accept, hold as pending, or reject bookings with custom reason templates.</p>
@@ -1126,7 +1139,7 @@ export default function AdminApp() {
         {/* TAB: FEEDBACKS */}
         {activeFolderId === 'feedbacks' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <MessageSquare className="w-4 h-4" /> Client Feedback & Suggestions Box
@@ -1402,7 +1415,7 @@ export default function AdminApp() {
                 <Wrench className="w-4 h-4" /> App Down & Maintenance Controller
               </h3>
               <p className={`text-xs ${adminMuted} mt-0.5`}>
-                Turn on to politely lock customer app with an elegant maintenance notice during updates.
+                Turn on to politely lock customer app with an elegant maintenance notice during upgrades.
               </p>
             </div>
 
@@ -1445,10 +1458,105 @@ export default function AdminApp() {
           </div>
         )}
 
+        {/* TAB: FLOATING PROMO BANNER (FIXED BLANK ISSUE) */}
+        {activeFolderId === 'floating' && (
+          <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
+            <div>
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
+                <Gift className="w-4 h-4" /> Floating Promo Offer Banner Controller
+              </h3>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Configure bottom-right floating offer pill text, code and activation status.</p>
+            </div>
+
+            <div className={`p-4 rounded-2xl border space-y-4 ${adminInnerCard}`}>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs text-white">Enable Floating Promo Banner Widget</span>
+                <button
+                  type="button"
+                  onClick={() => setDraft({
+                    ...draft,
+                    floatingBanner: {
+                      ...(draft.floatingBanner || {}),
+                      enabled: !(draft.floatingBanner?.enabled !== false)
+                    }
+                  })}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'}`}
+                >
+                  {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[10px] mb-1 ${adminMuted}`}>Badge Tag</label>
+                  <input
+                    type="text"
+                    value={draft.floatingBanner?.tag || ''}
+                    onChange={e => setDraft({
+                      ...draft,
+                      floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
+                    })}
+                    className={`w-full p-2.5 rounded-xl text-xs border ${adminInputBg}`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-[10px] mb-1 ${adminMuted}`}>Promo Code</label>
+                  <input
+                    type="text"
+                    value={draft.floatingBanner?.code || ''}
+                    onChange={e => setDraft({
+                      ...draft,
+                      floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
+                    })}
+                    className={`w-full p-2.5 rounded-xl text-xs font-mono text-cyan-400 border ${adminInputBg}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-[10px] mb-1 ${adminMuted}`}>Banner Title</label>
+                <input
+                  type="text"
+                  value={draft.floatingBanner?.title || ''}
+                  onChange={e => setDraft({
+                    ...draft,
+                    floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
+                  })}
+                  className={`w-full p-2.5 rounded-xl text-xs border ${adminInputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-[10px] mb-1 ${adminMuted}`}>Action Button Text</label>
+                <input
+                  type="text"
+                  value={draft.floatingBanner?.actionText || ''}
+                  onChange={e => setDraft({
+                    ...draft,
+                    floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
+                  })}
+                  className={`w-full p-2.5 rounded-xl text-xs border ${adminInputBg}`}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Floating Banner'}
+              onClick={() => handleSaveSpecificCard('Floating Banner')}
+              className={`w-full py-3.5 ${currentTheme.btnPrimary} text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
+            </button>
+          </div>
+        )}
+
         {/* TAB: PROMO COUPONS */}
         {activeFolderId === 'coupons' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Tag className="w-4 h-4" /> Promo Coupons Manager & Expiry Timers
@@ -1607,7 +1715,7 @@ export default function AdminApp() {
         {/* TAB: TRANSFORMATIONS */}
         {activeFolderId === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Film className="w-4 h-4" /> Transformations, Videos & GIFs Studio (20MB Max)
@@ -1762,7 +1870,7 @@ export default function AdminApp() {
         {/* TAB: VISITOR TRAFFIC LOGS */}
         {activeFolderId === 'traffic_logs' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Activity className="w-4 h-4" /> Live Traffic & Instagram Visitor Logs
@@ -1824,7 +1932,7 @@ export default function AdminApp() {
         {/* TAB: TOP ANNOUNCEMENTS */}
         {activeFolderId === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Volume2 className="w-4 h-4" /> Top Announcement Lines Ticker
@@ -1880,7 +1988,7 @@ export default function AdminApp() {
         {/* TAB: TRAVEL FEES */}
         {activeFolderId === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Car className="w-4 h-4" /> Travel Fees & Convenience Zones
