@@ -30,7 +30,7 @@ const DEFAULT_CONFIG = {
   theme: {
     fontFamily: "sans",
     colorTheme: "liquid_glass",
-    defaultMode: "light"
+    defaultMode: "dark"
   },
 
   isAppDown: false,
@@ -152,6 +152,68 @@ const DEFAULT_CONFIG = {
   }
 };
 
+const THEME_STYLES = {
+  liquid_glass: {
+    accentGradient: "from-cyan-400 via-sky-300 to-indigo-400",
+    btnPrimary: "bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-neutral-950 font-bold shadow-xl shadow-cyan-500/25 border border-white/40",
+    accentText: "text-cyan-500 dark:text-cyan-400",
+    accentBorder: "border-cyan-500/40 dark:border-cyan-400/30",
+    glow: "shadow-cyan-500/30"
+  },
+  one_ui_9: {
+    accentGradient: "from-amber-400 via-rose-400 to-amber-500",
+    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md shadow-amber-500/25 border border-amber-300/40",
+    accentText: "text-amber-600 dark:text-amber-400",
+    accentBorder: "border-amber-500/30",
+    glow: "shadow-amber-500/20"
+  },
+  gold_rose: {
+    accentGradient: "from-amber-400 via-rose-400 to-amber-500",
+    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold shadow-md",
+    accentText: "text-rose-600 dark:text-rose-400",
+    accentBorder: "border-rose-500/30",
+    glow: "shadow-rose-500/20"
+  },
+  google_minimal: {
+    accentGradient: "from-blue-500 via-teal-400 to-emerald-400",
+    btnPrimary: "bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md",
+    accentText: "text-blue-600 dark:text-blue-400",
+    accentBorder: "border-blue-500/30",
+    glow: "shadow-blue-500/20"
+  },
+  champagne: {
+    accentGradient: "from-amber-200 via-yellow-400 to-amber-500",
+    btnPrimary: "bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold shadow-lg shadow-amber-400/20",
+    accentText: "text-amber-600 dark:text-amber-400",
+    accentBorder: "border-amber-400/30",
+    glow: "shadow-amber-400/20"
+  },
+  emerald: {
+    accentGradient: "from-emerald-400 via-teal-300 to-emerald-500",
+    btnPrimary: "bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold shadow-lg shadow-emerald-500/20",
+    accentText: "text-emerald-600 dark:text-emerald-400",
+    accentBorder: "border-emerald-500/30",
+    glow: "shadow-emerald-500/20"
+  },
+  violet: {
+    accentGradient: "from-purple-400 via-pink-400 to-rose-400",
+    btnPrimary: "bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold shadow-lg shadow-purple-500/25",
+    accentText: "text-purple-600 dark:text-purple-400",
+    accentBorder: "border-purple-500/30",
+    glow: "shadow-purple-500/20"
+  }
+};
+
+const FONT_MAP = {
+  sans: "'Plus Jakarta Sans', sans-serif",
+  outfit: "'Outfit', sans-serif",
+  comic: "'Comic Neue', 'Comic Sans MS', cursive, sans-serif",
+  serif: "'Playfair Display', serif",
+  cormorant: "'Cormorant Garamond', serif",
+  cinzel: "'Cinzel', serif",
+  montserrat: "'Montserrat', sans-serif"
+};
+
 const PRE_ADDED_REJECTION_REASONS = [
   "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
   "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
@@ -179,6 +241,16 @@ const INITIAL_FOLDERS = [
   { id: 'prices', label: 'Package Rates Manager', icon: Percent, desc: 'Adjust rates for Luxury vs HD kit looks' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, desc: 'Aesthetic skins, fonts & mode defaults' },
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
+];
+
+const MAIN_APP_VERSIONS = [
+  { version: "v2.9.3", date: "August 29, 2026", status: "Active Live Production", changes: "Full unified multi-theme switcher live synced across Admin and Main App." },
+  { version: "v2.9.2", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass visionOS style with adaptive material tinting." }
+];
+
+const ADMIN_APP_VERSIONS = [
+  { version: "v2.7.3", date: "August 29, 2026", status: "Active Live Production", changes: "Unified theme engine sync added for live cross-app reflection." },
+  { version: "v2.7.2", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass visionOS style console with fluid glass cards." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -212,7 +284,7 @@ const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdminDarkMode, setIsAdminDarkMode] = useState(false);
+  const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState('');
@@ -600,16 +672,16 @@ export default function App() {
     const isConfirmed = b.status === 'confirmed';
 
     const drawAdminSlip = (logoImgObj) => {
-      ctx.fillStyle = isAdminDarkMode ? '#1C1C1E' : '#F8F5F2';
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, 1080, 1760);
 
       const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
-      bgGrad.addColorStop(0, isAdminDarkMode ? '#2C2C2E' : '#FFFFFF');
-      bgGrad.addColorStop(1, isAdminDarkMode ? '#1C1C1E' : '#F8F5F2');
+      bgGrad.addColorStop(0, '#ffffff');
+      bgGrad.addColorStop(1, '#fafafa');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(20, 20, 1040, 1720);
 
-      ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#B89462');
+      ctx.strokeStyle = '#b48a3c';
       ctx.lineWidth = 4;
       ctx.strokeRect(40, 40, 1000, 1680);
 
@@ -617,7 +689,7 @@ export default function App() {
       ctx.translate(540, 880);
       ctx.rotate(-Math.PI / 6);
       ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(184, 148, 98, 0.05)';
+      ctx.fillStyle = 'rgba(180, 138, 60, 0.05)';
       ctx.font = 'bold 84px serif';
       ctx.fillText('H&F MAKEUP ARTIST', 0, 0);
       ctx.restore();
@@ -631,32 +703,32 @@ export default function App() {
         ctx.drawImage(logoImgObj, 95, 105, 90, 90);
         ctx.restore();
 
-        ctx.strokeStyle = '#B89462';
+        ctx.strokeStyle = '#b48a3c';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
         ctx.stroke();
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = isAdminDarkMode ? '#FFFFFF' : '#1C1C1E';
+        ctx.fillStyle = '#1e293b';
         ctx.font = 'bold 36px serif';
         ctx.fillText('H&F MAKEUP ARTIST', 210, 140);
 
-        ctx.fillStyle = '#B89462';
+        ctx.fillStyle = '#b48a3c';
         ctx.font = '600 18px sans-serif';
         ctx.fillText('Beauty, Styled Your Way', 210, 170);
       } else {
         ctx.textAlign = 'center';
-        ctx.fillStyle = isAdminDarkMode ? '#FFFFFF' : '#1C1C1E';
+        ctx.fillStyle = '#1e293b';
         ctx.font = 'bold 42px serif';
         ctx.fillText('H&F MAKEUP ARTIST', 540, 140);
 
-        ctx.fillStyle = '#B89462';
+        ctx.fillStyle = '#b48a3c';
         ctx.font = '600 20px sans-serif';
         ctx.fillText('Beauty, Styled Your Way', 540, 175);
       }
 
-      ctx.strokeStyle = 'rgba(184, 148, 98, 0.3)';
+      ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(80, 220);
@@ -664,7 +736,7 @@ export default function App() {
       ctx.stroke();
 
       ctx.textAlign = 'center';
-      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : (isAdminDarkMode ? '#FFFFFF' : '#1C1C1E'));
+      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
       ctx.font = 'bold 24px sans-serif';
       ctx.fillText(
         isRejected 
@@ -688,16 +760,16 @@ export default function App() {
       let startY = 340;
       rows.forEach((row, idx) => {
         ctx.fillStyle = idx === 0 
-          ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : (isAdminDarkMode ? '#2C2C2E' : '#F1ECE6'))) 
-          : (idx % 2 === 0 ? (isAdminDarkMode ? '#242426' : '#FFFFFF') : (isAdminDarkMode ? '#1C1C1E' : '#F8F5F2'));
+          ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : '#f0f9ff')) 
+          : (idx % 2 === 0 ? '#f8fafc' : '#ffffff');
         ctx.fillRect(80, startY - 26, 920, 56);
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#B89462')) : '#6E6864';
+        ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#0284c7')) : '#64748b';
         ctx.font = idx === 0 ? 'bold 19px monospace' : 'bold 18px sans-serif';
         ctx.fillText(row.label, 100, startY + 9);
 
-        ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : (isAdminDarkMode ? '#FFFFFF' : '#1C1C1E'))) : (isAdminDarkMode ? '#FFFFFF' : '#1C1C1E');
+        ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : '#0369a1')) : '#0f172a';
         ctx.font = idx === 0 ? 'bold 21px monospace' : 'bold 20px sans-serif';
 
         let displayVal = row.val;
@@ -729,11 +801,11 @@ export default function App() {
           const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
           const pkgName = draft.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
 
-          ctx.fillStyle = isAdminDarkMode ? '#242426' : '#FFFFFF';
+          ctx.fillStyle = '#ffffff';
           ctx.fillRect(80, startY - 20, 920, 40);
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = '#6E6864';
+          ctx.fillStyle = '#475569';
           ctx.font = '16px sans-serif';
           ctx.fillText("• Guest #" + (gIdx + 1) + " (" + kitLabel + "): " + pkgName, 120, startY + 6);
 
@@ -761,18 +833,18 @@ export default function App() {
       }
 
       startY += 10;
-      ctx.fillStyle = isAdminDarkMode ? '#2C2C2E' : '#F1ECE6';
+      ctx.fillStyle = '#f8fafc';
       ctx.fillRect(80, startY, 920, 140);
-      ctx.strokeStyle = '#B89462';
+      ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 2;
       ctx.strokeRect(80, startY, 920, 140);
 
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#6E6864';
+      ctx.fillStyle = '#64748b';
       ctx.font = 'bold 20px sans-serif';
       ctx.fillText('TOTAL AMOUNT', 540, startY + 45);
 
-      ctx.fillStyle = isAdminDarkMode ? '#FFFFFF' : '#1C1C1E';
+      ctx.fillStyle = '#0f172a';
       ctx.font = 'bold 56px serif';
       ctx.fillText("₹" + b.totalAmount?.toLocaleString('en-IN'), 540, startY + 110);
 
@@ -789,7 +861,7 @@ export default function App() {
         ctx.font = 'bold 19px sans-serif';
         ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 32);
 
-        ctx.fillStyle = '#6E6864';
+        ctx.fillStyle = '#475569';
         ctx.font = 'italic 16px sans-serif';
         
         const fullReason = b.rejectionReason || "Slot unavailable for requested date. Please connect with studio.";
@@ -815,11 +887,11 @@ export default function App() {
       }
 
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#6E6864';
+      ctx.fillStyle = '#64748b';
       ctx.font = '17px sans-serif';
       ctx.fillText("Base Location: " + draft.baseLocation + " • Instagram: @" + (draft.instagramHandle || 'husna_farooqui_makeup'), 540, 1670);
 
-      ctx.fillStyle = '#B89462';
+      ctx.fillStyle = '#b48a3c';
       ctx.font = 'italic 16px sans-serif';
       ctx.fillText('Beauty, Styled Your Way', 540, 1700);
 
@@ -967,75 +1039,65 @@ export default function App() {
     return statusMatch && dateMatch;
   });
 
-  const adminBgClass = isAdminDarkMode ? "bg-[#1C1C1E] text-[#F8F5F2]" : "bg-[#F8F5F2] text-[#1C1C1E]";
-  const cardBgClass = isAdminDarkMode 
-    ? "bg-[#2C2C2E]/70 backdrop-blur-[24px] saturate-[160%] border border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.25)] rounded-[22px] text-[#F8F5F2]" 
-    : "bg-white/50 backdrop-blur-[24px] saturate-[160%] border border-white/40 shadow-[0_8px_30px_rgba(30,20,15,0.08)] rounded-[22px] text-[#1C1C1E]";
-  const adminInnerCard = isAdminDarkMode 
-    ? "bg-[#3A3A3C]/60 backdrop-blur-[20px] border border-white/10 text-[#F8F5F2] rounded-[18px]" 
-    : "bg-white/70 backdrop-blur-[20px] border border-white/50 text-[#1C1C1E] rounded-[18px]";
-  const adminInputBg = isAdminDarkMode 
-    ? "bg-[#2C2C2E] backdrop-blur-[16px] border border-white/15 text-white placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]" 
-    : "bg-white/90 backdrop-blur-[16px] border border-[#D8B9B1]/40 text-[#1C1C1E] placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]";
-  const adminMuted = isAdminDarkMode ? "text-[#98928E]" : "text-[#6E6864]";
+  const activeColorThemeKey = draft.theme?.colorTheme || 'liquid_glass';
+  const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.liquid_glass;
+  const currentFontFamily = FONT_MAP[draft.theme?.fontFamily] || FONT_MAP.sans;
 
-  const liquidGlassButton = isAdminDarkMode
-    ? "bg-[#3A3A3C]/80 backdrop-blur-[20px] border border-white/15 rounded-[16px] shadow-[0_6px_18px_rgba(0,0,0,0.15)] active:scale-[0.97] transition-all text-[#F8F5F2]"
-    : "bg-white/70 backdrop-blur-[20px] border border-white/40 rounded-[16px] shadow-[0_6px_18px_rgba(90,65,40,0.1)] active:scale-[0.97] transition-all text-[#1C1C1E]";
-  
-  const primaryCtaButton = "bg-[#B89462]/90 hover:bg-[#B89462] backdrop-blur-[20px] text-white font-bold border border-white/35 rounded-[16px] shadow-[0_6px_18px_rgba(184,148,98,0.25)] active:scale-[0.97] transition-all";
+  const adminBgClass = isAdminDarkMode ? "bg-[#030712] text-[#f8fafc]" : "bg-[#f8fafc] text-[#0f172a]";
+  const cardBgClass = isAdminDarkMode ? "bg-white/[0.04] backdrop-blur-3xl border border-white/[0.12] shadow-2xl text-[#f8fafc]" : "bg-white border border-slate-200 shadow-xl text-[#0f172a]";
+  const adminInnerCard = isAdminDarkMode ? "bg-black/40 border border-white/10 text-[#f8fafc]" : "bg-slate-50 border border-slate-200 text-[#0f172a]";
+  const adminInputBg = isAdminDarkMode ? "bg-black/40 border border-white/20 text-white placeholder-slate-400 focus:border-cyan-400" : "bg-white border border-slate-300 text-slate-900 placeholder-slate-500 focus:border-blue-500";
+  const adminMuted = isAdminDarkMode ? "text-slate-400" : "text-slate-600";
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
 
   if (!isAuthenticated) {
     return (
-      <div className={"min-h-screen " + adminBgClass + " flex items-center justify-center p-5 relative overflow-hidden font-sans transition-colors duration-300"}>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D8B9B1]/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div style={{ fontFamily: currentFontFamily }} className={"min-h-screen " + adminBgClass + " flex items-center justify-center p-4 relative overflow-hidden font-sans"}>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
         
         {showForgotPasswordModal ? (
-          <form onSubmit={handleForgotPasswordSubmit} className={"max-w-sm w-full p-8 rounded-[28px] border text-center space-y-4 shadow-[0_12px_40px_rgba(0,0,0,0.1)] " + cardBgClass + " animate-fade-in"}>
-            <div className="w-16 h-16 rounded-[22px] bg-[#B89462]/15 border border-[#B89462]/30 text-[#B89462] flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleForgotPasswordSubmit} className={"max-w-sm w-full p-8 rounded-3xl border text-center space-y-4 shadow-2xl " + cardBgClass + " animate-fade-in"}>
+            <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-lg">
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
-            <h2 className="text-[24px] font-bold tracking-tight">Recover Password</h2>
-            <p className={"text-[13px] " + adminMuted}>Your recovery email is permanently secured to <strong>{draft.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
+            <h2 className="text-xl font-bold">Recover Password</h2>
+            <p className={"text-xs " + adminMuted}>Your recovery email is permanently secured to <strong>{draft.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
-              <div className="p-3.5 rounded-[16px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 text-[13px] font-semibold">
+              <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
                 {forgotPasswordStatus}
               </div>
             )}
 
-            <button type="submit" className={"w-full py-3.5 " + primaryCtaButton + " text-[14px]"}>Send PIN to Recovery Email</button>
-            <button type="button" onClick={() => setShowForgotPasswordModal(false)} className={"text-[13px] underline " + adminMuted}>Back to Login</button>
+            <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-rose-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Send PIN to Recovery Email</button>
+            <button type="button" onClick={() => setShowForgotPasswordModal(false)} className="text-xs text-slate-400 hover:text-white underline">Back to Login</button>
           </form>
         ) : (
-          <form onSubmit={handleLogin} className={"max-w-sm w-full p-8 rounded-[28px] border text-center space-y-5 shadow-[0_12px_40px_rgba(0,0,0,0.1)] " + cardBgClass}>
-            <div className="w-16 h-16 rounded-[22px] bg-[#B89462]/15 border border-[#B89462]/30 text-[#B89462] flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleLogin} className={"max-w-sm w-full p-8 rounded-3xl border text-center space-y-4 shadow-2xl " + cardBgClass}>
+            <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto shadow-lg">
               <Lock className="w-8 h-8 animate-bounce" />
             </div>
-            <div>
-              <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>Apple Liquid Glass iOS 19 Suite</p>
-            </div>
-            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={"w-full text-center text-[18px] p-3.5 font-mono text-[#B89462] " + adminInputBg} />
+            <h2 className="text-xl font-bold">Admin Portal</h2>
+            <p className={"text-xs " + adminMuted}>Master Studio Management Console</p>
+            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={"w-full text-center text-lg p-3 rounded-2xl font-mono text-cyan-400 " + adminInputBg} />
             
-            <button type="submit" className={"w-full py-3.5 " + primaryCtaButton + " text-[14px]"}>Unlock Console</button>
+            <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs rounded-2xl shadow-lg active:scale-95 transition">Unlock Console</button>
             
-            <div className="space-y-2.5 pt-3 border-t border-white/10">
+            <div className="space-y-2 pt-2 border-t border-white/10">
               <button
                 type="button"
                 onClick={handleBiometricOrFaceLogin}
-                className={"w-full py-3 " + liquidGlassButton + " text-[13px] font-bold text-[#B89462] flex items-center justify-center gap-2"}
+                className="w-full py-3 bg-white/10 hover:bg-white/15 text-xs font-bold text-cyan-400 rounded-2xl flex items-center justify-center gap-2 border border-white/15 active:scale-95 transition"
               >
-                <Fingerprint className="w-4 h-4 text-[#B89462]" />
+                <Fingerprint className="w-4 h-4 text-cyan-400" />
                 <span>Login with Fingerprint / Face ID</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowForgotPasswordModal(true)}
-                className={"text-[13px] underline block w-full pt-1 " + adminMuted}
+                className="text-xs text-slate-400 hover:text-cyan-400 underline block w-full pt-1"
               >
                 Forgot Password? Send via Email
               </button>
@@ -1047,46 +1109,46 @@ export default function App() {
   }
 
   return (
-    <div className={"min-h-screen " + adminBgClass + " font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden"}>
-      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-[#D8B9B1]/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
-      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-[#B89462]/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
+    <div style={{ fontFamily: currentFontFamily }} className={"min-h-screen " + adminBgClass + " font-sans pb-28 transition-colors duration-300 relative overflow-x-hidden"}>
+      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {rejectModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[24px] animate-fade-in">
-          <div className="max-w-lg w-full rounded-[28px] p-6 border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-4 bg-white/90 backdrop-blur-[30px] text-[#1C1C1E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className={"max-w-lg w-full rounded-3xl p-6 border shadow-2xl space-y-4 " + (isAdminDarkMode ? 'bg-[#0f1424] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900')}>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <Ban className="w-5 h-5 text-rose-500" />
-                <h3 className="font-bold text-[18px]">Reject Booking: {rejectModalData.bookingNumber || rejectModalData.clientName}</h3>
+                <Ban className="w-5 h-5 text-rose-400" />
+                <h3 className="font-bold text-base">Reject Booking: {rejectModalData.bookingNumber || rejectModalData.clientName}</h3>
               </div>
-              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-[#6E6864] hover:text-[#1C1C1E]"><X className="w-5 h-5" /></button>
+              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
 
-            <p className="text-[13px] text-[#6E6864]">
+            <p className={"text-xs " + adminMuted}>
               Are you sure you want to decline this booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>?
             </p>
 
             <div>
-              <label className="block text-[11px] font-bold text-[#6E6864] mb-1.5 uppercase tracking-wider">Reason for Rejection (Added to Slip & Alert):</label>
+              <label className="block text-[11px] font-bold text-slate-300 mb-1">Reason for Rejection (Added to Slip & Alert):</label>
               <textarea
                 rows={3}
                 value={rejectionReasonText}
                 onChange={e => setRejectionReasonText(e.target.value)}
-                className="w-full p-3.5 rounded-[16px] text-[13px] border bg-white/80 text-[#1C1C1E] border-slate-300 focus:border-[#B89462]"
+                className={"w-full p-3 rounded-2xl text-xs border " + adminInputBg}
               />
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-[#6E6864] uppercase tracking-wider">Select Pre-Added Reason Template:</span>
-              <div className="grid grid-cols-1 gap-1.5 max-h-36 overflow-y-auto pr-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Pre-Added Reason Template:</span>
+              <div className="grid grid-cols-1 gap-1 max-h-36 overflow-y-auto pr-1">
                 {PRE_ADDED_REJECTION_REASONS.map((reason, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setRejectionReasonText(reason)}
-                    className={"text-left p-2.5 rounded-[14px] text-[12px] border transition " + (rejectionReasonText === reason ? 'bg-[#B89462]/20 text-[#1C1C1E] border-[#B89462]/50 font-semibold shadow-sm' : 'bg-slate-100 border-slate-200 text-[#6E6864] hover:bg-slate-200')}
+                    className={"text-left p-2 rounded-xl text-[11px] border transition " + (rejectionReasonText === reason ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 font-semibold' : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10')}
                   >
                     • {reason}
                   </button>
@@ -1094,18 +1156,18 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200/80">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
               <button
                 type="button"
                 onClick={() => setRejectModalData(null)}
-                className="px-4 py-2.5 rounded-[14px] bg-slate-200 text-[13px] font-bold text-[#6E6864]"
+                className="px-4 py-2 rounded-xl bg-white/10 text-xs font-bold text-slate-300 hover:bg-white/20"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmRejection}
-                className="px-5 py-2.5 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-[0_6px_18px_rgba(225,29,72,0.25)] active:scale-95 transition"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg active:scale-95"
               >
                 Confirm Rejection & Update Slip
               </button>
@@ -1114,27 +1176,27 @@ export default function App() {
         </div>
       )}
 
-      <header className={"sticky top-0 z-40 backdrop-blur-[28px] saturate-[160%] border-b px-5 sm:px-8 py-4 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-colors duration-300 " + (isAdminDarkMode ? 'bg-[#2C2C2E]/80 border-white/10 text-white' : 'bg-white/75 border-white/50 text-[#1C1C1E]')}>
-        <div className="flex items-center gap-3">
+      <header className={"sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center " + (isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm')}>
+        <div className="flex items-center gap-2.5">
           {draft.studioLogo ? (
-            <div className="w-11 h-11 rounded-[18px] bg-white/40 p-1 border border-white/60 overflow-hidden shadow-md">
+            <div className="w-10 h-10 rounded-2xl bg-white/10 p-1 border border-white/20 overflow-hidden shadow-md">
               <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
             </div>
           ) : (
-            <div className="w-11 h-11 rounded-[18px] bg-[#B89462]/15 text-[#B89462] flex items-center justify-center border border-[#B89462]/30 shadow-md">
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 shadow-md">
               <Crown className="w-5 h-5" />
             </div>
           )}
 
           <div>
-            <h1 className="font-bold text-[16px] sm:text-[18px] tracking-tight">
+            <h1 className={"font-bold text-sm sm:text-base bg-gradient-to-r " + currentTheme.accentGradient + " bg-clip-text text-transparent"}>
               H&F Makeup Artist Console
             </h1>
-            <p className={"text-[12px] " + adminMuted}>Liquid Glass iOS 19 Architecture</p>
+            <p className={"text-[11px] " + adminMuted}>Master Directory & Configuration Center</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           {!activeFolderId && (
             <button
               onClick={() => {
@@ -1143,54 +1205,54 @@ export default function App() {
                 }
                 setIsReorderMode(!isReorderMode);
               }}
-              className={"px-4 py-2.5 rounded-[16px] text-[13px] font-bold flex items-center gap-1.5 transition " + (isReorderMode ? 'bg-[#B89462] text-white shadow-[0_6px_18px_rgba(184,148,98,0.3)]' : liquidGlassButton)}
+              className={"px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition " + (isReorderMode ? 'bg-emerald-500 text-neutral-950 shadow-lg shadow-emerald-500/30' : 'bg-white/10 hover:bg-white/20 text-cyan-400 border border-white/15')}
             >
-              <Edit3 className="w-4 h-4" />
+              <Edit3 className="w-3.5 h-3.5" />
               <span>{isReorderMode ? 'Save Order' : 'Edit Order'}</span>
             </button>
           )}
 
-          <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={"p-2.5 rounded-[14px] " + liquidGlassButton} title="Toggle Day/Night Mode">
-            {isAdminDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#B89462]" />}
+          <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={"p-2 rounded-xl border " + (isAdminDarkMode ? 'bg-white/10 border-white/20 text-amber-400' : 'bg-white border-slate-300 text-slate-800')}>
+            {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-indigo-600" />}
           </button>
-          <button onClick={() => setIsAuthenticated(false)} className="text-[13px] text-rose-500 font-bold hover:underline px-2 py-1">Lock</button>
+          <button onClick={() => setIsAuthenticated(false)} className="text-xs text-rose-500 font-bold hover:underline">Lock</button>
         </div>
       </header>
 
-      <div className="max-w-[1200px] mx-auto px-5 sm:px-8 py-8 space-y-6">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           {activeFolderId ? (
             <button
               onClick={() => setActiveFolderId(null)}
-              className={"px-4 py-2.5 rounded-[16px] " + liquidGlassButton + " text-[13px] font-bold flex items-center gap-2 text-[#B89462] transition"}
+              className="px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 active:scale-95 text-xs font-bold flex items-center gap-2 text-cyan-400 border border-white/10 transition"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Master Folders</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <Folder className="w-4 h-4 text-[#B89462]" />
-              <h3 className={"font-bold text-[13px] uppercase tracking-wider " + adminMuted}>
+              <Folder className="w-4 h-4 text-cyan-400" />
+              <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300">
                 {isReorderMode ? 'Reorder Mode Active: Use ⬆️ ⬇️ to move cards' : 'Master Control Cards Directory'}
               </h3>
             </div>
           )}
 
           {activeFolderObj && (
-            <span className={"text-[13px] font-bold font-mono " + adminMuted}>
-              Folder: <strong className={isAdminDarkMode ? 'text-white' : 'text-[#1C1C1E]'}>{activeFolderObj.label}</strong>
+            <span className="text-xs font-bold text-slate-400 font-mono">
+              Folder: <strong className="text-white">{activeFolderObj.label}</strong>
             </span>
           )}
         </div>
 
         {actionStatus && (
-          <div className="p-4 rounded-[18px] bg-[#B89462]/15 border border-[#B89462]/30 font-bold text-[13px] text-center animate-fade-in shadow-md">
+          <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs text-center animate-fade-in shadow-lg">
             {actionStatus}
           </div>
         )}
 
         {!activeFolderId && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
             {adminFolders.map((f, index) => {
               const Icon = f.icon;
               const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
@@ -1198,23 +1260,23 @@ export default function App() {
               return (
                 <div
                   key={f.id}
-                  className={cardBgClass + " p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative " + (isReorderMode ? 'ring-2 ring-[#B89462] bg-[#B89462]/10' : 'hover:scale-[1.01]')}
+                  className={cardBgClass + " rounded-3xl p-5 transition-all duration-300 flex flex-col justify-between space-y-3 group relative " + (isReorderMode ? 'ring-2 ring-amber-400/50 bg-amber-500/5' : 'hover:scale-[1.01]')}
                 >
                   <div className="flex justify-between items-start">
                     <div 
                       onClick={() => !isReorderMode && setActiveFolderId(f.id)} 
-                      className={"w-13 h-13 rounded-[20px] bg-[#B89462]/15 border border-[#B89462]/30 text-[#B89462] flex items-center justify-center group-hover:scale-110 transition-transform " + (!isReorderMode ? 'cursor-pointer' : '')}
+                      className={"w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center group-hover:scale-110 transition-transform " + (!isReorderMode ? 'cursor-pointer' : '')}
                     >
                       <Icon className="w-6 h-6" />
                     </div>
 
-                    <div className={"flex items-center gap-1 p-1 rounded-[14px] border shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
+                    <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
                       <button
                         type="button"
                         disabled={index === 0}
                         onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
                         title="Move Up"
-                        className={"p-1.5 rounded-[10px] disabled:opacity-30 disabled:pointer-events-none " + (isAdminDarkMode ? 'text-slate-300 hover:bg-white/10' : 'text-[#6E6864] hover:bg-white')}
+                        className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none"
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
@@ -1223,7 +1285,7 @@ export default function App() {
                         disabled={index === adminFolders.length - 1}
                         onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
                         title="Move Down"
-                        className={"p-1.5 rounded-[10px] disabled:opacity-30 disabled:pointer-events-none " + (isAdminDarkMode ? 'text-slate-300 hover:bg-white/10' : 'text-[#6E6864] hover:bg-white')}
+                        className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none"
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -1232,16 +1294,16 @@ export default function App() {
 
                   <div onClick={() => !isReorderMode && setActiveFolderId(f.id)} className={!isReorderMode ? 'cursor-pointer' : ''}>
                     <div className="flex justify-between items-center">
-                      <h4 className={"font-bold text-[16px] transition-colors " + (isAdminDarkMode ? 'text-white group-hover:text-[#B89462]' : 'text-[#1C1C1E] group-hover:text-[#B89462]')}>
+                      <h4 className="font-bold text-sm sm:text-base group-hover:text-cyan-300 transition-colors">
                         {f.label}
                       </h4>
                       {count !== null && (
-                        <span className="text-[11px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/30 px-2.5 py-1 rounded-full">
+                        <span className="text-xs font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 px-2.5 py-0.5 rounded-full">
                           {count} Active
                         </span>
                       )}
                     </div>
-                    <p className={"text-[13px] mt-1.5 leading-relaxed " + adminMuted}>{f.desc}</p>
+                    <p className={"text-xs mt-1 leading-relaxed " + adminMuted}>{f.desc}</p>
                   </div>
                 </div>
               );
@@ -1250,41 +1312,41 @@ export default function App() {
         )}
 
         {activeFolderId === 'general' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <Settings className="w-4 h-4" /> General & Security Settings
               </h3>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
+              <p className={"text-xs " + adminMuted + " mt-0.5"}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
             </div>
 
-            <div className={"p-6 rounded-[22px] border space-y-4 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <Fingerprint className="w-4 h-4 text-[#B89462]" /> Hardware Fingerprint Scanner Integration
+            <div className={"p-5 rounded-2xl border space-y-4 " + adminInnerCard}>
+              <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
+                <Fingerprint className="w-4 h-4 text-cyan-400" /> Hardware Fingerprint Scanner Integration
               </h4>
-              <p className={"text-[13px] " + adminMuted}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
+              <p className={"text-xs " + adminMuted}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
 
-              <div className={"p-5 rounded-[18px] border text-center space-y-3.5 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
-                <div className="w-16 h-16 rounded-[22px] bg-[#B89462]/15 text-[#B89462] flex items-center justify-center mx-auto border border-[#B89462]/30 shadow-md">
-                  <Fingerprint className={"w-8 h-8 " + (isScanningFinger ? 'animate-pulse text-[#B89462]' : '')} />
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center mx-auto border border-cyan-500/30">
+                  <Fingerprint className={"w-8 h-8 " + (isScanningFinger ? 'animate-pulse text-amber-400' : '')} />
                 </div>
                 
                 {isScanningFinger ? (
-                  <div className="space-y-2">
-                    <p className="text-[13px] font-bold text-[#B89462]">Scanning Fingerprint... ({scanProgress}%)</p>
-                    <div className="w-48 h-2 bg-black/20 rounded-full mx-auto overflow-hidden shadow-inner">
-                      <div className="h-full bg-[#B89462] transition-all duration-300" style={{ width: scanProgress + '%' }} />
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-bold text-amber-400">Scanning Fingerprint... ({scanProgress}%)</p>
+                    <div className="w-48 h-2 bg-white/10 rounded-full mx-auto overflow-hidden">
+                      <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: scanProgress + '%' }} />
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2.5">
-                    <p className={"text-[13px] " + adminMuted}>
+                  <div className="space-y-2">
+                    <p className="text-xs text-slate-300">
                       {draft.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
                     </p>
                     <button
                       type="button"
                       onClick={handleRegisterFingerprintScan}
-                      className={"px-6 py-3 " + primaryCtaButton + " text-[13px]"}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-neutral-950 font-bold text-xs shadow active:scale-95 transition"
                     >
                       {draft.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
                     </button>
@@ -1292,24 +1354,24 @@ export default function App() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-                <div className={"p-4 rounded-[16px] border flex items-center justify-between shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
-                  <span className="text-[13px] font-bold">Enable Touch ID / Biometrics</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <span className="text-xs font-bold text-white">Enable Touch ID / Biometrics</span>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, biometricEnabled: !draft.biometricEnabled })}
-                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
+                    className={"p-2 rounded-lg font-bold text-xs " + (draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                   >
                     {draft.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
 
-                <div className={"p-4 rounded-[16px] border flex items-center justify-between shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
-                  <span className="text-[13px] font-bold">Enable Face ID / Passkey</span>
+                <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
+                  <span className="text-xs font-bold text-white">Enable Face ID / iOS Passkey</span>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, faceIdEnabled: !draft.faceIdEnabled })}
-                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
+                    className={"p-2 rounded-lg font-bold text-xs " + (draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                   >
                     {draft.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
@@ -1317,110 +1379,110 @@ export default function App() {
               </div>
             </div>
 
-            <div className={"p-6 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-[#B89462]" /> Main App Version & History
+            <div className={"p-5 rounded-2xl border space-y-3 " + adminInnerCard}>
+              <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
+                <GitBranch className="w-4 h-4 text-cyan-400" /> Main App Version & Deployment History
               </h4>
-              <p className={"text-[13px] " + adminMuted}>Deployment timeline and release changes for Customer Main App.</p>
+              <p className={"text-xs " + adminMuted}>Deployment timeline and release changes for Customer Main App.</p>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                 {MAIN_APP_VERSIONS.map((ver, vIdx) => (
-                  <div key={vIdx} className={"p-3.5 rounded-[16px] border text-[13px] space-y-1 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
+                  <div key={vIdx} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold font-mono text-[#B89462]">{ver.version}</span>
-                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-300')}>
+                      <span className="font-bold font-mono text-cyan-400">{ver.version}</span>
+                      <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400')}>
                         {ver.status}
                       </span>
                     </div>
-                    <p className={"text-[12px] " + (isAdminDarkMode ? 'text-slate-300' : 'text-[#1C1C1E]')}>{ver.changes}</p>
-                    <span className={"text-[11px] font-mono " + adminMuted}>Released: {ver.date}</span>
+                    <p className="text-[11px] text-slate-300">{ver.changes}</p>
+                    <span className="text-[10px] text-slate-500 font-mono">Released: {ver.date}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className={"p-6 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-[#B89462]" /> Admin App Version & History
+            <div className={"p-5 rounded-2xl border space-y-3 " + adminInnerCard}>
+              <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
+                <GitBranch className="w-4 h-4 text-purple-400" /> Admin App Version & Deployment History
               </h4>
-              <p className={"text-[13px] " + adminMuted}>Deployment timeline and release changes for Admin Console.</p>
+              <p className={"text-xs " + adminMuted}>Deployment timeline and release changes for Admin Console.</p>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                 {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
-                  <div key={vIdx} className={"p-3.5 rounded-[16px] border text-[13px] space-y-1 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
+                  <div key={vIdx} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold font-mono text-[#B89462]">{ver.version}</span>
-                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-300')}>
+                      <span className="font-bold font-mono text-purple-400">{ver.version}</span>
+                      <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400')}>
                         {ver.status}
                       </span>
                     </div>
-                    <p className={"text-[12px] " + (isAdminDarkMode ? 'text-slate-300' : 'text-[#1C1C1E]')}>{ver.changes}</p>
-                    <span className={"text-[11px] font-mono " + adminMuted}>Released: {ver.date}</span>
+                    <p className="text-[11px] text-slate-300">{ver.changes}</p>
+                    <span className="text-[10px] text-slate-500 font-mono">Released: {ver.date}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className={"p-6 rounded-[22px] border space-y-3 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#B89462]" /> Permanent Recovery Email ID
+            <div className={"p-5 rounded-2xl border space-y-3 " + adminInnerCard}>
+              <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
+                <Mail className="w-4 h-4 text-amber-400" /> Permanent Recovery Email ID
               </h4>
-              <p className={"text-[13px] " + adminMuted}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
+              <p className={"text-xs " + adminMuted}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
               
               <input
                 type="email"
                 value={draft.recoveryEmail || "aqiffarooqui@gmail.com"}
                 onChange={e => setDraft({ ...draft, recoveryEmail: e.target.value })}
-                className={"w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-[#B89462] border " + adminInputBg}
+                className={"w-full p-3 rounded-xl font-mono text-xs font-bold text-cyan-400 border " + adminInputBg}
               />
             </div>
 
-            <form onSubmit={handlePasswordChange} className={"p-6 rounded-[22px] border space-y-4 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#B89462]" /> Change Admin PIN Password
+            <form onSubmit={handlePasswordChange} className={"p-5 rounded-2xl border space-y-3 " + adminInnerCard}>
+              <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
+                <Key className="w-4 h-4 text-cyan-400" /> Change Admin PIN Password
               </h4>
 
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 <div>
-                  <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Current PIN</label>
+                  <label className={"block text-[10px] mb-1 " + adminMuted}>Current PIN</label>
                   <input
                     type="password"
                     required
                     placeholder="Enter current PIN"
                     value={oldPinInput}
                     onChange={e => setOldPinInput(e.target.value)}
-                    className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                    className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>New PIN (Min 4 digits)</label>
+                    <label className={"block text-[10px] mb-1 " + adminMuted}>New PIN (Min 4 digits)</label>
                     <input
                       type="password"
                       required
                       placeholder="Enter new PIN"
                       value={newPinInput}
                       onChange={e => setNewPinInput(e.target.value)}
-                      className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                      className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                     />
                   </div>
                   <div>
-                    <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Confirm New PIN</label>
+                    <label className={"block text-[10px] mb-1 " + adminMuted}>Confirm New PIN</label>
                     <input
                       type="password"
                       required
                       placeholder="Confirm new PIN"
                       value={confirmPinInput}
                       onChange={e => setConfirmPinInput(e.target.value)}
-                      className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                      className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className={"w-full py-3.5 " + primaryCtaButton + " text-[13px]"}
+                  className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs rounded-xl shadow active:scale-95 transition"
                 >
                   Update Admin Password
                 </button>
@@ -1431,7 +1493,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'General Settings'}
               onClick={() => handleSaveSpecificCard('General Settings')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'General Settings' ? 'Saving...' : 'Save General & Security Settings Live'}</span>
@@ -1440,24 +1502,24 @@ export default function App() {
         )}
 
         {activeFolderId === 'bookings' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462]">Incoming Customer Bookings Queue</h3>
-                <p className={"text-[13px] " + adminMuted + " mt-1"}>Filter by status or event date, review, accept, or reject bookings.</p>
+                <h3 className="font-bold text-xs uppercase text-cyan-400">Incoming Customer Bookings Queue</h3>
+                <p className={"text-xs " + adminMuted}>Filter by status or event date, review, accept, or reject bookings.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/40 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
                 {filteredBookingsList.length} / {bookingsList.length} Bookings
               </span>
             </div>
 
-            <div className={"p-5 rounded-[22px] border grid grid-cols-1 sm:grid-cols-2 gap-4 " + adminInnerCard}>
+            <div className={"p-4 rounded-2xl border grid grid-cols-1 sm:grid-cols-2 gap-3 " + adminInnerCard}>
               <div>
-                <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Filter by Status</label>
+                <label className={"block text-[10px] mb-1 font-bold " + adminMuted}>Filter by Status</label>
                 <select
                   value={bookingStatusFilter}
                   onChange={e => setBookingStatusFilter(e.target.value)}
-                  className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}
+                  className={"w-full p-2.5 rounded-xl text-xs font-bold border " + adminInputBg}
                 >
                   <option value="all">🌟 All Statuses</option>
                   <option value="confirmed">✅ Confirmed / Accepted</option>
@@ -1467,19 +1529,19 @@ export default function App() {
               </div>
 
               <div>
-                <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Filter by Event Date</label>
-                <div className="flex gap-2.5">
+                <label className={"block text-[10px] mb-1 font-bold " + adminMuted}>Filter by Event Date</label>
+                <div className="flex gap-2">
                   <input
                     type="date"
                     value={bookingDateFilter}
                     onChange={e => setBookingDateFilter(e.target.value)}
-                    className={"flex-1 p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                    className={"flex-1 p-2.5 rounded-xl text-xs border " + adminInputBg}
                   />
                   {bookingDateFilter && (
                     <button
                       type="button"
                       onClick={() => setBookingDateFilter('')}
-                      className={"px-4 py-3 rounded-[16px] text-[13px] font-bold text-rose-500 " + liquidGlassButton}
+                      className="px-3 py-2 rounded-xl bg-white/10 text-xs font-bold text-rose-400 hover:bg-white/20"
                     >
                       Clear
                     </button>
@@ -1489,23 +1551,23 @@ export default function App() {
             </div>
 
             {filteredBookingsList.length === 0 ? (
-              <p className={"text-[14px] py-12 text-center " + adminMuted}>No bookings match the selected filters.</p>
+              <p className="text-xs text-slate-400 py-8 text-center">No bookings match the selected filters.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredBookingsList.map(b => {
                   const conflictingConfirmedBooking = b.status === 'pending' 
                     ? bookingsList.find(other => other.id !== b.id && other.eventDate === b.eventDate && other.status === 'confirmed')
                     : null;
 
                   return (
-                    <div key={b.id} className={"p-6 rounded-[24px] border space-y-4 " + adminInnerCard + (conflictingConfirmedBooking ? ' ring-2 ring-rose-500/50' : '')}>
+                    <div key={b.id} className={"p-5 rounded-3xl border space-y-3 " + adminInnerCard + (conflictingConfirmedBooking ? ' ring-2 ring-rose-500/50' : '')}>
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-[12px] font-bold text-[#B89462] bg-[#B89462]/15 px-2.5 py-1 rounded-[10px] border border-[#B89462]/30">
+                            <span className="font-mono text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-lg border border-cyan-500/20">
                               {b.bookingNumber || '#HF-PENDING'}
                             </span>
-                            <span className={"text-[11px] font-bold uppercase px-3 py-1 rounded-full " + (
+                            <span className={"text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full " + (
                               b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 
                               b.status === 'rejected' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 
                               'bg-amber-500/20 text-amber-400 border border-amber-500/40'
@@ -1514,54 +1576,54 @@ export default function App() {
                             </span>
                           </div>
                           
-                          <h4 className="font-bold text-[18px] mt-2.5">{b.clientName}</h4>
-                          <p className={"text-[13px] font-mono mt-0.5 " + adminMuted}>📞 {b.clientPhone}</p>
+                          <h4 className="font-bold text-base mt-2">{b.clientName}</h4>
+                          <p className="text-xs text-slate-400 font-mono">📞 {b.clientPhone}</p>
                         </div>
-                        <button onClick={() => deleteDoc(doc(db, "bookings", b.id))} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => deleteDoc(doc(db, "bookings", b.id))} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                       </div>
 
                       {conflictingConfirmedBooking && (
-                        <div className="p-3.5 rounded-[16px] bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[13px] space-y-1 animate-pulse">
-                          <div className="flex items-center gap-2 font-bold">
+                        <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs space-y-1 animate-pulse">
+                          <div className="flex items-center gap-1.5 font-bold">
                             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                             <span>STUDIO BUSY FOR THIS DATE!</span>
                           </div>
-                          <p className="text-[12px] text-rose-200">
+                          <p className="text-[11px] text-rose-200">
                             You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.
                           </p>
                         </div>
                       )}
 
-                      <div className={"text-[13px] space-y-1.5 border-t border-b py-3 " + (isAdminDarkMode ? 'border-white/10' : 'border-black/10')}>
-                        <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-[#B89462] font-mono">{b.eventDate}</strong></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Package:</span><span className="font-medium">{b.packageName}</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span className="font-medium">{b.extraGuestsCount || 0} Custom Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span className="font-medium">{b.zoneName}</span></div>
+                      <div className="text-xs space-y-1 border-t border-b border-white/10 py-2">
+                        <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-amber-400 font-mono">{b.eventDate}</strong></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Package:</span><span>{b.packageName}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span>{b.kitType}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span>{b.extraGuestsCount || 0} Custom Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span>{b.zoneName}</span></div>
                         <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
                         {b.rejectionReason && (
-                          <div className="p-3 rounded-[14px] bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[12px]">
+                          <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
                             <strong>Rejection Note:</strong> {b.rejectionReason}
                           </div>
                         )}
-                        <div className={"flex justify-between pt-2 border-t " + (isAdminDarkMode ? 'border-white/5' : 'border-black/5')}><span className="font-bold">Total Amount:</span><strong className="text-[#B89462] font-mono text-[15px]">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
+                        <div className="flex justify-between pt-1 border-t border-white/5"><span className="font-bold">Total Amount:</span><strong className="text-cyan-400 font-mono text-sm">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
                       </div>
 
-                      <div className="space-y-2.5 pt-1">
+                      <div className="space-y-2 pt-1">
                         <button
                           type="button"
                           onClick={() => handleAcceptBookingWhatsApp(b)}
-                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-[13px] rounded-[16px] shadow-[0_6px_18px_rgba(5,150,105,0.25)] flex items-center justify-center gap-2 transition"
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition"
                         >
-                          <Send className="w-4 h-4" />
+                          <Send className="w-3.5 h-3.5" />
                           <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
                         </button>
 
-                        <div className="grid grid-cols-3 gap-2.5">
+                        <div className="grid grid-cols-3 gap-2">
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'confirmed')}
-                            className="py-2.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+                            className="py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
                           >
                             <Check className="w-3.5 h-3.5" />
                             <span>Accept</span>
@@ -1570,7 +1632,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'pending')}
-                            className="py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+                            className="py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>Pending</span>
@@ -1582,7 +1644,7 @@ export default function App() {
                               setRejectModalData(b);
                               setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
                             }}
-                            className="py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+                            className="py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-xs rounded-xl flex items-center justify-center gap-1 active:scale-95 transition"
                           >
                             <Ban className="w-3.5 h-3.5" />
                             <span>Reject</span>
@@ -1592,9 +1654,9 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className={"w-full py-2.5 " + liquidGlassButton + " font-bold text-[12px] flex items-center justify-center gap-2"}
+                          className="w-full py-2 bg-white/10 hover:bg-white/15 text-slate-300 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition"
                         >
-                          <Download className="w-4 h-4" />
+                          <Download className="w-3.5 h-3.5" />
                           <span>Generate & Download Status Slip (.JPG)</span>
                         </button>
                       </div>
@@ -1607,46 +1669,46 @@ export default function App() {
         )}
 
         {activeFolderId === 'feedbacks' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <MessageSquare className="w-4 h-4" /> Client Feedback & Suggestions Box
                 </h3>
-                <p className={"text-[13px] " + adminMuted}>Reviews, ratings, and creative suggestions submitted by clients.</p>
+                <p className={"text-xs " + adminMuted}>Reviews, ratings, and creative suggestions submitted by clients.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/40 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
                 {feedbacksList.length} Feedbacks
               </span>
             </div>
 
             {feedbacksList.length === 0 ? (
-              <p className={"text-[14px] py-12 text-center " + adminMuted}>No client feedback submitted yet.</p>
+              <p className="text-xs text-slate-400 py-8 text-center">No client feedback submitted yet.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedbacksList.map(item => (
-                  <div key={item.id} className={"p-5 rounded-[22px] border space-y-3 " + adminInnerCard}>
+                  <div key={item.id} className={"p-4 rounded-2xl border space-y-2.5 " + adminInnerCard}>
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-1 text-amber-400">
                           {Array.from({ length: item.rating || 5 }).map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-amber-400" />
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
                           ))}
                         </div>
-                        <h4 className="font-bold text-[16px] mt-1.5">{item.clientName}</h4>
+                        <h4 className="font-bold text-sm text-white mt-1">{item.clientName}</h4>
                         {item.clientPhone && item.clientPhone !== 'Not Provided' && (
-                          <p className={"text-[12px] font-mono mt-0.5 " + adminMuted}>📞 {item.clientPhone}</p>
+                          <p className="text-[11px] text-slate-400 font-mono">📞 {item.clientPhone}</p>
                         )}
                       </div>
-                      <button onClick={() => handleDeleteFeedback(item.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleDeleteFeedback(item.id)} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                     </div>
 
-                    <p className={"text-[13px] leading-relaxed p-3.5 rounded-[16px] border shadow-inner " + (isAdminDarkMode ? 'bg-black/20 border-white/10 text-slate-300' : 'bg-white/50 border-white/60 text-[#1C1C1E]')}>
+                    <p className="text-xs text-slate-300 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5">
                       "{item.message}"
                     </p>
 
                     <div className="flex justify-end">
-                      <span className={"text-[11px] font-mono " + adminMuted}>
+                      <span className="text-[10px] text-slate-500 font-mono">
                         {item.submittedAt ? new Date(item.submittedAt.toDate?.() || item.submittedAt).toLocaleDateString() : 'Recent'}
                       </span>
                     </div>
@@ -1658,37 +1720,37 @@ export default function App() {
         )}
 
         {activeFolderId === 'calendar_view' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className={"p-6 rounded-3xl border space-y-6 " + cardBgClass}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" /> Interactive Monthly Booking Calendar
                 </h3>
-                <p className={"text-[13px] " + adminMuted + " mt-1"}>
+                <p className={"text-xs " + adminMuted + " mt-0.5"}>
                   Visual color tags show free vs booked dates (🟢 Green = Confirmed / Busy, 🟡 Amber = Pending).
                 </p>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className={"p-2.5 rounded-[14px] " + liquidGlassButton + " active:scale-90 transition"}>
-                  <ChevronLeft className="w-4 h-4 text-[#B89462]" />
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
+                  <ChevronLeft className="w-4 h-4 text-cyan-400" />
                 </button>
-                <span className="font-bold text-[14px] font-mono min-w-[140px] text-center">
+                <span className="font-bold text-xs sm:text-sm font-mono min-w-[130px] text-center text-white">
                   {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className={"p-2.5 rounded-[14px] " + liquidGlassButton + " active:scale-90 transition"}>
-                  <ChevronRight className="w-4 h-4 text-[#B89462]" />
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-90 transition">
+                  <ChevronRight className="w-4 h-4 text-cyan-400" />
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-7 gap-2 text-center">
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <span key={d} className={"text-[12px] font-bold py-1.5 uppercase " + adminMuted}>{d}</span>
+                <span key={d} className="text-[11px] font-bold text-slate-400 py-1 uppercase">{d}</span>
               ))}
 
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={"empty_" + i} className="h-20 sm:h-24 rounded-[18px] bg-transparent" />
+                <div key={"empty_" + i} className="h-16 sm:h-20 rounded-2xl bg-transparent" />
               ))}
 
               {Array.from({ length: totalDaysInMonth }).map((_, i) => {
@@ -1698,20 +1760,20 @@ export default function App() {
                   <div
                     key={"day_" + day}
                     onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
-                    className={"h-20 sm:h-24 rounded-[18px] p-2 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer " + (
+                    className={"h-16 sm:h-20 rounded-2xl p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer " + (
                       status.hasBookings 
                         ? (status.isConfirmed 
-                            ? 'bg-emerald-500/20 border-emerald-500/50 hover:scale-105 shadow-md shadow-emerald-500/10' 
-                            : 'bg-amber-500/20 border-amber-500/50 hover:scale-105 shadow-md shadow-amber-500/10')
-                        : adminInnerCard + ' hover:border-white/50 opacity-80'
+                            ? 'bg-emerald-500/15 border-emerald-500/40 hover:scale-105 shadow-md shadow-emerald-500/10' 
+                            : 'bg-amber-500/15 border-amber-500/40 hover:scale-105 shadow-md shadow-amber-500/10')
+                        : adminInnerCard + ' hover:border-white/20 opacity-75'
                     )}
                   >
-                    <span className={"text-[13px] font-bold font-mono " + (status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : '')}>
+                    <span className={"text-xs font-bold font-mono " + (status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : 'text-slate-300')}>
                       {day}
                     </span>
 
                     {status.hasBookings && (
-                      <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm " + (status.isConfirmed ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-white')}>
+                      <span className={"text-[9px] font-bold px-1.5 py-0.5 rounded-full " + (status.isConfirmed ? 'bg-emerald-500 text-neutral-950' : 'bg-amber-500 text-neutral-950')}>
                         {status.count} Booked
                       </span>
                     )}
@@ -1721,26 +1783,26 @@ export default function App() {
             </div>
 
             {selectedCalendarDay && (
-              <div className={"p-5 rounded-[22px] border space-y-3.5 animate-fade-in " + adminInnerCard}>
+              <div className={"p-4 rounded-2xl border space-y-3 animate-fade-in " + adminInnerCard}>
                 <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2.5">
-                    <span className="font-mono font-bold text-[14px] text-[#B89462]">Date: {selectedCalendarDay.dateStr}</span>
-                    <span className={"text-[11px] font-bold px-2.5 py-0.5 rounded-full " + (selectedCalendarDay.isConfirmed ? 'bg-emerald-500/25 text-emerald-400' : 'bg-amber-500/25 text-amber-400')}>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-sm text-cyan-400">Date: {selectedCalendarDay.dateStr}</span>
+                    <span className={"text-[10px] font-bold px-2 py-0.5 rounded-full " + (selectedCalendarDay.isConfirmed ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400')}>
                       {selectedCalendarDay.isConfirmed ? 'LOCKED / CONFIRMED' : 'PENDING REVIEW'}
                     </span>
                   </div>
-                  <button onClick={() => setSelectedCalendarDay(null)} className={"text-[13px] underline font-medium " + adminMuted}>Close</button>
+                  <button onClick={() => setSelectedCalendarDay(null)} className="text-slate-400 hover:text-white text-xs underline">Close</button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedCalendarDay.list.map(b => (
-                    <div key={b.id} className={"p-3.5 rounded-[16px] border text-[13px] space-y-1 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/60 border-white/70')}>
+                    <div key={b.id} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                       <div className="flex justify-between font-bold">
-                        <span>{b.bookingNumber || ''} • {b.clientName}</span>
-                        <span className="font-mono text-[#B89462]">₹{b.totalAmount?.toLocaleString('en-IN')}</span>
+                        <span className="text-white">{b.bookingNumber || ''} • {b.clientName}</span>
+                        <span className="font-mono text-cyan-400">₹{b.totalAmount?.toLocaleString('en-IN')}</span>
                       </div>
                       <p className={adminMuted}>Look: {b.packageName} ({b.kitType})</p>
-                      <p className={"text-[12px] truncate " + adminMuted}>📍 {b.venueAddress}</p>
+                      <p className="text-[11px] text-slate-400 truncate">📍 {b.venueAddress}</p>
                     </div>
                   ))}
                 </div>
@@ -1750,27 +1812,27 @@ export default function App() {
         )}
 
         {activeFolderId === 'packages_master' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className={"p-6 rounded-3xl border space-y-6 " + cardBgClass}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Layers className="w-4 h-4" /> Package Management (Images, Titles & Descriptions)
                 </h3>
-                <p className={"text-[13px] " + adminMuted + " mt-1"}>Manage custom look photos, package display names and descriptions per kit type.</p>
+                <p className={"text-xs " + adminMuted + " mt-0.5"}>Manage custom look photos, package display names and descriptions per kit type.</p>
               </div>
 
-              <div className={"inline-flex p-1.5 rounded-[18px] border gap-1.5 self-start shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/40 border-white/60')}>
+              <div className="inline-flex p-1 rounded-xl bg-black/50 border border-white/10 gap-1 self-start">
                 <button
                   type="button"
                   onClick={() => setEditingKitTab('international')}
-                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'international' ? 'bg-[#B89462] text-white shadow' : adminMuted)}
+                  className={"px-3 py-1.5 rounded-lg text-xs font-bold transition " + (editingKitTab === 'international' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400')}
                 >
                   👑 Luxury Kit
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditingKitTab('drugstore')}
-                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'drugstore' ? 'bg-[#B89462] text-white shadow' : adminMuted)}
+                  className={"px-3 py-1.5 rounded-lg text-xs font-bold transition " + (editingKitTab === 'drugstore' ? 'bg-cyan-500 text-neutral-950 shadow' : 'text-slate-400')}
                 >
                   ✨ HD Kit
                 </button>
@@ -1783,17 +1845,17 @@ export default function App() {
                 const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitImages[editingKitTab][k];
 
                 return (
-                  <div key={editingKitTab + "_" + k} className={"p-6 rounded-[24px] border space-y-4 " + adminInnerCard}>
+                  <div key={editingKitTab + "_" + k} className={"p-5 rounded-3xl border space-y-4 " + adminInnerCard}>
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-bold text-[#B89462] font-mono uppercase tracking-wider">{k.replace(/_/g, ' ')}</span>
-                      <span className={"text-[11px] px-2.5 py-0.5 rounded-full uppercase font-bold border " + (isAdminDarkMode ? 'bg-black/40 border-white/10 text-slate-300' : 'bg-white/60 border-white/80 text-[#6E6864]')}>{editingKitTab}</span>
+                      <span className="text-xs font-bold text-cyan-400 font-mono uppercase">{k.replace(/_/g, ' ')}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 uppercase">{editingKitTab}</span>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="w-24 h-24 rounded-[20px] overflow-hidden bg-neutral-200 border border-white/80 shrink-0 shadow-md">
+                    <div className="flex items-center gap-3">
+                      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-neutral-800 border border-white/20 shrink-0 shadow">
                         <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
                       </div>
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 space-y-1.5">
                         <input
                           type="text"
                           placeholder="Image URL"
@@ -1808,18 +1870,18 @@ export default function App() {
                               }
                             }
                           })}
-                          className={"w-full p-2.5 rounded-[12px] text-[12px] font-mono border " + adminInputBg}
+                          className={"w-full p-2 rounded-xl text-xs font-mono border " + adminInputBg}
                         />
-                        <label className="block text-center py-2 rounded-[12px] bg-[#B89462]/20 text-[#B89462] text-[12px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
+                        <label className="block text-center py-1.5 rounded-lg bg-cyan-500/15 text-cyan-400 text-[11px] font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25">
                           Upload Photo (&lt;20MB)
                           <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
                         </label>
                       </div>
                     </div>
 
-                    <div className={"space-y-3 pt-3 border-t " + (isAdminDarkMode ? 'border-white/10' : 'border-black/10')}>
+                    <div className="space-y-2 pt-2 border-t border-white/10">
                       <div>
-                        <span className={"block text-[11px] mb-1 font-bold " + adminMuted}>Package Display Name</span>
+                        <span className={"block text-[10px] mb-1 " + adminMuted}>Package Display Name</span>
                         <input
                           type="text"
                           value={pkgText.name || ''}
@@ -1833,11 +1895,11 @@ export default function App() {
                               }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}
+                          className={"w-full p-2.5 rounded-xl text-xs font-bold border " + adminInputBg}
                         />
                       </div>
                       <div>
-                        <span className={"block text-[11px] mb-1 font-bold " + adminMuted}>Description</span>
+                        <span className={"block text-[10px] mb-1 " + adminMuted}>Description</span>
                         <textarea
                           rows={2}
                           value={pkgText.desc || ''}
@@ -1851,7 +1913,7 @@ export default function App() {
                               }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                          className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                         />
                       </div>
                     </div>
@@ -1864,7 +1926,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Package Master'}
               onClick={() => handleSaveSpecificCard('Package Master')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
@@ -1873,23 +1935,23 @@ export default function App() {
         )}
 
         {activeFolderId === 'app_maintenance' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <Wrench className="w-4 h-4" /> App Down & Maintenance Controller
               </h3>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>
+              <p className={"text-xs " + adminMuted + " mt-0.5"}>
                 Turn on to politely lock customer app with an elegant maintenance notice during upgrades.
               </p>
             </div>
 
-            <div className={"p-6 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 " + adminInnerCard}>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2.5">
-                  <span className={"w-3.5 h-3.5 rounded-full " + (draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500')} />
-                  <h4 className="font-bold text-[16px]">App Down / Maintenance Mode</h4>
+            <div className={"p-5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 " + adminInnerCard}>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={"w-3 h-3 rounded-full " + (draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500')} />
+                  <h4 className="font-bold text-sm text-white">App Down / Maintenance Mode</h4>
                 </div>
-                <p className={"text-[13px] max-w-lg leading-relaxed " + adminMuted}>
+                <p className={"text-xs max-w-lg leading-relaxed " + adminMuted}>
                   {draft.isAppDown 
                     ? "🔴 ON: Customer App is locked. Visitors see a polite glassmorphism maintenance banner stating system upgrades are in progress."
                     : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
@@ -1899,10 +1961,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setDraft({ ...draft, isAppDown: !draft.isAppDown })}
-                className={"px-6 py-3.5 rounded-[18px] font-bold text-[13px] flex items-center gap-2.5 transition-all duration-200 active:scale-95 shadow-md " + (
+                className={"px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all duration-200 active:scale-95 " + (
                   draft.isAppDown 
-                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30' 
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/30' 
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30'
                 )}
               >
                 {draft.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
@@ -1914,7 +1976,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Maintenance Mode'}
               onClick={() => handleSaveSpecificCard('Maintenance Mode')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
@@ -1923,17 +1985,17 @@ export default function App() {
         )}
 
         {activeFolderId === 'floating' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-5 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <Gift className="w-4 h-4" /> Floating Promo Offer Banner Controller
               </h3>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure bottom-right floating offer pill text, code and activation status.</p>
+              <p className={"text-xs " + adminMuted + " mt-0.5"}>Configure bottom-right floating offer pill text, code and activation status.</p>
             </div>
 
-            <div className={"p-6 rounded-[22px] border space-y-4 " + adminInnerCard}>
+            <div className={"p-4 rounded-2xl border space-y-4 " + adminInnerCard}>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[14px]">Enable Floating Promo Banner Widget</span>
+                <span className="font-bold text-xs text-white">Enable Floating Promo Banner Widget</span>
                 <button
                   type="button"
                   onClick={() => setDraft({
@@ -1943,16 +2005,16 @@ export default function App() {
                       enabled: !(draft.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={"px-4 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-2 " + (draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
+                  className={"px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 " + (draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                 >
                   {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Badge Tag</label>
+                  <label className={"block text-[10px] mb-1 " + adminMuted}>Badge Tag</label>
                   <input
                     type="text"
                     value={draft.floatingBanner?.tag || ''}
@@ -1960,11 +2022,11 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
                     })}
-                    className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                    className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                   />
                 </div>
                 <div>
-                  <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Promo Code</label>
+                  <label className={"block text-[10px] mb-1 " + adminMuted}>Promo Code</label>
                   <input
                     type="text"
                     value={draft.floatingBanner?.code || ''}
@@ -1972,13 +2034,13 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
                     })}
-                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono font-bold text-[#B89462] border " + adminInputBg}
+                    className={"w-full p-2.5 rounded-xl text-xs font-mono text-cyan-400 border " + adminInputBg}
                   />
                 </div>
               </div>
 
               <div>
-                <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Banner Title</label>
+                <label className={"block text-[10px] mb-1 " + adminMuted}>Banner Title</label>
                 <input
                   type="text"
                   value={draft.floatingBanner?.title || ''}
@@ -1986,12 +2048,12 @@ export default function App() {
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
                   })}
-                  className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                  className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                 />
               </div>
 
               <div>
-                <label className={"block text-[11px] font-bold mb-1.5 " + adminMuted}>Action Button Text</label>
+                <label className={"block text-[10px] mb-1 " + adminMuted}>Action Button Text</label>
                 <input
                   type="text"
                   value={draft.floatingBanner?.actionText || ''}
@@ -1999,7 +2061,7 @@ export default function App() {
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
                   })}
-                  className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                  className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg}
                 />
               </div>
             </div>
@@ -2008,7 +2070,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Floating Banner'}
               onClick={() => handleSaveSpecificCard('Floating Banner')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
@@ -2017,13 +2079,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'coupons' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className={"p-6 rounded-3xl border space-y-5 " + cardBgClass}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Tag className="w-4 h-4" /> Promo Coupons Manager & Expiry Timers
                 </h3>
-                <p className={"text-[13px] " + adminMuted}>Set coupon discounts, active status and expiry timer dates.</p>
+                <p className={"text-xs " + adminMuted}>Set coupon discounts, active status and expiry timer dates.</p>
               </div>
               <button
                 type="button"
@@ -2047,9 +2109,9 @@ export default function App() {
                     });
                   }
                 }}
-                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
               >
-                <Plus className="w-4 h-4" /> Add Coupon
+                <Plus className="w-3.5 h-3.5" /> Add Coupon
               </button>
             </div>
 
@@ -2057,16 +2119,16 @@ export default function App() {
               {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
-                  <div key={code} className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
+                  <div key={code} className={"p-4 rounded-2xl border space-y-3 " + adminInnerCard}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-[#B89462] font-bold text-[16px]">{code}</span>
-                        <span className={"text-[11px] px-3 py-0.5 rounded-full font-bold " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-cyan-400 font-bold text-base">{code}</span>
+                        <span className={"text-[10px] px-2.5 py-0.5 rounded-full font-bold " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400')}>
                           {isCodeActive ? 'ACTIVE' : 'DISABLED'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setDraft({
@@ -2076,7 +2138,7 @@ export default function App() {
                               [code]: { ...c, enabled: !isCodeActive }
                             }
                           })}
-                          className={"px-3.5 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-1.5 transition active:scale-95 " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
+                          className={"px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition active:scale-95 " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                         >
                           {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                           <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
@@ -2086,13 +2148,13 @@ export default function App() {
                           const copy = { ...draft.validCoupons };
                           delete copy[code];
                           setDraft({ ...draft, validCoupons: copy });
-                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                        }} className="text-rose-400 p-2 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Discount Type</span>
+                        <span className={"block text-[10px] mb-1 " + adminMuted}>Discount Type</span>
                         <select
                           value={c.type || 'percent'}
                           onChange={e => setDraft({
@@ -2102,7 +2164,7 @@ export default function App() {
                               [code]: { ...c, type: e.target.value }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}
+                          className={"w-full p-2 rounded-xl text-xs font-bold border " + adminInputBg}
                         >
                           <option value="percent">% Percent Off</option>
                           <option value="flat">₹ Flat Discount</option>
@@ -2110,7 +2172,7 @@ export default function App() {
                       </div>
 
                       <div>
-                        <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
+                        <span className={"block text-[10px] mb-1 " + adminMuted}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
                         <input
                           type="number"
                           value={c.value || 0}
@@ -2121,12 +2183,12 @@ export default function App() {
                               [code]: { ...c, value: Number(e.target.value) }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] font-mono text-[#B89462] text-[13px] font-bold border " + adminInputBg}
+                          className={"w-full p-2 rounded-xl font-mono text-cyan-400 text-xs font-bold border " + adminInputBg}
                         />
                       </div>
 
                       <div>
-                        <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>⏱️ Expiry Date & Time</span>
+                        <span className={"block text-[10px] mb-1 " + adminMuted}>⏱️ Expiry Date & Time</span>
                         <input
                           type="datetime-local"
                           value={c.expiryDate || ''}
@@ -2137,13 +2199,13 @@ export default function App() {
                               [code]: { ...c, expiryDate: e.target.value }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#B89462] border " + adminInputBg}
+                          className={"w-full p-2 rounded-xl text-xs font-mono text-amber-400 border " + adminInputBg}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <span className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Promo Display Description / Label</span>
+                      <span className={"block text-[10px] mb-1 " + adminMuted}>Promo Display Description / Label</span>
                       <input
                         type="text"
                         value={c.label || ''}
@@ -2154,7 +2216,7 @@ export default function App() {
                             [code]: { ...c, label: e.target.value }
                           }
                         })}
-                        className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg}
+                        className={"w-full p-2 rounded-xl text-xs border " + adminInputBg}
                       />
                     </div>
                   </div>
@@ -2166,7 +2228,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Coupons'}
               onClick={() => handleSaveSpecificCard('Coupons')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Coupons' ? 'Saving...' : 'Save Promo Coupons Live'}</span>
@@ -2175,13 +2237,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'gallery' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className={"p-6 rounded-3xl border space-y-5 " + cardBgClass}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Film className="w-4 h-4" /> Transformations, Videos & GIFs Studio (20MB Max)
                 </h3>
-                <p className={"text-[13px] " + adminMuted}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
+                <p className={"text-xs " + adminMuted}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
               </div>
               <button
                 type="button"
@@ -2194,61 +2256,61 @@ export default function App() {
                     ]
                   });
                 }}
-                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
               >
-                <Plus className="w-4 h-4" /> Add Card
+                <Plus className="w-3.5 h-3.5" /> Add Card
               </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(draft.galleryPhotos || []).map((item, idx) => (
-                <div key={idx} className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
+                <div key={idx} className={"p-4 rounded-2xl border space-y-3 " + adminInnerCard}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-[#B89462] font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
-                    <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-500 p-1.5 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
+                    <span className="text-xs font-bold text-cyan-400 font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
+                    <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-400 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Type</label>
+                      <label className={"block text-[10px] mb-1 " + adminMuted}>Type</label>
                       <select value={item.type || 'video'} onChange={e => {
                         const copy = [...draft.galleryPhotos];
                         copy[idx] = { ...copy[idx], type: e.target.value };
                         setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}>
+                      }} className={"w-full p-2 rounded-xl text-xs font-bold border " + adminInputBg}>
                         <option value="video">🎥 Auto-play Video</option>
                         <option value="image">🖼️ Image / Animated GIF</option>
                       </select>
                     </div>
                     <div>
-                      <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Subtitle</label>
+                      <label className={"block text-[10px] mb-1 " + adminMuted}>Subtitle</label>
                       <input type="text" value={item.sub || ''} onChange={e => {
                         const copy = [...draft.galleryPhotos];
                         copy[idx] = { ...copy[idx], sub: e.target.value };
                         setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
+                      }} className={"w-full p-2 rounded-xl text-xs border " + adminInputBg} />
                     </div>
                   </div>
 
                   <div>
-                    <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Title</label>
+                    <label className={"block text-[10px] mb-1 " + adminMuted}>Title</label>
                     <input type="text" value={item.title || ''} onChange={e => {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], title: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
+                    }} className={"w-full p-2 rounded-xl text-xs font-bold border " + adminInputBg} />
                   </div>
 
                   <div>
-                    <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Direct URL (Video, GIF, or Image link)</label>
+                    <label className={"block text-[10px] mb-1 " + adminMuted}>Direct URL (Video, GIF, or Image link)</label>
                     <input type="text" value={item.url || ''} onChange={e => {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#B89462] border " + adminInputBg} />
+                    }} className={"w-full p-2 rounded-xl text-xs font-mono text-cyan-400 border " + adminInputBg} />
                   </div>
 
-                  <label className="block text-center py-2.5 rounded-[14px] bg-[#B89462]/20 text-[#B89462] text-[13px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
+                  <label className="block text-center py-2 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25 transition">
                     Upload Video / GIF / Image (&lt;20MB)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
@@ -2260,7 +2322,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Gallery Media'}
               onClick={() => handleSaveSpecificCard('Gallery Media')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
@@ -2269,12 +2331,12 @@ export default function App() {
         )}
 
         {activeFolderId === 'toggles_master' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-5 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
               </h3>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>Enable or disable any tab, section or feature on the customer app.</p>
+              <p className={"text-xs " + adminMuted + " mt-0.5"}>Enable or disable any tab, section or feature on the customer app.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2291,10 +2353,10 @@ export default function App() {
               ].map(toggle => {
                 const isEnabled = draft.toggles?.[toggle.key] !== false;
                 return (
-                  <div key={toggle.key} className={"p-4.5 rounded-[20px] border flex items-center justify-between gap-3.5 " + adminInnerCard}>
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-[13px]">{toggle.label}</h4>
-                      <p className={"text-[12px] " + adminMuted}>{toggle.desc}</p>
+                  <div key={toggle.key} className={"p-4 rounded-2xl border flex items-center justify-between gap-3 " + adminInnerCard}>
+                    <div className="space-y-0.5">
+                      <h4 className="font-bold text-xs text-white">{toggle.label}</h4>
+                      <p className={"text-[11px] " + adminMuted}>{toggle.desc}</p>
                     </div>
                     <button
                       type="button"
@@ -2305,7 +2367,7 @@ export default function App() {
                           [toggle.key]: !isEnabled
                         }
                       })}
-                      className={"px-3.5 py-2 rounded-[14px] flex items-center gap-1.5 font-bold text-[12px] transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
+                      className={"p-2 rounded-xl flex items-center gap-1.5 font-bold text-xs transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                     >
                       {isEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                       <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
@@ -2319,7 +2381,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Master Toggles'}
               onClick={() => handleSaveSpecificCard('Master Toggles')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
@@ -2328,33 +2390,33 @@ export default function App() {
         )}
 
         {activeFolderId === 'traffic_logs' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Activity className="w-4 h-4" /> Live Traffic & Instagram Visitor Logs
                 </h3>
-                <p className={"text-[13px] " + adminMuted}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
+                <p className={"text-xs " + adminMuted}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/40 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="text-xs font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-xl">
                 {visitorLogs.length} Recent Visits Logged
               </span>
             </div>
 
             {visitorLogs.length === 0 ? (
-              <p className={"text-[14px] py-12 text-center " + adminMuted}>No visitor traffic recorded yet.</p>
+              <p className="text-xs text-slate-400 py-8 text-center">No visitor traffic recorded yet.</p>
             ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                 {visitorLogs.map(log => (
-                  <div key={log.id} className={"p-4 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[13px] " + adminInnerCard}>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-bold text-[#B89462] font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className={"text-[10px] px-2.5 py-0.5 rounded-full font-bold border " + (isAdminDarkMode ? 'bg-white/10 border-white/20 text-slate-300' : 'bg-white/80 border-white text-[#1C1C1E]')}>Active Visit</span>
+                  <div key={log.id} className={"p-3.5 rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs " + adminInnerCard}>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-cyan-400 font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300">Active Visit</span>
                       </div>
-                      <p className={"text-[12px] truncate max-w-md " + adminMuted}>{log.userAgent}</p>
+                      <p className={"text-[11px] truncate max-w-md " + adminMuted}>{log.userAgent}</p>
                     </div>
-                    <span className="text-[12px] text-[#B89462] font-mono font-medium">
+                    <span className="text-[11px] text-amber-400 font-mono">
                       {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
                     </span>
                   </div>
@@ -2365,8 +2427,8 @@ export default function App() {
         )}
 
         {activeFolderId === 'promotions' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
+            <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
               <Megaphone className="w-4 h-4" /> WhatsApp Broadcast Studio
             </h3>
             <textarea
@@ -2377,13 +2439,13 @@ export default function App() {
                 updated[0] = e.target.value;
                 setDraft({...draft, announcements: updated});
               }}
-              className={"w-full p-4 rounded-[20px] text-[13px] font-mono border " + adminInputBg}
+              className={"w-full p-3.5 rounded-2xl text-xs font-mono text-cyan-300 border " + adminInputBg}
             />
             <button
               type="button"
               disabled={false}
               onClick={() => handleSaveSpecificCard('Broadcast Studio')}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-[14px] rounded-[20px] shadow-[0_10px_30px_rgba(219,39,119,0.3)] active:scale-95 flex items-center justify-center gap-2 transition"
+              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-xs rounded-2xl shadow-xl active:scale-95 flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span>Save Broadcast Settings</span>
@@ -2392,27 +2454,27 @@ export default function App() {
         )}
 
         {activeFolderId === 'announcements' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Volume2 className="w-4 h-4" /> Top Announcement Lines Ticker
                 </h3>
-                <p className={"text-[13px] " + adminMuted}>Edit rotating top banner messages displayed to clients.</p>
+                <p className={"text-xs " + adminMuted}>Edit rotating top banner messages displayed to clients.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setDraft({ ...draft, announcements: [...(draft.announcements || []), "✨ New studio announcement line ✨"] })}
-                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
               >
-                <Plus className="w-4 h-4" /> Add Line
+                <Plus className="w-3.5 h-3.5" /> Add Line
               </button>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {(draft.announcements || []).map((line, idx) => (
-                <div key={idx} className="flex gap-2.5 items-center">
-                  <span className="text-[13px] font-mono font-bold text-[#B89462] w-6">#{idx + 1}</span>
+                <div key={idx} className="flex gap-2 items-center">
+                  <span className="text-xs font-mono font-bold text-cyan-400 w-6">#{idx + 1}</span>
                   <input
                     type="text"
                     value={line}
@@ -2421,12 +2483,12 @@ export default function App() {
                       copy[idx] = e.target.value;
                       setDraft({ ...draft, announcements: copy });
                     }}
-                    className={"flex-1 p-3.5 rounded-[16px] text-[13px] border " + adminInputBg}
+                    className={"flex-1 p-3 rounded-2xl text-xs border " + adminInputBg}
                   />
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) })}
-                    className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
+                    className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -2438,7 +2500,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Announcements'}
               onClick={() => handleSaveSpecificCard('Announcements')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements Live'}</span>
@@ -2447,13 +2509,13 @@ export default function App() {
         )}
 
         {activeFolderId === 'convenience' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+                <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Car className="w-4 h-4" /> Travel Fees & Convenience Zones
                 </h3>
-                <p className={"text-[13px] " + adminMuted}>Manage venue travel charges for customer locations.</p>
+                <p className={"text-xs " + adminMuted}>Manage venue travel charges for customer locations.</p>
               </div>
               <button
                 type="button"
@@ -2470,17 +2532,17 @@ export default function App() {
                     });
                   }
                 }}
-                className={"px-4 py-2.5 " + primaryCtaButton + " text-[13px] flex items-center gap-1.5"}
+                className="px-3.5 py-1.5 bg-cyan-500 text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95"
               >
-                <Plus className="w-4 h-4" /> Add Zone
+                <Plus className="w-3.5 h-3.5" /> Add Zone
               </button>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={"p-4.5 rounded-[20px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 " + adminInnerCard}>
+                <div key={zKey} className={"p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 " + adminInnerCard}>
                   <div className="flex-1 w-full space-y-1">
-                    <span className="text-[11px] font-mono text-[#B89462] uppercase font-bold">Zone Key: {zKey}</span>
+                    <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">Zone Key: {zKey}</span>
                     <input
                       type="text"
                       value={zData.name}
@@ -2491,12 +2553,12 @@ export default function App() {
                           [zKey]: { ...zData, name: e.target.value }
                         }
                       })}
-                      className={"w-full p-3 rounded-[16px] text-[13px] font-semibold border " + adminInputBg}
+                      className={"w-full p-2.5 rounded-xl text-xs font-semibold border " + adminInputBg}
                     />
                   </div>
 
-                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                    <label className={"text-[13px] font-bold " + adminMuted}>Fee (₹):</label>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <label className="text-xs font-bold text-slate-400">Fee (₹):</label>
                     <input
                       type="number"
                       value={zData.fee}
@@ -2507,7 +2569,7 @@ export default function App() {
                           [zKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
-                      className={"w-32 p-3 rounded-[16px] font-mono text-[#B89462] font-bold text-[13px] border " + adminInputBg}
+                      className={"w-28 p-2.5 rounded-xl font-mono text-cyan-400 font-bold text-xs border " + adminInputBg}
                     />
                     <button
                       type="button"
@@ -2516,7 +2578,7 @@ export default function App() {
                         delete copy[zKey];
                         setDraft({ ...draft, convenienceZones: copy });
                       }}
-                      className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
+                      className="p-2 text-rose-400 hover:bg-rose-500/10 rounded-xl"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -2529,7 +2591,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Travel Fees'}
               onClick={() => handleSaveSpecificCard('Travel Fees')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
@@ -2538,23 +2600,23 @@ export default function App() {
         )}
 
         {activeFolderId === 'prices' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <h3 className="font-bold text-[14px] uppercase text-[#B89462]">👑 International Luxury Vanity Kit (₹)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
+            <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {partyPackages.concat(bridalPackages).map(k => (
                 <div key={k}>
-                  <label className={"block text-[11px] mb-1.5 capitalize font-bold " + adminMuted}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-[#B89462] text-[13px] font-bold border " + adminInputBg} />
+                  <label className={"block text-[10px] mb-1 capitalize " + adminMuted}>{k.replace(/_/g, ' ')}</label>
+                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={"w-full p-2.5 rounded-xl font-mono text-cyan-400 text-xs border " + adminInputBg} />
                 </div>
               ))}
             </div>
 
-            <h3 className="font-bold text-[14px] uppercase text-rose-500 pt-4">✨ Premium HD Kit Rates (₹)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+            <h3 className="font-bold text-xs uppercase text-rose-400 pt-4">✨ Premium HD Kit Rates (₹)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {partyPackages.concat(bridalPackages).map(k => (
                 <div key={k}>
-                  <label className={"block text-[11px] mb-1.5 capitalize font-bold " + adminMuted}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-rose-500 text-[13px] font-bold border " + adminInputBg} />
+                  <label className={"block text-[10px] mb-1 capitalize " + adminMuted}>{k.replace(/_/g, ' ')}</label>
+                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={"w-full p-2.5 rounded-xl font-mono text-rose-400 text-xs border " + adminInputBg} />
                 </div>
               ))}
             </div>
@@ -2563,7 +2625,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Package Rates'}
               onClick={() => handleSaveSpecificCard('Package Rates')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Rates' ? 'Saving...' : 'Save Package Rates Live'}</span>
@@ -2572,12 +2634,12 @@ export default function App() {
         )}
 
         {activeFolderId === 'theme' && (
-          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
-            <h3 className="font-bold text-[14px] uppercase text-[#B89462]">Aesthetic Themes & Fonts (Synced)</h3>
+          <div className={"p-6 rounded-3xl border space-y-4 " + cardBgClass}>
+            <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts (Synced)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Color Theme</label>
-                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#B89462] border " + adminInputBg}>
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Color Theme</label>
+                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={"w-full p-2.5 rounded-xl text-xs font-bold text-cyan-400 border " + adminInputBg}>
                   <option value="liquid_glass">💎 Liquid Glass iOS</option>
                   <option value="one_ui_9">✨ Samsung One UI 9</option>
                   <option value="gold_rose">👑 Royal Gold Rose</option>
@@ -2589,8 +2651,8 @@ export default function App() {
               </div>
 
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Font Family</label>
-                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#B89462] border " + adminInputBg}>
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Font Family</label>
+                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={"w-full p-2.5 rounded-xl text-xs font-bold text-amber-400 border " + adminInputBg}>
                   <option value="sans">Plus Jakarta Sans</option>
                   <option value="outfit">Outfit (iOS Glass Minimal)</option>
                   <option value="serif">Playfair Display (Royal)</option>
@@ -2601,10 +2663,10 @@ export default function App() {
               </div>
 
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Default Customer Mode (Main App Theme)</label>
-                <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}>
-                  <option value="light">☀️ Light Mode (#F8F5F2)</option>
-                  <option value="dark">🌙 Dark Mode (#1C1C1E)</option>
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Default Customer Mode (Main App Theme)</label>
+                <select value={draft.theme?.defaultMode || 'dark'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={"w-full p-2.5 rounded-xl text-xs font-bold border " + adminInputBg}>
+                  <option value="dark">🌙 Dark Mode</option>
+                  <option value="light">☀️ Light Mode</option>
                 </select>
               </div>
             </div>
@@ -2613,7 +2675,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Theme & Styles'}
               onClick={() => handleSaveSpecificCard('Theme & Styles')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts Live'}</span>
@@ -2622,40 +2684,40 @@ export default function App() {
         )}
 
         {activeFolderId === 'profile' && (
-          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
+          <div className={"p-6 rounded-3xl border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
+              <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
               </h3>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure official studio title, upload custom logo & artist profile photo.</p>
+              <p className={"text-xs " + adminMuted + " mt-0.5"}>Configure official studio title, upload custom logo & artist profile photo.</p>
             </div>
 
-            <div className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
+            <div className={"p-4 rounded-2xl border space-y-3 " + adminInnerCard}>
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#B89462] uppercase flex items-center gap-2">
+                <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
                   <Crown className="w-4 h-4" /> 1. Official Studio Logo (Header & Splash)
                 </span>
-                <span className={"text-[11px] font-mono font-medium " + adminMuted}>Auto-Compressed</span>
+                <span className="text-[10px] text-slate-400 font-mono">Auto-Compressed</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className={"w-18 h-18 rounded-[20px] p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md border " + (isAdminDarkMode ? 'bg-black/40 border-white/20' : 'bg-white/60 border-white/80')}>
+                <div className="w-16 h-16 rounded-2xl bg-white/10 border border-white/20 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
                   {draft.studioLogo ? (
                     <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
-                    <Crown className="w-8 h-8 text-[#6E6864]" />
+                    <Crown className="w-8 h-8 text-slate-400" />
                   )}
                 </div>
 
-                <div className="flex-1 w-full space-y-2.5">
+                <div className="flex-1 w-full space-y-2">
                   <input
                     type="text"
                     placeholder="Paste Logo Image URL"
                     value={draft.studioLogo || ''}
                     onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
-                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono border " + adminInputBg}
+                    className={"w-full p-2.5 rounded-xl text-xs font-mono border " + adminInputBg}
                   />
-                  <label className="inline-block px-4 py-2 rounded-[14px] bg-[#B89462]/20 text-[#B89462] text-[13px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
+                  <label className="inline-block px-3.5 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-400 text-xs font-bold cursor-pointer border border-cyan-500/30 hover:bg-cyan-500/25 transition">
                     Upload & Compress Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
@@ -2663,28 +2725,28 @@ export default function App() {
               </div>
             </div>
 
-            <div className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
+            <div className={"p-4 rounded-2xl border space-y-3 " + adminInnerCard}>
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#B89462] uppercase flex items-center gap-2">
+                <span className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
                   <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
                 </span>
-                <span className={"text-[11px] font-mono font-medium " + adminMuted}>Avatar Card</span>
+                <span className="text-[10px] text-slate-400 font-mono">Avatar Card</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-18 h-18 rounded-[20px] overflow-hidden bg-neutral-200 border-2 border-[#B89462]/50 shrink-0 shadow-md">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-neutral-800 border-2 border-amber-400/40 shrink-0 shadow-md">
                   <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
 
-                <div className="flex-1 w-full space-y-2.5">
+                <div className="flex-1 w-full space-y-2">
                   <input
                     type="text"
                     placeholder="Paste Profile Photo URL"
                     value={draft.profileImage || ''}
                     onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
-                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono border " + adminInputBg}
+                    className={"w-full p-2.5 rounded-xl text-xs font-mono border " + adminInputBg}
                   />
-                  <label className="inline-block px-4 py-2 rounded-[14px] bg-[#B89462]/20 text-[#B89462] text-[13px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
+                  <label className="inline-block px-3.5 py-1.5 rounded-xl bg-amber-500/15 text-amber-400 text-xs font-bold cursor-pointer border border-amber-500/30 hover:bg-amber-500/25 transition">
                     Upload & Compress Profile Photo
                     <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
@@ -2694,20 +2756,20 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Display Title</label>
-                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Display Title</label>
+                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg} />
               </div>
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Booking Contact Number</label>
-                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#B89462] border " + adminInputBg} />
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Booking Contact Number</label>
+                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={"w-full p-2.5 rounded-xl text-xs font-mono text-cyan-400 border " + adminInputBg} />
               </div>
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-pink-500 border " + adminInputBg} />
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Instagram Handle</label>
+                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={"w-full p-2.5 rounded-xl text-xs font-mono text-pink-400 border " + adminInputBg} />
               </div>
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Artist Tagline / Subtitle</label>
-                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] border " + adminInputBg} />
+                <label className={"block text-xs font-bold mb-1 " + adminMuted}>Artist Tagline / Subtitle</label>
+                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={"w-full p-2.5 rounded-xl text-xs border " + adminInputBg} />
               </div>
             </div>
 
@@ -2715,7 +2777,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Studio Profile'}
               onClick={() => handleSaveSpecificCard('Studio Profile')}
-              className={"w-full py-4 " + primaryCtaButton + " text-[14px] flex items-center justify-center gap-2"}
+              className={"w-full py-3.5 " + currentTheme.btnPrimary + " text-xs rounded-2xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2"}
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile & Logo Live'}</span>
