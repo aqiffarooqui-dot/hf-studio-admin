@@ -240,12 +240,17 @@ const INITIAL_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
-// 🚀 Deployed Versions History Registry
-const DEPLOYED_VERSIONS_LIST = [
-  { version: "v2.5.0", date: "August 28, 2026", status: "Active Live Production", changes: "Biometric WebAuthn hardware binding & reorderable cards." },
-  { version: "v2.4.2", date: "August 15, 2026", status: "Archived", changes: "Added WhatsApp Baileys gateway integration & canvas receipt JPG." },
-  { version: "v2.3.0", date: "July 30, 2026", status: "Archived", changes: "Master package management folder & coupon countdown timers." },
-  { version: "v2.0.0", date: "June 01, 2026", status: "Archived", changes: "Initial Firebase real-time config sync & mobile responsive UI." }
+// 🚀 Separate Main App & Admin App Deployment Versions
+const MAIN_APP_VERSIONS = [
+  { version: "v2.8.0", date: "August 28, 2026", status: "Active Live Production", changes: "Embedded studio logo, watermark on canvas receipts & marquee announcements." },
+  { version: "v2.7.1", date: "August 12, 2026", status: "Archived", changes: "Interactive custom guest makeup estimator & family discount tiers." },
+  { version: "v2.5.0", date: "July 20, 2026", status: "Archived", changes: "Firestore real-time config synchronization & responsive glassmorphism." }
+];
+
+const ADMIN_APP_VERSIONS = [
+  { version: "v2.6.0", date: "August 28, 2026", status: "Active Live Production", changes: "WebAuthn hardware biometric passkey login & reorderable master cards." },
+  { version: "v2.5.0", date: "August 10, 2026", status: "Archived", changes: "WhatsApp Baileys broadcast gateway and status slip filter queue." },
+  { version: "v2.1.0", date: "July 05, 2026", status: "Archived", changes: "Initial dashboard folder cards and auto-compression upload tools." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -1392,18 +1397,41 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* 🚀 App Versions & Deployment History Section */}
+            {/* 🚀 1. Main App Version & Deployment History */}
             <div className={`p-5 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
-                <GitBranch className="w-4 h-4 text-cyan-400" /> App Versions & Deployment History
+                <GitBranch className="w-4 h-4 text-cyan-400" /> Main App Version & Deployment History
               </h4>
-              <p className={`text-xs ${adminMuted}`}>Track all deployed versions of the Main App and Admin Console.</p>
+              <p className={`text-xs ${adminMuted}`}>Deployment timeline and release changes for Customer Main App.</p>
 
-              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                {DEPLOYED_VERSIONS_LIST.map((ver, vIdx) => (
+              <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                {MAIN_APP_VERSIONS.map((ver, vIdx) => (
                   <div key={vIdx} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
                     <div className="flex justify-between items-center">
                       <span className="font-bold font-mono text-cyan-400">{ver.version}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400'}`}>
+                        {ver.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300">{ver.changes}</p>
+                    <span className="text-[10px] text-slate-500 font-mono">Released: {ver.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 🚀 2. Admin App Version & Deployment History */}
+            <div className={`p-5 rounded-2xl border space-y-3 ${adminInnerCard}`}>
+              <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
+                <GitBranch className="w-4 h-4 text-purple-400" /> Admin App Version & Deployment History
+              </h4>
+              <p className={`text-xs ${adminMuted}`}>Deployment timeline and release changes for Admin Console.</p>
+
+              <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
+                  <div key={vIdx} className="p-3 rounded-xl bg-white/5 border border-white/10 text-xs space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold font-mono text-purple-400">{ver.version}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400'}`}>
                         {ver.status}
                       </span>
