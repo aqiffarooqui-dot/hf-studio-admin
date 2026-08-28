@@ -393,24 +393,24 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Strict Hardware Fingerprint & WebAuthn Authentication on Login
+  // 👆 Direct Hardware Fingerprint & Passkey Prompt Invocation
   const handleBiometricOrFaceLogin = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      alert("⚠️ Biometric hardware scanner is not available in this browser/device context.");
+      alert("⚠️ Biometric authentication is not supported by your browser or device.");
       return;
     }
 
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (!available) {
-        alert("⚠️ No platform biometric authenticator found.");
+        alert("⚠️ No hardware fingerprint/face scanner detected.");
         return;
       }
 
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
       
-      // Forces device hardware scanner (Samsung / iOS Touch ID / Face ID)
+      // Directly triggers phone biometric sensor
       await navigator.credentials.get({
         publicKey: {
           challenge,
@@ -425,10 +425,10 @@ export default function AdminApp() {
       });
       
       setIsAuthenticated(true);
-      setActionStatus("✅ Hardware Fingerprint Scanned & Authenticated!");
+      setActionStatus("✅ Fingerprint Hardware Scanner Verified!");
     } catch (err) {
-      console.warn("WebAuthn biometric auth error or cancelled:", err);
-      alert("⚠️ Fingerprint scan cancelled or failed by hardware. Please enter your 4-digit PIN.");
+      console.warn("WebAuthn fingerprint login error:", err);
+      alert("⚠️ Fingerprint scan was cancelled or failed. Please use your 4-digit PIN.");
     }
   };
 
@@ -480,7 +480,7 @@ export default function AdminApp() {
       console.warn("Hardware credential creation notice:", err);
       clearInterval(interval);
       setIsScanningFinger(false);
-      alert("⚠️ Fingerprint registration was cancelled or failed by device. Please try again.");
+      alert("⚠️ Fingerprint scan was cancelled. Please try again.");
       return;
     }
 
