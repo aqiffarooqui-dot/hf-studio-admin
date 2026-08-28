@@ -240,7 +240,6 @@ const INITIAL_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
-// 🚀 Separate Main App & Admin App Deployment Versions
 const MAIN_APP_VERSIONS = [
   { version: "v2.8.0", date: "August 28, 2026", status: "Active Live Production", changes: "Embedded studio logo, watermark on canvas receipts & marquee announcements." },
   { version: "v2.7.1", date: "August 12, 2026", status: "Archived", changes: "Interactive custom guest makeup estimator & family discount tiers." },
@@ -304,16 +303,13 @@ export default function AdminApp() {
   const [savingSection, setSavingSection] = useState('');
   const [actionStatus, setActionStatus] = useState('');
 
-  // 👆 Fingerprint Registration State
   const [isScanningFinger, setIsScanningFinger] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
 
-  // Password Change Form State
   const [oldPinInput, setOldPinInput] = useState('');
   const [newPinInput, setNewPinInput] = useState('');
   const [confirmPinInput, setConfirmPinInput] = useState('');
 
-  // Filter & Date States for Bookings
   const [bookingStatusFilter, setBookingStatusFilter] = useState('all');
   const [bookingDateFilter, setBookingDateFilter] = useState('');
 
@@ -406,7 +402,6 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Strict Hardware Fingerprint & WebAuthn Authentication Handler
   const handleBiometricOrFaceLogin = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
       alert("⚠️ Biometric hardware scanner is not available in this browser context. Please use PIN 8760.");
@@ -423,7 +418,6 @@ export default function AdminApp() {
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
       
-      // Directly invokes phone hardware biometric sensor prompt
       await navigator.credentials.get({
         publicKey: {
           challenge,
@@ -445,7 +439,6 @@ export default function AdminApp() {
     }
   };
 
-  // 👆 Register Fingerprint Scan with navigator.credentials.create
   const handleRegisterFingerprintScan = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
       alert("⚠️ Biometric hardware API is not supported in this browser context.");
@@ -643,7 +636,6 @@ export default function AdminApp() {
     }
   };
 
-  // 🖼️ Admin Canvas Slip Generator (Matches Main App with Logo, Watermark & Rejection Remarks)
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -669,7 +661,6 @@ export default function AdminApp() {
       ctx.lineWidth = 4;
       ctx.strokeRect(40, 40, 1000, 1680);
 
-      // 💧 Embedded Subtle Watermark
       ctx.save();
       ctx.translate(540, 880);
       ctx.rotate(-Math.PI / 6);
@@ -1124,7 +1115,6 @@ export default function AdminApp() {
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Rejection Modal */}
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className={`max-w-lg w-full rounded-3xl p-6 border shadow-2xl space-y-4 ${isAdminDarkMode ? 'bg-[#0f1424] border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
@@ -1186,7 +1176,6 @@ export default function AdminApp() {
         </div>
       )}
 
-      {/* 💎 Header with Edit / Save Reorder Toggle Button */}
       <header className={`sticky top-0 z-40 backdrop-blur-3xl border-b px-4 sm:px-8 py-3.5 flex justify-between items-center ${isAdminDarkMode ? 'bg-[#080d1e]/80 border-white/10' : 'bg-white/85 border-slate-200 shadow-sm'}`}>
         <div className="flex items-center gap-2.5">
           {draft.studioLogo ? (
@@ -1232,7 +1221,6 @@ export default function AdminApp() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6 space-y-6">
          
-        {/* Breadcrumb Bar */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           {activeFolderId ? (
             <button
@@ -1264,7 +1252,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* 📁 VIEW 1: REORDERABLE FOLDER CARDS DIRECTORY GRID */}
         {!activeFolderId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
             {adminFolders.map((f, index) => {
@@ -1325,9 +1312,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* 🗂️ VIEW 2: INSIDE SPECIFIC FOLDER CARD */}
-
-        {/* TAB: GENERAL & SECURITY SETTINGS */}
         {activeFolderId === 'general' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div>
@@ -1337,7 +1321,6 @@ export default function AdminApp() {
               <p className={`text-xs ${adminMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
             </div>
 
-            {/* Fingerprint Scanner Registration */}
             <div className={`p-5 rounded-2xl border space-y-4 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
                 <Fingerprint className="w-4 h-4 text-cyan-400" /> Hardware Fingerprint Scanner Integration
@@ -1397,7 +1380,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* 🚀 1. Main App Version & Deployment History */}
             <div className={`p-5 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
                 <GitBranch className="w-4 h-4 text-cyan-400" /> Main App Version & Deployment History
@@ -1420,7 +1402,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* 🚀 2. Admin App Version & Deployment History */}
             <div className={`p-5 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
                 <GitBranch className="w-4 h-4 text-purple-400" /> Admin App Version & Deployment History
@@ -1443,7 +1424,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* Permanent Recovery Email Card */}
             <div className={`p-5 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
                 <Mail className="w-4 h-4 text-amber-400" /> Permanent Recovery Email ID
@@ -1458,7 +1438,6 @@ export default function AdminApp() {
               />
             </div>
 
-            {/* Password Change Card */}
             <form onSubmit={handlePasswordChange} className={`p-5 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <h4 className="font-bold text-xs text-white uppercase flex items-center gap-1.5">
                 <Key className="w-4 h-4 text-cyan-400" /> Change Admin PIN Password
@@ -1523,7 +1502,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: BOOKINGS (WITH STATUS & DATE FILTERS) */}
         {activeFolderId === 'bookings' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
@@ -1536,7 +1514,6 @@ export default function AdminApp() {
               </span>
             </div>
 
-            {/* Filter Bar */}
             <div className={`p-4 rounded-2xl border grid grid-cols-1 sm:grid-cols-2 gap-3 ${adminInnerCard}`}>
               <div>
                 <label className={`block text-[10px] mb-1 font-bold ${adminMuted}`}>Filter by Status</label>
@@ -1694,7 +1671,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: FEEDBACKS */}
         {activeFolderId === 'feedbacks' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -1746,7 +1722,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: CALENDAR */}
         {activeFolderId === 'calendar_view' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1839,7 +1814,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: MERGED PACKAGE MANAGEMENT (IMAGES + TITLES & DESCRIPTIONS) */}
         {activeFolderId === 'packages_master' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1880,7 +1854,6 @@ export default function AdminApp() {
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 uppercase">{editingKitTab}</span>
                     </div>
 
-                    {/* Image Preview & Upload */}
                     <div className="flex items-center gap-3">
                       <div className="w-20 h-20 rounded-2xl overflow-hidden bg-neutral-800 border border-white/20 shrink-0 shadow">
                         <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
@@ -1909,7 +1882,6 @@ export default function AdminApp() {
                       </div>
                     </div>
 
-                    {/* Package Name & Desc */}
                     <div className="space-y-2 pt-2 border-t border-white/10">
                       <div>
                         <span className={`block text-[10px] mb-1 ${adminMuted}`}>Package Display Name</span>
@@ -1965,7 +1937,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: MAINTENANCE MODE */}
         {activeFolderId === 'app_maintenance' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div>
@@ -2016,7 +1987,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: FLOATING PROMO BANNER */}
         {activeFolderId === 'floating' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div>
@@ -2111,7 +2081,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: PROMO COUPONS */}
         {activeFolderId === 'coupons' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2270,7 +2239,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: TRANSFORMATIONS */}
         {activeFolderId === 'gallery' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2365,7 +2333,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: MASTER FEATURE & SECTION TOGGLES */}
         {activeFolderId === 'toggles_master' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div>
@@ -2425,7 +2392,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: VISITOR TRAFFIC LOGS */}
         {activeFolderId === 'traffic_logs' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2463,7 +2429,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: PROMOTIONS */}
         {activeFolderId === 'promotions' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
@@ -2487,7 +2452,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: TOP ANNOUNCEMENTS */}
         {activeFolderId === 'announcements' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2495,7 +2459,7 @@ export default function AdminApp() {
                 <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                   <Volume2 className="w-4 h-4" /> Top Announcement Lines Ticker
                 </h3>
-                <p className={`text-xs ${adminMuted}`}>Edit rotating top banner messages displayed to clients.</p>
+                <p className={`text-xs ${adminMuted}`}>{`Edit rotating top banner messages displayed to clients.`}</p>
               </div>
               <button
                 type="button"
@@ -2543,7 +2507,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: TRAVEL FEES */}
         {activeFolderId === 'convenience' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2635,7 +2598,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: RATES */}
         {activeFolderId === 'prices' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">👑 International Luxury Vanity Kit (₹)</h3>
@@ -2670,7 +2632,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: THEMES */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 rounded-3xl border space-y-4 ${cardBgClass}`}>
             <h3 className="font-bold text-xs uppercase text-cyan-400">Aesthetic Themes & Fonts (Synced)</h3>
@@ -2721,7 +2682,6 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: PROFILE & LOGO UPLOAD */}
         {activeFolderId === 'profile' && (
           <div className={`p-6 rounded-3xl border space-y-6 ${cardBgClass}`}>
             <div>
@@ -2731,7 +2691,6 @@ export default function AdminApp() {
               <p className={`text-xs ${adminMuted} mt-0.5`}>Configure official studio title, upload custom logo & artist profile photo.</p>
             </div>
 
-            {/* 1. Studio Logo Upload Card */}
             <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-cyan-400 uppercase flex items-center gap-1.5">
@@ -2765,7 +2724,6 @@ export default function AdminApp() {
               </div>
             </div>
 
-            {/* 2. Artist Profile Photo Card */}
             <div className={`p-4 rounded-2xl border space-y-3 ${adminInnerCard}`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-amber-400 uppercase flex items-center gap-1.5">
