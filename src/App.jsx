@@ -189,13 +189,13 @@ const INITIAL_FOLDERS = [
 ];
 
 const MAIN_APP_VERSIONS = [
-  { version: "v2.9.0", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass design system integrated with dynamic backdrop blur." },
-  { version: "v2.8.0", date: "August 28, 2026", status: "Archived", changes: "Embedded studio logo, watermark on canvas receipts & marquee announcements." }
+  { version: "v2.9.1", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass design system with native iOS SF Symbols styling." },
+  { version: "v2.9.0", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass design system integrated with dynamic backdrop blur." }
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v2.7.0", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass admin console with champagne highlights & fluid blur cards." },
-  { version: "v2.6.0", date: "August 28, 2026", status: "Archived", changes: "WebAuthn hardware biometric passkey login & reorderable master cards." }
+  { version: "v2.7.1", date: "August 29, 2026", status: "Active Live Production", changes: "Apple Liquid Glass admin console with day/night toggle and brand palette." },
+  { version: "v2.7.0", date: "August 29, 2026", status: "Archived", changes: "Apple Liquid Glass admin console with champagne highlights & fluid blur cards." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -621,16 +621,16 @@ export default function App() {
     const isConfirmed = b.status === 'confirmed';
 
     const drawAdminSlip = (logoImgObj) => {
-      ctx.fillStyle = '#FFF9F6';
+      ctx.fillStyle = isAdminDarkMode ? '#1C1C1E' : '#F8F5F2';
       ctx.fillRect(0, 0, 1080, 1760);
 
       const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
-      bgGrad.addColorStop(0, '#FFFFFF');
-      bgGrad.addColorStop(1, '#F7EFEC');
+      bgGrad.addColorStop(0, isAdminDarkMode ? '#2C2C2E' : '#FFFFFF');
+      bgGrad.addColorStop(1, isAdminDarkMode ? '#1C1C1E' : '#F8F5F2');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(20, 20, 1040, 1720);
 
-      ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#C9A46A');
+      ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#B89462');
       ctx.lineWidth = 4;
       ctx.strokeRect(40, 40, 1000, 1680);
 
@@ -638,7 +638,7 @@ export default function App() {
       ctx.translate(540, 880);
       ctx.rotate(-Math.PI / 6);
       ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(201, 164, 106, 0.05)';
+      ctx.fillStyle = 'rgba(184, 148, 98, 0.05)';
       ctx.font = 'bold 84px serif';
       ctx.fillText('H&F MAKEUP ARTIST', 0, 0);
       ctx.restore();
@@ -652,32 +652,32 @@ export default function App() {
         ctx.drawImage(logoImgObj, 95, 105, 90, 90);
         ctx.restore();
 
-        ctx.strokeStyle = '#C9A46A';
+        ctx.strokeStyle = '#B89462';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
         ctx.stroke();
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#241E1C';
+        ctx.fillStyle = isAdminDarkMode ? '#FFFFFF' : '#1C1C1E';
         ctx.font = 'bold 36px serif';
         ctx.fillText('H&F MAKEUP ARTIST', 210, 140);
 
-        ctx.fillStyle = '#C9A46A';
+        ctx.fillStyle = '#B89462';
         ctx.font = '600 18px sans-serif';
         ctx.fillText('Beauty, Styled Your Way', 210, 170);
       } else {
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#241E1C';
+        ctx.fillStyle = isAdminDarkMode ? '#FFFFFF' : '#1C1C1E';
         ctx.font = 'bold 42px serif';
         ctx.fillText('H&F MAKEUP ARTIST', 540, 140);
 
-        ctx.fillStyle = '#C9A46A';
+        ctx.fillStyle = '#B89462';
         ctx.font = '600 20px sans-serif';
         ctx.fillText('Beauty, Styled Your Way', 540, 175);
       }
 
-      ctx.strokeStyle = 'rgba(201, 164, 106, 0.3)';
+      ctx.strokeStyle = 'rgba(184, 148, 98, 0.3)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(80, 220);
@@ -685,7 +685,7 @@ export default function App() {
       ctx.stroke();
 
       ctx.textAlign = 'center';
-      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#241E1C');
+      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : (isAdminDarkMode ? '#FFFFFF' : '#1C1C1E'));
       ctx.font = 'bold 24px sans-serif';
       ctx.fillText(
         isRejected 
@@ -709,16 +709,16 @@ export default function App() {
       let startY = 340;
       rows.forEach((row, idx) => {
         ctx.fillStyle = idx === 0 
-          ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : '#F7EFEC')) 
-          : (idx % 2 === 0 ? '#FFFFFF' : '#F9F4F1');
+          ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : (isAdminDarkMode ? '#2C2C2E' : '#F1ECE6'))) 
+          : (idx % 2 === 0 ? (isAdminDarkMode ? '#242426' : '#FFFFFF') : (isAdminDarkMode ? '#1C1C1E' : '#F8F5F2'));
         ctx.fillRect(80, startY - 26, 920, 56);
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#C9A46A')) : '#756B67';
+        ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#B89462')) : '#6E6864';
         ctx.font = idx === 0 ? 'bold 19px monospace' : 'bold 18px sans-serif';
         ctx.fillText(row.label, 100, startY + 9);
 
-        ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : '#241E1C')) : '#241E1C';
+        ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : (isAdminDarkMode ? '#FFFFFF' : '#1C1C1E'))) : (isAdminDarkMode ? '#FFFFFF' : '#1C1C1E');
         ctx.font = idx === 0 ? 'bold 21px monospace' : 'bold 20px sans-serif';
 
         let displayVal = row.val;
@@ -750,11 +750,11 @@ export default function App() {
           const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
           const pkgName = draft.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
 
-          ctx.fillStyle = '#FFFFFF';
+          ctx.fillStyle = isAdminDarkMode ? '#242426' : '#FFFFFF';
           ctx.fillRect(80, startY - 20, 920, 40);
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = '#756B67';
+          ctx.fillStyle = '#6E6864';
           ctx.font = '16px sans-serif';
           ctx.fillText("• Guest #" + (gIdx + 1) + " (" + kitLabel + "): " + pkgName, 120, startY + 6);
 
@@ -782,18 +782,18 @@ export default function App() {
       }
 
       startY += 10;
-      ctx.fillStyle = '#F7EFEC';
+      ctx.fillStyle = isAdminDarkMode ? '#2C2C2E' : '#F1ECE6';
       ctx.fillRect(80, startY, 920, 140);
-      ctx.strokeStyle = '#C9A46A';
+      ctx.strokeStyle = '#B89462';
       ctx.lineWidth = 2;
       ctx.strokeRect(80, startY, 920, 140);
 
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#756B67';
+      ctx.fillStyle = '#6E6864';
       ctx.font = 'bold 20px sans-serif';
       ctx.fillText('TOTAL AMOUNT', 540, startY + 45);
 
-      ctx.fillStyle = '#241E1C';
+      ctx.fillStyle = isAdminDarkMode ? '#FFFFFF' : '#1C1C1E';
       ctx.font = 'bold 56px serif';
       ctx.fillText("₹" + b.totalAmount?.toLocaleString('en-IN'), 540, startY + 110);
 
@@ -810,7 +810,7 @@ export default function App() {
         ctx.font = 'bold 19px sans-serif';
         ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 32);
 
-        ctx.fillStyle = '#756B67';
+        ctx.fillStyle = '#6E6864';
         ctx.font = 'italic 16px sans-serif';
         
         const fullReason = b.rejectionReason || "Slot unavailable for requested date. Please connect with studio.";
@@ -836,11 +836,11 @@ export default function App() {
       }
 
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#756B67';
+      ctx.fillStyle = '#6E6864';
       ctx.font = '17px sans-serif';
       ctx.fillText("Base Location: " + draft.baseLocation + " • Instagram: @" + (draft.instagramHandle || 'husna_farooqui_makeup'), 540, 1670);
 
-      ctx.fillStyle = '#C9A46A';
+      ctx.fillStyle = '#B89462';
       ctx.font = 'italic 16px sans-serif';
       ctx.fillText('Beauty, Styled Your Way', 540, 1700);
 
@@ -1015,26 +1015,34 @@ export default function App() {
     return statusMatch && dateMatch;
   });
 
-  const liquidGlassCard = "bg-white/22 backdrop-blur-[24px] saturate-[145%] border border-white/35 shadow-[0_8px_30px_rgba(40,25,20,0.08)] rounded-[22px]";
-  const liquidGlassButton = "bg-white/18 backdrop-blur-[20px] border border-white/32 rounded-[16px] shadow-[0_6px_18px_rgba(90,65,40,0.1)] active:scale-[0.97] transition-all";
-  const primaryCtaButton = "bg-[#C9A46A]/90 hover:bg-[#C9A46A] backdrop-blur-[20px] text-white font-bold border border-white/35 rounded-[16px] shadow-[0_6px_18px_rgba(90,65,40,0.15)] active:scale-[0.97] transition-all";
+  const adminBgClass = isAdminDarkMode ? "bg-[#1C1C1E] text-[#F8F5F2]" : "bg-[#F8F5F2] text-[#1C1C1E]";
+  const cardBgClass = isAdminDarkMode 
+    ? "bg-[#2C2C2E]/60 backdrop-blur-[24px] saturate-[160%] border border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.25)] rounded-[22px] text-[#F8F5F2]" 
+    : "bg-white/45 backdrop-blur-[24px] saturate-[160%] border border-white/40 shadow-[0_8px_30px_rgba(30,20,15,0.08)] rounded-[22px] text-[#1C1C1E]";
+  const adminInnerCard = isAdminDarkMode 
+    ? "bg-[#3A3A3C]/50 backdrop-blur-[20px] border border-white/10 text-[#F8F5F2] rounded-[18px]" 
+    : "bg-white/60 backdrop-blur-[20px] border border-white/50 text-[#1C1C1E] rounded-[18px]";
+  const adminInputBg = isAdminDarkMode 
+    ? "bg-[#2C2C2E] backdrop-blur-[16px] border border-white/15 text-white placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]" 
+    : "bg-white/80 backdrop-blur-[16px] border border-[#D8B9B1]/40 text-[#1C1C1E] placeholder-[#6E6864] focus:border-[#B89462] rounded-[14px]";
+  const adminMuted = isAdminDarkMode ? "text-[#98928E]" : "text-[#6E6864]";
 
-  const adminBgClass = "bg-[#FFF9F6] text-[#241E1C]";
-  const cardBgClass = "bg-white/20 backdrop-blur-[24px] saturate-[145%] border border-white/35 shadow-[0_8px_30px_rgba(40,25,20,0.08)] rounded-[22px] text-[#241E1C]";
-  const adminInnerCard = "bg-white/40 backdrop-blur-[20px] border border-white/30 text-[#241E1C] rounded-[18px]";
-  const adminInputBg = "bg-white/60 backdrop-blur-[16px] border border-[#D9B8B0]/40 text-[#241E1C] placeholder-[#756B67] focus:border-[#C9A46A] rounded-[14px]";
-  const adminMuted = "text-[#756B67]";
+  const liquidGlassButton = isAdminDarkMode
+    ? "bg-[#3A3A3C]/70 backdrop-blur-[20px] border border-white/15 rounded-[16px] shadow-[0_6px_18px_rgba(0,0,0,0.15)] active:scale-[0.97] transition-all text-[#F8F5F2]"
+    : "bg-white/60 backdrop-blur-[20px] border border-white/40 rounded-[16px] shadow-[0_6px_18px_rgba(90,65,40,0.1)] active:scale-[0.97] transition-all text-[#1C1C1E]";
+  
+  const primaryCtaButton = "bg-[#B89462]/90 hover:bg-[#B89462] backdrop-blur-[20px] text-white font-bold border border-white/35 rounded-[16px] shadow-[0_6px_18px_rgba(184,148,98,0.25)] active:scale-[0.97] transition-all";
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
 
   if (!isAuthenticated) {
     return (
-      <div className={"min-h-screen " + adminBgClass + " flex items-center justify-center p-5 relative overflow-hidden font-sans"}>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D9B8B0]/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div className={"min-h-screen " + adminBgClass + " flex items-center justify-center p-5 relative overflow-hidden font-sans transition-colors duration-300"}>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#D8B9B1]/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
         
         {showForgotPasswordModal ? (
-          <form onSubmit={handleForgotPasswordSubmit} className={"max-w-sm w-full p-8 rounded-[28px] border border-white/50 text-center space-y-4 shadow-[0_12px_40px_rgba(40,25,20,0.1)] " + cardBgClass + " animate-fade-in"}>
-            <div className="w-16 h-16 rounded-[22px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleForgotPasswordSubmit} className={"max-w-sm w-full p-8 rounded-[28px] border text-center space-y-4 shadow-[0_12px_40px_rgba(0,0,0,0.1)] " + cardBgClass + " animate-fade-in"}>
+            <div className="w-16 h-16 rounded-[22px] bg-[#B89462]/15 border border-[#B89462]/30 text-[#B89462] flex items-center justify-center mx-auto shadow-md">
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
             <h2 className="text-[24px] font-bold tracking-tight">Recover Password</h2>
@@ -1047,35 +1055,35 @@ export default function App() {
             )}
 
             <button type="submit" className={"w-full py-3.5 " + primaryCtaButton + " text-[14px]"}>Send PIN to Recovery Email</button>
-            <button type="button" onClick={() => setShowForgotPasswordModal(false)} className="text-[13px] text-[#756B67] hover:text-[#241E1C] underline">Back to Login</button>
+            <button type="button" onClick={() => setShowForgotPasswordModal(false)} className={"text-[13px] underline " + adminMuted}>Back to Login</button>
           </form>
         ) : (
-          <form onSubmit={handleLogin} className={"max-w-sm w-full p-8 rounded-[28px] border border-white/50 text-center space-y-5 shadow-[0_12px_40px_rgba(40,25,20,0.1)] " + cardBgClass}>
-            <div className="w-16 h-16 rounded-[22px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleLogin} className={"max-w-sm w-full p-8 rounded-[28px] border text-center space-y-5 shadow-[0_12px_40px_rgba(0,0,0,0.1)] " + cardBgClass}>
+            <div className="w-16 h-16 rounded-[22px] bg-[#B89462]/15 border border-[#B89462]/30 text-[#B89462] flex items-center justify-center mx-auto shadow-md">
               <Lock className="w-8 h-8 animate-bounce" />
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={"text-[13px] " + adminMuted + " mt-1"}>Apple Liquid Glass Studio Console</p>
+              <p className={"text-[13px] " + adminMuted + " mt-1"}>Apple Liquid Glass iOS 19 Suite</p>
             </div>
-            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={"w-full text-center text-[18px] p-3.5 font-mono text-[#C9A46A] " + adminInputBg} />
+            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={"w-full text-center text-[18px] p-3.5 font-mono text-[#B89462] " + adminInputBg} />
             
             <button type="submit" className={"w-full py-3.5 " + primaryCtaButton + " text-[14px]"}>Unlock Console</button>
             
-            <div className="space-y-2.5 pt-3 border-t border-white/20">
+            <div className="space-y-2.5 pt-3 border-t border-white/10">
               <button
                 type="button"
                 onClick={handleBiometricOrFaceLogin}
-                className={"w-full py-3 " + liquidGlassButton + " text-[13px] font-bold text-[#C9A46A] flex items-center justify-center gap-2"}
+                className={"w-full py-3 " + liquidGlassButton + " text-[13px] font-bold text-[#B89462] flex items-center justify-center gap-2"}
               >
-                <Fingerprint className="w-4 h-4 text-[#C9A46A]" />
+                <Fingerprint className="w-4 h-4 text-[#B89462]" />
                 <span>Login with Fingerprint / Face ID</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowForgotPasswordModal(true)}
-                className="text-[13px] text-[#756B67] hover:text-[#C9A46A] underline block w-full pt-1"
+                className={"text-[13px] underline block w-full pt-1 " + adminMuted}
               >
                 Forgot Password? Send via Email
               </button>
@@ -1088,45 +1096,45 @@ export default function App() {
 
   return (
     <div className={"min-h-screen " + adminBgClass + " font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden"}>
-      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-[#D9B8B0]/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
-      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-[#C9A46A]/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
+      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-[#D8B9B1]/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div className="absolute top-1/2 right-1/4 w-[500px] h-[500px] bg-[#B89462]/10 rounded-full blur-3xl pointer-events-none animate-pulse delay-1000" />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {rejectModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[20px] animate-fade-in">
-          <div className="max-w-lg w-full rounded-[28px] p-6 border border-white/60 shadow-[0_20px_50px_rgba(30,20,15,0.15)] space-y-4 bg-white/80 backdrop-blur-[30px] text-[#241E1C]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[24px] animate-fade-in">
+          <div className="max-w-lg w-full rounded-[28px] p-6 border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] space-y-4 bg-white/90 backdrop-blur-[30px] text-[#1C1C1E]">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Ban className="w-5 h-5 text-rose-500" />
                 <h3 className="font-bold text-[18px]">Reject Booking: {rejectModalData.bookingNumber || rejectModalData.clientName}</h3>
               </div>
-              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-[#756B67] hover:text-[#241E1C]"><X className="w-5 h-5" /></button>
+              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-[#6E6864] hover:text-[#1C1C1E]"><X className="w-5 h-5" /></button>
             </div>
 
-            <p className={"text-[13px] " + adminMuted}>
+            <p className="text-[13px] text-[#6E6864]">
               Are you sure you want to decline this booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>?
             </p>
 
             <div>
-              <label className="block text-[11px] font-bold text-[#756B67] mb-1.5 uppercase tracking-wider">Reason for Rejection (Added to Slip & Alert):</label>
+              <label className="block text-[11px] font-bold text-[#6E6864] mb-1.5 uppercase tracking-wider">Reason for Rejection (Added to Slip & Alert):</label>
               <textarea
                 rows={3}
                 value={rejectionReasonText}
                 onChange={e => setRejectionReasonText(e.target.value)}
-                className={"w-full p-3.5 rounded-[16px] text-[13px] border " + adminInputBg}
+                className="w-full p-3.5 rounded-[16px] text-[13px] border bg-white/80 text-[#1C1C1E] border-slate-300 focus:border-[#B89462]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-[10px] font-bold text-[#756B67] uppercase tracking-wider">Select Pre-Added Reason Template:</span>
+              <span className="text-[10px] font-bold text-[#6E6864] uppercase tracking-wider">Select Pre-Added Reason Template:</span>
               <div className="grid grid-cols-1 gap-1.5 max-h-36 overflow-y-auto pr-1">
                 {PRE_ADDED_REJECTION_REASONS.map((reason, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setRejectionReasonText(reason)}
-                    className={"text-left p-2.5 rounded-[14px] text-[12px] border transition " + (rejectionReasonText === reason ? 'bg-[#C9A46A]/20 text-[#241E1C] border-[#C9A46A]/50 font-semibold shadow-sm' : 'bg-white/40 border-white/40 text-[#756B67] hover:bg-white/70')}
+                    className={"text-left p-2.5 rounded-[14px] text-[12px] border transition " + (rejectionReasonText === reason ? 'bg-[#B89462]/20 text-[#1C1C1E] border-[#B89462]/50 font-semibold shadow-sm' : 'bg-slate-100 border-slate-200 text-[#6E6864] hover:bg-slate-200')}
                   >
                     • {reason}
                   </button>
@@ -1134,11 +1142,11 @@ export default function App() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200/60">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200/80">
               <button
                 type="button"
                 onClick={() => setRejectModalData(null)}
-                className={"px-4 py-2.5 rounded-[14px] " + liquidGlassButton + " text-[13px] font-bold text-[#756B67]"}
+                className="px-4 py-2.5 rounded-[14px] bg-slate-200 text-[13px] font-bold text-[#6E6864]"
               >
                 Cancel
               </button>
@@ -1154,23 +1162,23 @@ export default function App() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 backdrop-blur-[28px] saturate-[150%] bg-white/72 border-b border-white/40 px-5 sm:px-8 py-4 flex justify-between items-center shadow-[0_4px_20px_rgba(40,25,20,0.05)]">
+      <header className={"sticky top-0 z-40 backdrop-blur-[28px] saturate-[160%] border-b px-5 sm:px-8 py-4 flex justify-between items-center shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-colors duration-300 " + (isAdminDarkMode ? 'bg-[#2C2C2E]/80 border-white/10 text-white' : 'bg-white/75 border-white/50 text-[#1C1C1E]')}>
         <div className="flex items-center gap-3">
           {draft.studioLogo ? (
             <div className="w-11 h-11 rounded-[18px] bg-white/40 p-1 border border-white/60 overflow-hidden shadow-md">
               <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
             </div>
           ) : (
-            <div className="w-11 h-11 rounded-[18px] bg-[#C9A46A]/15 text-[#C9A46A] flex items-center justify-center border border-[#C9A46A]/30 shadow-md">
+            <div className="w-11 h-11 rounded-[18px] bg-[#B89462]/15 text-[#B89462] flex items-center justify-center border border-[#B89462]/30 shadow-md">
               <Crown className="w-5 h-5" />
             </div>
           )}
 
           <div>
-            <h1 className="font-bold text-[16px] sm:text-[18px] text-[#241E1C] tracking-tight">
+            <h1 className="font-bold text-[16px] sm:text-[18px] tracking-tight">
               H&F Makeup Artist Console
             </h1>
-            <p className={"text-[12px] " + adminMuted}>Master Directory & Liquid Glass Center</p>
+            <p className={"text-[12px] " + adminMuted}>Liquid Glass iOS 19 Architecture</p>
           </div>
         </div>
 
@@ -1183,14 +1191,17 @@ export default function App() {
                 }
                 setIsReorderMode(!isReorderMode);
               }}
-              className={"px-4 py-2.5 rounded-[16px] text-[13px] font-bold flex items-center gap-1.5 transition " + (isReorderMode ? 'bg-[#C9A46A] text-white shadow-[0_6px_18px_rgba(201,164,106,0.3)]' : liquidGlassButton + ' text-[#241E1C]')}
+              className={"px-4 py-2.5 rounded-[16px] text-[13px] font-bold flex items-center gap-1.5 transition " + (isReorderMode ? 'bg-[#B89462] text-white shadow-[0_6px_18px_rgba(184,148,98,0.3)]' : liquidGlassButton)}
             >
               <Edit3 className="w-4 h-4" />
               <span>{isReorderMode ? 'Save Order' : 'Edit Order'}</span>
             </button>
           )}
 
-          <button onClick={() => setIsAuthenticated(false)} className="text-[13px] text-rose-600 font-bold hover:underline px-2 py-1">Lock</button>
+          <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={"p-2.5 rounded-[14px] " + liquidGlassButton} title="Toggle Day/Night Mode">
+            {isAdminDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#B89462]" />}
+          </button>
+          <button onClick={() => setIsAuthenticated(false)} className="text-[13px] text-rose-500 font-bold hover:underline px-2 py-1">Lock</button>
         </div>
       </header>
 
@@ -1199,29 +1210,29 @@ export default function App() {
           {activeFolderId ? (
             <button
               onClick={() => setActiveFolderId(null)}
-              className={"px-4 py-2.5 rounded-[16px] " + liquidGlassButton + " text-[13px] font-bold flex items-center gap-2 text-[#C9A46A] transition"}
+              className={"px-4 py-2.5 rounded-[16px] " + liquidGlassButton + " text-[13px] font-bold flex items-center gap-2 text-[#B89462] transition"}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Master Folders</span>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <Folder className="w-4 h-4 text-[#C9A46A]" />
-              <h3 className="font-bold text-[13px] uppercase tracking-wider text-[#756B67]">
+              <Folder className="w-4 h-4 text-[#B89462]" />
+              <h3 className={"font-bold text-[13px] uppercase tracking-wider " + adminMuted}>
                 {isReorderMode ? 'Reorder Mode Active: Use ⬆️ ⬇️ to move cards' : 'Master Control Cards Directory'}
               </h3>
             </div>
           )}
 
           {activeFolderObj && (
-            <span className="text-[13px] font-bold text-[#756B67] font-mono">
-              Folder: <strong className="text-[#241E1C]">{activeFolderObj.label}</strong>
+            <span className={"text-[13px] font-bold font-mono " + adminMuted}>
+              Folder: <strong className={isAdminDarkMode ? 'text-white' : 'text-[#1C1C1E]'}>{activeFolderObj.label}</strong>
             </span>
           )}
         </div>
 
         {actionStatus && (
-          <div className="p-4 rounded-[18px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#241E1C] font-bold text-[13px] text-center animate-fade-in shadow-md">
+          <div className="p-4 rounded-[18px] bg-[#B89462]/15 border border-[#B89462]/30 font-bold text-[13px] text-center animate-fade-in shadow-md">
             {actionStatus}
           </div>
         )}
@@ -1235,23 +1246,23 @@ export default function App() {
               return (
                 <div
                   key={f.id}
-                  className={cardBgClass + " p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative " + (isReorderMode ? 'ring-2 ring-[#C9A46A] bg-[#C9A46A]/5' : 'hover:scale-[1.01]')}
+                  className={cardBgClass + " p-6 transition-all duration-300 flex flex-col justify-between space-y-4 group relative " + (isReorderMode ? 'ring-2 ring-[#B89462] bg-[#B89462]/10' : 'hover:scale-[1.01]}')}
                 >
                   <div className="flex justify-between items-start">
                     <div 
                       onClick={() => !isReorderMode && setActiveFolderId(f.id)} 
-                      className={"w-13 h-13 rounded-[20px] bg-[#C9A46A]/15 border border-[#C9A46A]/30 text-[#C9A46A] flex items-center justify-center group-hover:scale-110 transition-transform " + (!isReorderMode ? 'cursor-pointer' : '')}
+                      className={"w-13 h-13 rounded-[20px] bg-[#B89462]/15 border border-[#B89462]/30 text-[#B89462] flex items-center justify-center group-hover:scale-110 transition-transform " + (!isReorderMode ? 'cursor-pointer' : '')}
                     >
                       <Icon className="w-6 h-6" />
                     </div>
 
-                    <div className="flex items-center gap-1 bg-white/50 p-1 rounded-[14px] border border-white/60 shadow-sm">
+                    <div className={"flex items-center gap-1 p-1 rounded-[14px] border shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
                       <button
                         type="button"
                         disabled={index === 0}
                         onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
                         title="Move Up"
-                        className="p-1.5 rounded-[10px] text-[#756B67] hover:text-[#241E1C] hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
+                        className={"p-1.5 rounded-[10px] disabled:opacity-30 disabled:pointer-events-none " + (isAdminDarkMode ? 'text-slate-300 hover:bg-white/10' : 'text-[#6E6864] hover:bg-white')}
                       >
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
@@ -1260,7 +1271,7 @@ export default function App() {
                         disabled={index === adminFolders.length - 1}
                         onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
                         title="Move Down"
-                        className="p-1.5 rounded-[10px] text-[#756B67] hover:text-[#241E1C] hover:bg-white disabled:opacity-30 disabled:pointer-events-none"
+                        className={"p-1.5 rounded-[10px] disabled:opacity-30 disabled:pointer-events-none " + (isAdminDarkMode ? 'text-slate-300 hover:bg-white/10' : 'text-[#6E6864] hover:bg-white')}
                       >
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
@@ -1269,11 +1280,11 @@ export default function App() {
 
                   <div onClick={() => !isReorderMode && setActiveFolderId(f.id)} className={!isReorderMode ? 'cursor-pointer' : ''}>
                     <div className="flex justify-between items-center">
-                      <h4 className="font-bold text-[16px] text-[#241E1C] group-hover:text-[#C9A46A] transition-colors">
+                      <h4 className={"font-bold text-[16px] transition-colors " + (isAdminDarkMode ? 'text-white group-hover:text-[#B89462]' : 'text-[#1C1C1E] group-hover:text-[#B89462]')}>
                         {f.label}
                       </h4>
                       {count !== null && (
-                        <span className="text-[11px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/30 px-2.5 py-1 rounded-full">
+                        <span className="text-[11px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/30 px-2.5 py-1 rounded-full">
                           {count} Active
                         </span>
                       )}
@@ -1287,35 +1298,35 @@ export default function App() {
         )}
 
         {activeFolderId === 'general' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                 <Settings className="w-4 h-4" /> General & Security Settings
               </h3>
               <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
             </div>
 
-            <div className={"p-6 rounded-[22px] border border-white/40 space-y-4 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
-                <Fingerprint className="w-4 h-4 text-[#C9A46A]" /> Hardware Fingerprint Scanner Integration
+            <div className={"p-6 rounded-[22px] border space-y-4 " + adminInnerCard}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Fingerprint className="w-4 h-4 text-[#B89462]" /> Hardware Fingerprint Scanner Integration
               </h4>
               <p className={"text-[13px] " + adminMuted}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
 
-              <div className="p-5 rounded-[18px] bg-white/50 border border-white/60 text-center space-y-3.5 shadow-sm">
-                <div className="w-16 h-16 rounded-[22px] bg-[#C9A46A]/15 text-[#C9A46A] flex items-center justify-center mx-auto border border-[#C9A46A]/30 shadow-md">
-                  <Fingerprint className={"w-8 h-8 " + (isScanningFinger ? 'animate-pulse text-[#C9A46A]' : '')} />
+              <div className={"p-5 rounded-[18px] border text-center space-y-3.5 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
+                <div className="w-16 h-16 rounded-[22px] bg-[#B89462]/15 text-[#B89462] flex items-center justify-center mx-auto border border-[#B89462]/30 shadow-md">
+                  <Fingerprint className={"w-8 h-8 " + (isScanningFinger ? 'animate-pulse text-[#B89462]' : '')} />
                 </div>
                 
                 {isScanningFinger ? (
                   <div className="space-y-2">
-                    <p className="text-[13px] font-bold text-[#C9A46A]">Scanning Fingerprint... ({scanProgress}%)</p>
-                    <div className="w-48 h-2 bg-white/60 rounded-full mx-auto overflow-hidden shadow-inner">
-                      <div className="h-full bg-[#C9A46A] transition-all duration-300" style={{ width: scanProgress + '%' }} />
+                    <p className="text-[13px] font-bold text-[#B89462]">Scanning Fingerprint... ({scanProgress}%)</p>
+                    <div className="w-48 h-2 bg-black/20 rounded-full mx-auto overflow-hidden shadow-inner">
+                      <div className="h-full bg-[#B89462] transition-all duration-300" style={{ width: scanProgress + '%' }} />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2.5">
-                    <p className="text-[13px] text-[#756B67]">
+                    <p className={"text-[13px] " + adminMuted}>
                       {draft.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
                     </p>
                     <button
@@ -1330,23 +1341,23 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
-                <div className="p-4 rounded-[16px] bg-white/50 border border-white/60 flex items-center justify-between shadow-sm">
-                  <span className="text-[13px] font-bold text-[#241E1C]">Enable Touch ID / Biometrics</span>
+                <div className={"p-4 rounded-[16px] border flex items-center justify-between shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
+                  <span className="text-[13px] font-bold">Enable Touch ID / Biometrics</span>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, biometricEnabled: !draft.biometricEnabled })}
-                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-800 border border-rose-500/40')}
+                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                   >
                     {draft.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
 
-                <div className="p-4 rounded-[16px] bg-white/50 border border-white/60 flex items-center justify-between shadow-sm">
-                  <span className="text-[13px] font-bold text-[#241E1C]">Enable Face ID / Passkey</span>
+                <div className={"p-4 rounded-[16px] border flex items-center justify-between shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
+                  <span className="text-[13px] font-bold">Enable Face ID / Passkey</span>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, faceIdEnabled: !draft.faceIdEnabled })}
-                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-800 border border-rose-500/40')}
+                    className={"px-3 py-1.5 rounded-[12px] font-bold text-[12px] " + (draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                   >
                     {draft.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
@@ -1354,53 +1365,53 @@ export default function App() {
               </div>
             </div>
 
-            <div className={"p-6 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-[#C9A46A]" /> Main App Version & History
+            <div className={"p-6 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-[#B89462]" /> Main App Version & History
               </h4>
               <p className={"text-[13px] " + adminMuted}>Deployment timeline and release changes for Customer Main App.</p>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                 {MAIN_APP_VERSIONS.map((ver, vIdx) => (
-                  <div key={vIdx} className="p-3.5 rounded-[16px] bg-white/50 border border-white/60 text-[13px] space-y-1 shadow-sm">
+                  <div key={vIdx} className={"p-3.5 rounded-[16px] border text-[13px] space-y-1 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
                     <div className="flex justify-between items-center">
-                      <span className="font-bold font-mono text-[#C9A46A]">{ver.version}</span>
-                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/30' : 'bg-slate-200 text-slate-700')}>
+                      <span className="font-bold font-mono text-[#B89462]">{ver.version}</span>
+                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-300')}>
                         {ver.status}
                       </span>
                     </div>
-                    <p className="text-[12px] text-[#241E1C]">{ver.changes}</p>
-                    <span className="text-[11px] text-[#756B67] font-mono">Released: {ver.date}</span>
+                    <p className={"text-[12px] " + (isAdminDarkMode ? 'text-slate-300' : 'text-[#1C1C1E]')}>{ver.changes}</p>
+                    <span className={"text-[11px] font-mono " + adminMuted}>Released: {ver.date}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className={"p-6 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-[#C9A46A]" /> Admin App Version & History
+            <div className={"p-6 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-[#B89462]" /> Admin App Version & History
               </h4>
               <p className={"text-[13px] " + adminMuted}>Deployment timeline and release changes for Admin Console.</p>
 
               <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
                 {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
-                  <div key={vIdx} className="p-3.5 rounded-[16px] bg-white/50 border border-white/60 text-[13px] space-y-1 shadow-sm">
+                  <div key={vIdx} className={"p-3.5 rounded-[16px] border text-[13px] space-y-1 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/50 border-white/60')}>
                     <div className="flex justify-between items-center">
-                      <span className="font-bold font-mono text-[#C9A46A]">{ver.version}</span>
-                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/30' : 'bg-slate-200 text-slate-700')}>
+                      <span className="font-bold font-mono text-[#B89462]">{ver.version}</span>
+                      <span className={"text-[10px] font-bold px-2.5 py-0.5 rounded-full " + (ver.status.includes('Active') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-700 text-slate-300')}>
                         {ver.status}
                       </span>
                     </div>
-                    <p className="text-[12px] text-[#241E1C]">{ver.changes}</p>
-                    <span className="text-[11px] text-[#756B67] font-mono">Released: {ver.date}</span>
+                    <p className={"text-[12px] " + (isAdminDarkMode ? 'text-slate-300' : 'text-[#1C1C1E]')}>{ver.changes}</p>
+                    <span className={"text-[11px] font-mono " + adminMuted}>Released: {ver.date}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className={"p-6 rounded-[22px] border border-white/40 space-y-3 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#C9A46A]" /> Permanent Recovery Email ID
+            <div className={"p-6 rounded-[22px] border space-y-3 " + adminInnerCard}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#B89462]" /> Permanent Recovery Email ID
               </h4>
               <p className={"text-[13px] " + adminMuted}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
               
@@ -1408,13 +1419,13 @@ export default function App() {
                 type="email"
                 value={draft.recoveryEmail || "aqiffarooqui@gmail.com"}
                 onChange={e => setDraft({ ...draft, recoveryEmail: e.target.value })}
-                className={"w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-[#C9A46A] border " + adminInputBg}
+                className={"w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-[#B89462] border " + adminInputBg}
               />
             </div>
 
-            <form onSubmit={handlePasswordChange} className={"p-6 rounded-[22px] border border-white/40 space-y-4 " + adminInnerCard}>
-              <h4 className="font-bold text-[14px] text-[#241E1C] uppercase flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#C9A46A]" /> Change Admin PIN Password
+            <form onSubmit={handlePasswordChange} className={"p-6 rounded-[22px] border space-y-4 " + adminInnerCard}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Key className="w-4 h-4 text-[#B89462]" /> Change Admin PIN Password
               </h4>
 
               <div className="space-y-3.5">
@@ -1477,18 +1488,18 @@ export default function App() {
         )}
 
         {activeFolderId === 'bookings' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A]">Incoming Customer Bookings Queue</h3>
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462]">Incoming Customer Bookings Queue</h3>
                 <p className={"text-[13px] " + adminMuted + " mt-1"}>Filter by status or event date, review, accept, or reject bookings.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/40 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="text-[13px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/40 px-3.5 py-1.5 rounded-full shadow-sm">
                 {filteredBookingsList.length} / {bookingsList.length} Bookings
               </span>
             </div>
 
-            <div className={"p-5 rounded-[22px] border border-white/40 grid grid-cols-1 sm:grid-cols-2 gap-4 " + adminInnerCard}>
+            <div className={"p-5 rounded-[22px] border grid grid-cols-1 sm:grid-cols-2 gap-4 " + adminInnerCard}>
               <div>
                 <label className={"block text-[11px] mb-1.5 font-bold " + adminMuted}>Filter by Status</label>
                 <select
@@ -1516,7 +1527,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setBookingDateFilter('')}
-                      className={"px-4 py-3 rounded-[16px] " + liquidGlassButton + " text-[13px] font-bold text-rose-600"}
+                      className={"px-4 py-3 rounded-[16px] text-[13px] font-bold text-rose-500 " + liquidGlassButton}
                     >
                       Clear
                     </button>
@@ -1526,7 +1537,7 @@ export default function App() {
             </div>
 
             {filteredBookingsList.length === 0 ? (
-              <p className="text-[14px] text-[#756B67] py-12 text-center">No bookings match the selected filters.</p>
+              <p className={"text-[14px] py-12 text-center " + adminMuted}>No bookings match the selected filters.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filteredBookingsList.map(b => {
@@ -1535,53 +1546,53 @@ export default function App() {
                     : null;
 
                   return (
-                    <div key={b.id} className={"p-6 rounded-[24px] border border-white/40 space-y-4 " + adminInnerCard + (conflictingConfirmedBooking ? ' ring-2 ring-rose-500/50' : '')}>
+                    <div key={b.id} className={"p-6 rounded-[24px] border space-y-4 " + adminInnerCard + (conflictingConfirmedBooking ? ' ring-2 ring-rose-500/50' : '')}>
                       <div className="flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-mono text-[12px] font-bold text-[#C9A46A] bg-[#C9A46A]/15 px-2.5 py-1 rounded-[10px] border border-[#C9A46A]/30">
+                            <span className="font-mono text-[12px] font-bold text-[#B89462] bg-[#B89462]/15 px-2.5 py-1 rounded-[10px] border border-[#B89462]/30">
                               {b.bookingNumber || '#HF-PENDING'}
                             </span>
                             <span className={"text-[11px] font-bold uppercase px-3 py-1 rounded-full " + (
-                              b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-800 border border-emerald-500/40' : 
-                              b.status === 'rejected' ? 'bg-rose-500/20 text-rose-800 border border-rose-500/40' : 
-                              'bg-amber-500/20 text-amber-900 border border-amber-500/40'
+                              b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 
+                              b.status === 'rejected' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' : 
+                              'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                             )}>
                               {b.status === 'confirmed' ? '✅ Confirmed' : b.status === 'rejected' ? '❌ Rejected' : '⏳ Pending Review'}
                             </span>
                           </div>
                           
-                          <h4 className="font-bold text-[18px] text-[#241E1C] mt-2.5">{b.clientName}</h4>
-                          <p className="text-[13px] text-[#756B67] font-mono mt-0.5">📞 {b.clientPhone}</p>
+                          <h4 className="font-bold text-[18px] mt-2.5">{b.clientName}</h4>
+                          <p className={"text-[13px] font-mono mt-0.5 " + adminMuted}>📞 {b.clientPhone}</p>
                         </div>
-                        <button onClick={() => deleteDoc(doc(db, "bookings", b.id))} className="p-2 text-rose-600 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => deleteDoc(doc(db, "bookings", b.id))} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
                       </div>
 
                       {conflictingConfirmedBooking && (
-                        <div className="p-3.5 rounded-[16px] bg-rose-500/15 border border-rose-500/40 text-rose-900 text-[13px] space-y-1 animate-pulse">
+                        <div className="p-3.5 rounded-[16px] bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[13px] space-y-1 animate-pulse">
                           <div className="flex items-center gap-2 font-bold">
-                            <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
                             <span>STUDIO BUSY FOR THIS DATE!</span>
                           </div>
-                          <p className="text-[12px] text-rose-800">
+                          <p className="text-[12px] text-rose-200">
                             You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.
                           </p>
                         </div>
                       )}
 
-                      <div className="text-[13px] space-y-1.5 border-t border-b border-black/10 py-3">
-                        <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-[#C9A46A] font-mono">{b.eventDate}</strong></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Package:</span><span className="font-medium text-[#241E1C]">{b.packageName}</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span className="font-medium text-[#241E1C]">{b.kitType}</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span className="font-medium text-[#241E1C]">{b.extraGuestsCount || 0} Custom Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span className="font-medium text-[#241E1C]">{b.zoneName}</span></div>
-                        <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px] text-[#241E1C]">{b.venueAddress}</span></div>
+                      <div className={"text-[13px] space-y-1.5 border-t border-b py-3 " + (isAdminDarkMode ? 'border-white/10' : 'border-black/10')}>
+                        <div className="flex justify-between"><span className={adminMuted}>Event Date:</span><strong className="text-[#B89462] font-mono">{b.eventDate}</strong></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Package:</span><span className="font-medium">{b.packageName}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Extra Guests:</span><span className="font-medium">{b.extraGuestsCount || 0} Custom Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Venue Location:</span><span className="font-medium">{b.zoneName}</span></div>
+                        <div className="flex justify-between"><span className={adminMuted}>Address:</span><span className="truncate max-w-[200px]">{b.venueAddress}</span></div>
                         {b.rejectionReason && (
-                          <div className="p-3 rounded-[14px] bg-rose-500/15 border border-rose-500/30 text-rose-900 text-[12px]">
+                          <div className="p-3 rounded-[14px] bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[12px]">
                             <strong>Rejection Note:</strong> {b.rejectionReason}
                           </div>
                         )}
-                        <div className="flex justify-between pt-2 border-t border-black/5"><span className="font-bold text-[#241E1C]">Total Amount:</span><strong className="text-[#C9A46A] font-mono text-[15px]">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
+                        <div className={"flex justify-between pt-2 border-t " + (isAdminDarkMode ? 'border-white/5' : 'border-black/5')}><span className="font-bold">Total Amount:</span><strong className="text-[#B89462] font-mono text-[15px]">₹{b.totalAmount?.toLocaleString('en-IN')}</strong></div>
                       </div>
 
                       <div className="space-y-2.5 pt-1">
@@ -1598,7 +1609,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'confirmed')}
-                            className="py-2.5 bg-blue-600/15 hover:bg-blue-600/25 text-blue-900 border border-blue-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+                            className="py-2.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
                           >
                             <Check className="w-3.5 h-3.5" />
                             <span>Accept</span>
@@ -1607,7 +1618,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'pending')}
-                            className="py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 border border-amber-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+                            className="py-2.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>Pending</span>
@@ -1619,7 +1630,7 @@ export default function App() {
                               setRejectModalData(b);
                               setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
                             }}
-                            className="py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-900 border border-rose-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
+                            className="py-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 font-bold text-[12px] rounded-[14px] flex items-center justify-center gap-1.5 active:scale-95 transition"
                           >
                             <Ban className="w-3.5 h-3.5" />
                             <span>Reject</span>
@@ -1629,7 +1640,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className={"w-full py-2.5 " + liquidGlassButton + " text-[#241E1C] font-bold text-[12px] flex items-center justify-center gap-2"}
+                          className={"w-full py-2.5 " + liquidGlassButton + " font-bold text-[12px] flex items-center justify-center gap-2"}
                         >
                           <Download className="w-4 h-4" />
                           <span>Generate & Download Status Slip (.JPG)</span>
@@ -1644,46 +1655,46 @@ export default function App() {
         )}
 
         {activeFolderId === 'feedbacks' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" /> Client Feedback & Suggestions Box
                 </h3>
                 <p className={"text-[13px] " + adminMuted}>Reviews, ratings, and creative suggestions submitted by clients.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/40 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="text-[13px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/40 px-3.5 py-1.5 rounded-full shadow-sm">
                 {feedbacksList.length} Feedbacks
               </span>
             </div>
 
             {feedbacksList.length === 0 ? (
-              <p className="text-[14px] text-[#756B67] py-12 text-center">No client feedback submitted yet.</p>
+              <p className={"text-[14px] py-12 text-center " + adminMuted}>No client feedback submitted yet.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedbacksList.map(item => (
-                  <div key={item.id} className={"p-5 rounded-[22px] border border-white/40 space-y-3 " + adminInnerCard}>
+                  <div key={item.id} className={"p-5 rounded-[22px] border space-y-3 " + adminInnerCard}>
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="flex items-center gap-1 text-amber-500">
+                        <div className="flex items-center gap-1 text-amber-400">
                           {Array.from({ length: item.rating || 5 }).map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-amber-500" />
+                            <Star key={i} className="w-4 h-4 fill-amber-400" />
                           ))}
                         </div>
-                        <h4 className="font-bold text-[16px] text-[#241E1C] mt-1.5">{item.clientName}</h4>
+                        <h4 className="font-bold text-[16px] mt-1.5">{item.clientName}</h4>
                         {item.clientPhone && item.clientPhone !== 'Not Provided' && (
-                          <p className="text-[12px] text-[#756B67] font-mono mt-0.5">📞 {item.clientPhone}</p>
+                          <p className={"text-[12px] font-mono mt-0.5 " + adminMuted}>📞 {item.clientPhone}</p>
                         )}
                       </div>
-                      <button onClick={() => handleDeleteFeedback(item.id)} className="p-2 text-rose-600 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleDeleteFeedback(item.id)} className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
                     </div>
 
-                    <p className="text-[13px] text-[#241E1C] leading-relaxed bg-white/40 p-3.5 rounded-[16px] border border-white/50 shadow-inner">
+                    <p className={"text-[13px] leading-relaxed p-3.5 rounded-[16px] border shadow-inner " + (isAdminDarkMode ? 'bg-black/20 border-white/10 text-slate-300' : 'bg-white/50 border-white/60 text-[#1C1C1E]')}>
                       "{item.message}"
                     </p>
 
                     <div className="flex justify-end">
-                      <span className="text-[11px] text-[#756B67] font-mono">
+                      <span className={"text-[11px] font-mono " + adminMuted}>
                         {item.submittedAt ? new Date(item.submittedAt.toDate?.() || item.submittedAt).toLocaleDateString() : 'Recent'}
                       </span>
                     </div>
@@ -1695,10 +1706,10 @@ export default function App() {
         )}
 
         {activeFolderId === 'calendar_view' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Calendar className="w-4 h-4" /> Interactive Monthly Booking Calendar
                 </h3>
                 <p className={"text-[13px] " + adminMuted + " mt-1"}>
@@ -1708,20 +1719,20 @@ export default function App() {
 
               <div className="flex items-center gap-2.5">
                 <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className={"p-2.5 rounded-[14px] " + liquidGlassButton + " active:scale-90 transition"}>
-                  <ChevronLeft className="w-4 h-4 text-[#C9A46A]" />
+                  <ChevronLeft className="w-4 h-4 text-[#B89462]" />
                 </button>
-                <span className="font-bold text-[14px] font-mono min-w-[140px] text-center text-[#241E1C]">
+                <span className="font-bold text-[14px] font-mono min-w-[140px] text-center">
                   {monthNames[month]} {year}
                 </span>
                 <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className={"p-2.5 rounded-[14px] " + liquidGlassButton + " active:scale-90 transition"}>
-                  <ChevronRight className="w-4 h-4 text-[#C9A46A]" />
+                  <ChevronRight className="w-4 h-4 text-[#B89462]" />
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-7 gap-2 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <span key={d} className="text-[12px] font-bold text-[#756B67] py-1.5 uppercase">{d}</span>
+                <span key={d} className={"text-[12px] font-bold py-1.5 uppercase " + adminMuted}>{d}</span>
               ))}
 
               {Array.from({ length: firstDayIndex }).map((_, i) => (
@@ -1740,10 +1751,10 @@ export default function App() {
                         ? (status.isConfirmed 
                             ? 'bg-emerald-500/20 border-emerald-500/50 hover:scale-105 shadow-md shadow-emerald-500/10' 
                             : 'bg-amber-500/20 border-amber-500/50 hover:scale-105 shadow-md shadow-amber-500/10')
-                        : adminInnerCard + ' hover:border-white/60 opacity-80'
+                        : adminInnerCard + ' hover:border-white/50 opacity-80'
                     )}
                   >
-                    <span className={"text-[13px] font-bold font-mono " + (status.hasBookings ? (status.isConfirmed ? 'text-emerald-900' : 'text-amber-950') : 'text-[#241E1C]')}>
+                    <span className={"text-[13px] font-bold font-mono " + (status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : '')}>
                       {day}
                     </span>
 
@@ -1758,26 +1769,26 @@ export default function App() {
             </div>
 
             {selectedCalendarDay && (
-              <div className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 animate-fade-in " + adminInnerCard}>
+              <div className={"p-5 rounded-[22px] border space-y-3.5 animate-fade-in " + adminInnerCard}>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2.5">
-                    <span className="font-mono font-bold text-[14px] text-[#C9A46A]">Date: {selectedCalendarDay.dateStr}</span>
-                    <span className={"text-[11px] font-bold px-2.5 py-0.5 rounded-full " + (selectedCalendarDay.isConfirmed ? 'bg-emerald-500/25 text-emerald-900' : 'bg-amber-500/25 text-amber-950')}>
+                    <span className="font-mono font-bold text-[14px] text-[#B89462]">Date: {selectedCalendarDay.dateStr}</span>
+                    <span className={"text-[11px] font-bold px-2.5 py-0.5 rounded-full " + (selectedCalendarDay.isConfirmed ? 'bg-emerald-500/25 text-emerald-400' : 'bg-amber-500/25 text-amber-400')}>
                       {selectedCalendarDay.isConfirmed ? 'LOCKED / CONFIRMED' : 'PENDING REVIEW'}
                     </span>
                   </div>
-                  <button onClick={() => setSelectedCalendarDay(null)} className="text-[#756B67] hover:text-[#241E1C] text-[13px] underline font-medium">Close</button>
+                  <button onClick={() => setSelectedCalendarDay(null)} className={"text-[13px] underline font-medium " + adminMuted}>Close</button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {selectedCalendarDay.list.map(b => (
-                    <div key={b.id} className="p-3.5 rounded-[16px] bg-white/60 border border-white/70 text-[13px] space-y-1 shadow-sm">
+                    <div key={b.id} className={"p-3.5 rounded-[16px] border text-[13px] space-y-1 shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/60 border-white/70')}>
                       <div className="flex justify-between font-bold">
-                        <span className="text-[#241E1C]">{b.bookingNumber || ''} • {b.clientName}</span>
-                        <span className="font-mono text-[#C9A46A]">₹{b.totalAmount?.toLocaleString('en-IN')}</span>
+                        <span>{b.bookingNumber || ''} • {b.clientName}</span>
+                        <span className="font-mono text-[#B89462]">₹{b.totalAmount?.toLocaleString('en-IN')}</span>
                       </div>
                       <p className={adminMuted}>Look: {b.packageName} ({b.kitType})</p>
-                      <p className="text-[12px] text-[#756B67] truncate">📍 {b.venueAddress}</p>
+                      <p className={"text-[12px] truncate " + adminMuted}>📍 {b.venueAddress}</p>
                     </div>
                   ))}
                 </div>
@@ -1787,27 +1798,27 @@ export default function App() {
         )}
 
         {activeFolderId === 'packages_master' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Layers className="w-4 h-4" /> Package Management (Images, Titles & Descriptions)
                 </h3>
                 <p className={"text-[13px] " + adminMuted + " mt-1"}>Manage custom look photos, package display names and descriptions per kit type.</p>
               </div>
 
-              <div className="inline-flex p-1.5 rounded-[18px] bg-white/40 border border-white/60 gap-1.5 self-start shadow-sm">
+              <div className={"inline-flex p-1.5 rounded-[18px] border gap-1.5 self-start shadow-sm " + (isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white/40 border-white/60')}>
                 <button
                   type="button"
                   onClick={() => setEditingKitTab('international')}
-                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'international' ? 'bg-[#C9A46A] text-white shadow' : 'text-[#756B67]')}
+                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'international' ? 'bg-[#B89462] text-white shadow' : adminMuted)}
                 >
                   👑 Luxury Kit
                 </button>
                 <button
                   type="button"
                   onClick={() => setEditingKitTab('drugstore')}
-                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'drugstore' ? 'bg-[#C9A46A] text-white shadow' : 'text-[#756B67]')}
+                  className={"px-4 py-2 rounded-[14px] text-[13px] font-bold transition " + (editingKitTab === 'drugstore' ? 'bg-[#B89462] text-white shadow' : adminMuted)}
                 >
                   ✨ HD Kit
                 </button>
@@ -1820,10 +1831,10 @@ export default function App() {
                 const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitImages[editingKitTab][k];
 
                 return (
-                  <div key={editingKitTab + "_" + k} className={"p-6 rounded-[24px] border border-white/40 space-y-4 " + adminInnerCard}>
+                  <div key={editingKitTab + "_" + k} className={"p-6 rounded-[24px] border space-y-4 " + adminInnerCard}>
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-bold text-[#C9A46A] font-mono uppercase tracking-wider">{k.replace(/_/g, ' ')}</span>
-                      <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/60 text-[#756B67] uppercase font-bold border border-white/80">{editingKitTab}</span>
+                      <span className="text-[12px] font-bold text-[#B89462] font-mono uppercase tracking-wider">{k.replace(/_/g, ' ')}</span>
+                      <span className={"text-[11px] px-2.5 py-0.5 rounded-full uppercase font-bold border " + (isAdminDarkMode ? 'bg-black/40 border-white/10 text-slate-300' : 'bg-white/60 border-white/80 text-[#6E6864]')}>{editingKitTab}</span>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -1847,14 +1858,14 @@ export default function App() {
                           })}
                           className={"w-full p-2.5 rounded-[12px] text-[12px] font-mono border " + adminInputBg}
                         />
-                        <label className="block text-center py-2 rounded-[12px] bg-[#C9A46A]/20 text-[#241E1C] text-[12px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
+                        <label className="block text-center py-2 rounded-[12px] bg-[#B89462]/20 text-[#B89462] text-[12px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
                           Upload Photo (&lt;20MB)
                           <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
                         </label>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-3 border-t border-black/10">
+                    <div className={"space-y-3 pt-3 border-t " + (isAdminDarkMode ? 'border-white/10' : 'border-black/10')}>
                       <div>
                         <span className={"block text-[11px] mb-1 font-bold " + adminMuted}>Package Display Name</span>
                         <input
@@ -1910,9 +1921,9 @@ export default function App() {
         )}
 
         {activeFolderId === 'app_maintenance' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                 <Wrench className="w-4 h-4" /> App Down & Maintenance Controller
               </h3>
               <p className={"text-[13px] " + adminMuted + " mt-1"}>
@@ -1920,13 +1931,13 @@ export default function App() {
               </p>
             </div>
 
-            <div className={"p-6 rounded-[22px] border border-white/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 " + adminInnerCard}>
+            <div className={"p-6 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 " + adminInnerCard}>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2.5">
                   <span className={"w-3.5 h-3.5 rounded-full " + (draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500')} />
-                  <h4 className="font-bold text-[16px] text-[#241E1C]">App Down / Maintenance Mode</h4>
+                  <h4 className="font-bold text-[16px]">App Down / Maintenance Mode</h4>
                 </div>
-                <p className={"text-[13px] " + adminMuted + " max-w-lg leading-relaxed"}>
+                <p className={"text-[13px] max-w-lg leading-relaxed " + adminMuted}>
                   {draft.isAppDown 
                     ? "🔴 ON: Customer App is locked. Visitors see a polite glassmorphism maintenance banner stating system upgrades are in progress."
                     : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
@@ -1960,17 +1971,17 @@ export default function App() {
         )}
 
         {activeFolderId === 'floating' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                 <Gift className="w-4 h-4" /> Floating Promo Offer Banner Controller
               </h3>
               <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure bottom-right floating offer pill text, code and activation status.</p>
             </div>
 
-            <div className={"p-6 rounded-[22px] border border-white/40 space-y-4 " + adminInnerCard}>
+            <div className={"p-6 rounded-[22px] border space-y-4 " + adminInnerCard}>
               <div className="flex items-center justify-between">
-                <span className="font-bold text-[14px] text-[#241E1C]">Enable Floating Promo Banner Widget</span>
+                <span className="font-bold text-[14px]">Enable Floating Promo Banner Widget</span>
                 <button
                   type="button"
                   onClick={() => setDraft({
@@ -1980,7 +1991,7 @@ export default function App() {
                       enabled: !(draft.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={"px-4 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-2 " + (draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}
+                  className={"px-4 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-2 " + (draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                 >
                   {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
@@ -2009,7 +2020,7 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
                     })}
-                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono font-bold text-[#C9A46A] border " + adminInputBg}
+                    className={"w-full p-3 rounded-[16px] text-[13px] font-mono font-bold text-[#B89462] border " + adminInputBg}
                   />
                 </div>
               </div>
@@ -2054,10 +2065,10 @@ export default function App() {
         )}
 
         {activeFolderId === 'coupons' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Tag className="w-4 h-4" /> Promo Coupons Manager & Expiry Timers
                 </h3>
                 <p className={"text-[13px] " + adminMuted}>Set coupon discounts, active status and expiry timer dates.</p>
@@ -2094,11 +2105,11 @@ export default function App() {
               {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
-                  <div key={code} className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
+                  <div key={code} className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-[#C9A46A] font-bold text-[16px]">{code}</span>
-                        <span className={"text-[11px] px-3 py-0.5 rounded-full font-bold " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}>
+                        <span className="font-mono text-[#B89462] font-bold text-[16px]">{code}</span>
+                        <span className={"text-[11px] px-3 py-0.5 rounded-full font-bold " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}>
                           {isCodeActive ? 'ACTIVE' : 'DISABLED'}
                         </span>
                       </div>
@@ -2113,7 +2124,7 @@ export default function App() {
                               [code]: { ...c, enabled: !isCodeActive }
                             }
                           })}
-                          className={"px-3.5 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-1.5 transition active:scale-95 " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}
+                          className={"px-3.5 py-2 rounded-[14px] font-bold text-[12px] flex items-center gap-1.5 transition active:scale-95 " + (isCodeActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                         >
                           {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                           <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
@@ -2123,7 +2134,7 @@ export default function App() {
                           const copy = { ...draft.validCoupons };
                           delete copy[code];
                           setDraft({ ...draft, validCoupons: copy });
-                        }} className="text-rose-600 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
@@ -2158,7 +2169,7 @@ export default function App() {
                               [code]: { ...c, value: Number(e.target.value) }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] font-mono text-[#C9A46A] text-[13px] font-bold border " + adminInputBg}
+                          className={"w-full p-3 rounded-[16px] font-mono text-[#B89462] text-[13px] font-bold border " + adminInputBg}
                         />
                       </div>
 
@@ -2174,7 +2185,7 @@ export default function App() {
                               [code]: { ...c, expiryDate: e.target.value }
                             }
                           })}
-                          className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border " + adminInputBg}
+                          className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#B89462] border " + adminInputBg}
                         />
                       </div>
                     </div>
@@ -2212,10 +2223,10 @@ export default function App() {
         )}
 
         {activeFolderId === 'gallery' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Film className="w-4 h-4" /> Transformations, Videos & GIFs Studio (20MB Max)
                 </h3>
                 <p className={"text-[13px] " + adminMuted}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
@@ -2239,10 +2250,10 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(draft.galleryPhotos || []).map((item, idx) => (
-                <div key={idx} className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
+                <div key={idx} className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] font-bold text-[#C9A46A] font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
-                    <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-600 p-1.5 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
+                    <span className="text-[12px] font-bold text-[#B89462] font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
+                    <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-500 p-1.5 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -2282,10 +2293,10 @@ export default function App() {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border " + adminInputBg} />
+                    }} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#B89462] border " + adminInputBg} />
                   </div>
 
-                  <label className="block text-center py-2.5 rounded-[14px] bg-[#C9A46A]/20 text-[#241E1C] text-[13px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
+                  <label className="block text-center py-2.5 rounded-[14px] bg-[#B89462]/20 text-[#B89462] text-[13px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
                     Upload Video / GIF / Image (&lt;20MB)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
@@ -2306,9 +2317,9 @@ export default function App() {
         )}
 
         {activeFolderId === 'toggles_master' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
               </h3>
               <p className={"text-[13px] " + adminMuted + " mt-1"}>Enable or disable any tab, section or feature on the customer app.</p>
@@ -2328,9 +2339,9 @@ export default function App() {
               ].map(toggle => {
                 const isEnabled = draft.toggles?.[toggle.key] !== false;
                 return (
-                  <div key={toggle.key} className={"p-4.5 rounded-[20px] border border-white/40 flex items-center justify-between gap-3.5 " + adminInnerCard}>
+                  <div key={toggle.key} className={"p-4.5 rounded-[20px] border flex items-center justify-between gap-3.5 " + adminInnerCard}>
                     <div className="space-y-1">
-                      <h4 className="font-bold text-[13px] text-[#241E1C]">{toggle.label}</h4>
+                      <h4 className="font-bold text-[13px]">{toggle.label}</h4>
                       <p className={"text-[12px] " + adminMuted}>{toggle.desc}</p>
                     </div>
                     <button
@@ -2342,7 +2353,7 @@ export default function App() {
                           [toggle.key]: !isEnabled
                         }
                       })}
-                      className={"px-3.5 py-2 rounded-[14px] flex items-center gap-1.5 font-bold text-[12px] transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-900 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-900 border border-rose-500/40')}
+                      className={"px-3.5 py-2 rounded-[14px] flex items-center gap-1.5 font-bold text-[12px] transition active:scale-95 " + (isEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-400 border border-rose-500/40')}
                     >
                       {isEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                       <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
@@ -2365,33 +2376,33 @@ export default function App() {
         )}
 
         {activeFolderId === 'traffic_logs' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Activity className="w-4 h-4" /> Live Traffic & Instagram Visitor Logs
                 </h3>
                 <p className={"text-[13px] " + adminMuted}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-[#C9A46A]/20 text-[#241E1C] border border-[#C9A46A]/40 px-3.5 py-1.5 rounded-full shadow-sm">
+              <span className="text-[13px] font-mono font-bold bg-[#B89462]/20 border border-[#B89462]/40 px-3.5 py-1.5 rounded-full shadow-sm">
                 {visitorLogs.length} Recent Visits Logged
               </span>
             </div>
 
             {visitorLogs.length === 0 ? (
-              <p className="text-[14px] text-[#756B67] py-12 text-center">No visitor traffic recorded yet.</p>
+              <p className={"text-[14px] py-12 text-center " + adminMuted}>No visitor traffic recorded yet.</p>
             ) : (
               <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                 {visitorLogs.map(log => (
-                  <div key={log.id} className={"p-4 rounded-[18px] border border-white/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[13px] " + adminInnerCard}>
+                  <div key={log.id} className={"p-4 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-[13px] " + adminInnerCard}>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2.5">
-                        <span className="font-bold text-[#C9A46A] font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/60 text-[#241E1C] font-bold border border-white/80">Active Visit</span>
+                        <span className="font-bold text-[#B89462] font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
+                        <span className={"text-[10px] px-2.5 py-0.5 rounded-full font-bold border " + (isAdminDarkMode ? 'bg-white/10 border-white/20 text-slate-300' : 'bg-white/80 border-white text-[#1C1C1E]')}>Active Visit</span>
                       </div>
                       <p className={"text-[12px] truncate max-w-md " + adminMuted}>{log.userAgent}</p>
                     </div>
-                    <span className="text-[12px] text-[#C9A46A] font-mono font-medium">
+                    <span className="text-[12px] text-[#B89462] font-mono font-medium">
                       {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
                     </span>
                   </div>
@@ -2402,15 +2413,15 @@ export default function App() {
         )}
 
         {activeFolderId === 'promotions' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
-            <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
+            <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
               <Megaphone className="w-4 h-4" /> WhatsApp Broadcast Studio
             </h3>
             <textarea
               rows={6}
               value={selectedTemplateText}
               onChange={e => setSelectedTemplateText(e.target.value)}
-              className={"w-full p-4 rounded-[20px] text-[13px] font-mono text-[#241E1C] border " + adminInputBg}
+              className={"w-full p-4 rounded-[20px] text-[13px] font-mono border " + adminInputBg}
             />
             <button
               type="button"
@@ -2425,10 +2436,10 @@ export default function App() {
         )}
 
         {activeFolderId === 'announcements' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Volume2 className="w-4 h-4" /> Top Announcement Lines Ticker
                 </h3>
                 <p className={"text-[13px] " + adminMuted}>Edit rotating top banner messages displayed to clients.</p>
@@ -2445,7 +2456,7 @@ export default function App() {
             <div className="space-y-3.5">
               {(draft.announcements || []).map((line, idx) => (
                 <div key={idx} className="flex gap-2.5 items-center">
-                  <span className="text-[13px] font-mono font-bold text-[#C9A46A] w-6">#{idx + 1}</span>
+                  <span className="text-[13px] font-mono font-bold text-[#B89462] w-6">#{idx + 1}</span>
                   <input
                     type="text"
                     value={line}
@@ -2459,7 +2470,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) })}
-                    className="p-2.5 text-rose-600 hover:bg-rose-500/10 rounded-[14px]"
+                    className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -2480,10 +2491,10 @@ export default function App() {
         )}
 
         {activeFolderId === 'convenience' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+                <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                   <Car className="w-4 h-4" /> Travel Fees & Convenience Zones
                 </h3>
                 <p className={"text-[13px] " + adminMuted}>Manage venue travel charges for customer locations.</p>
@@ -2511,9 +2522,9 @@ export default function App() {
 
             <div className="space-y-3.5">
               {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={"p-4.5 rounded-[20px] border border-white/40 flex flex-col sm:flex-row items-center justify-between gap-3.5 " + adminInnerCard}>
+                <div key={zKey} className={"p-4.5 rounded-[20px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 " + adminInnerCard}>
                   <div className="flex-1 w-full space-y-1">
-                    <span className="text-[11px] font-mono text-[#C9A46A] uppercase font-bold">Zone Key: {zKey}</span>
+                    <span className="text-[11px] font-mono text-[#B89462] uppercase font-bold">Zone Key: {zKey}</span>
                     <input
                       type="text"
                       value={zData.name}
@@ -2529,7 +2540,7 @@ export default function App() {
                   </div>
 
                   <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                    <label className="text-[13px] font-bold text-[#756B67]">Fee (₹):</label>
+                    <label className={"text-[13px] font-bold " + adminMuted}>Fee (₹):</label>
                     <input
                       type="number"
                       value={zData.fee}
@@ -2540,7 +2551,7 @@ export default function App() {
                           [zKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
-                      className={"w-32 p-3 rounded-[16px] font-mono text-[#C9A46A] font-bold text-[13px] border " + adminInputBg}
+                      className={"w-32 p-3 rounded-[16px] font-mono text-[#B89462] font-bold text-[13px] border " + adminInputBg}
                     />
                     <button
                       type="button"
@@ -2549,7 +2560,7 @@ export default function App() {
                         delete copy[zKey];
                         setDraft({ ...draft, convenienceZones: copy });
                       }}
-                      className="p-2.5 text-rose-600 hover:bg-rose-500/10 rounded-[14px]"
+                      className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -2571,23 +2582,23 @@ export default function App() {
         )}
 
         {activeFolderId === 'prices' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
-            <h3 className="font-bold text-[14px] uppercase text-[#C9A46A]">👑 International Luxury Vanity Kit (₹)</h3>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
+            <h3 className="font-bold text-[14px] uppercase text-[#B89462]">👑 International Luxury Vanity Kit (₹)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
               {partyPackages.concat(bridalPackages).map(k => (
                 <div key={k}>
                   <label className={"block text-[11px] mb-1.5 capitalize font-bold " + adminMuted}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-[#C9A46A] text-[13px] font-bold border " + adminInputBg} />
+                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-[#B89462] text-[13px] font-bold border " + adminInputBg} />
                 </div>
               ))}
             </div>
 
-            <h3 className="font-bold text-[14px] uppercase text-rose-600 pt-4">✨ Premium HD Kit Rates (₹)</h3>
+            <h3 className="font-bold text-[14px] uppercase text-rose-500 pt-4">✨ Premium HD Kit Rates (₹)</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
               {partyPackages.concat(bridalPackages).map(k => (
                 <div key={k}>
                   <label className={"block text-[11px] mb-1.5 capitalize font-bold " + adminMuted}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-rose-700 text-[13px] font-bold border " + adminInputBg} />
+                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={"w-full p-3 rounded-[16px] font-mono text-rose-500 text-[13px] font-bold border " + adminInputBg} />
                 </div>
               ))}
             </div>
@@ -2605,12 +2616,12 @@ export default function App() {
         )}
 
         {activeFolderId === 'theme' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-5 " + cardBgClass}>
-            <h3 className="font-bold text-[14px] uppercase text-[#C9A46A]">Aesthetic Themes & Fonts (Synced)</h3>
+          <div className={"p-7 rounded-[28px] border space-y-5 " + cardBgClass}>
+            <h3 className="font-bold text-[14px] uppercase text-[#B89462]">Aesthetic Themes & Fonts (Synced)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Color Theme</label>
-                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#C9A46A] border " + adminInputBg}>
+                <select value={draft.theme?.colorTheme || 'liquid_glass'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#B89462] border " + adminInputBg}>
                   <option value="liquid_glass">💎 Liquid Glass iOS</option>
                   <option value="one_ui_9">✨ Samsung One UI 9</option>
                   <option value="gold_rose">👑 Royal Gold Rose</option>
@@ -2623,7 +2634,7 @@ export default function App() {
 
               <div>
                 <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Font Family</label>
-                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#C9A46A] border " + adminInputBg}>
+                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold text-[#B89462] border " + adminInputBg}>
                   <option value="sans">Plus Jakarta Sans</option>
                   <option value="outfit">Outfit (iOS Glass Minimal)</option>
                   <option value="serif">Playfair Display (Royal)</option>
@@ -2634,10 +2645,10 @@ export default function App() {
               </div>
 
               <div>
-                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Default Customer Mode</label>
+                <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Default Customer Mode (Main App Theme)</label>
                 <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={"w-full p-3 rounded-[16px] text-[13px] font-bold border " + adminInputBg}>
-                  <option value="light">☀️ Light Mode (#FFF9F6)</option>
-                  <option value="dark">🌙 Dark Mode</option>
+                  <option value="light">☀️ Light Mode (#F8F5F2)</option>
+                  <option value="dark">🌙 Dark Mode (#1C1C1E)</option>
                 </select>
               </div>
             </div>
@@ -2655,28 +2666,28 @@ export default function App() {
         )}
 
         {activeFolderId === 'profile' && (
-          <div className={"p-7 rounded-[28px] border border-white/50 space-y-6 " + cardBgClass}>
+          <div className={"p-7 rounded-[28px] border space-y-6 " + cardBgClass}>
             <div>
-              <h3 className="font-bold text-[14px] uppercase text-[#C9A46A] flex items-center gap-2">
+              <h3 className="font-bold text-[14px] uppercase text-[#B89462] flex items-center gap-2">
                 <User className="w-4 h-4" /> Studio Identity, Logo & Social Profiles
               </h3>
               <p className={"text-[13px] " + adminMuted + " mt-1"}>Configure official studio title, upload custom logo & artist profile photo.</p>
             </div>
 
-            <div className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
+            <div className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#C9A46A] uppercase flex items-center gap-2">
+                <span className="text-[12px] font-bold text-[#B89462] uppercase flex items-center gap-2">
                   <Crown className="w-4 h-4" /> 1. Official Studio Logo (Header & Splash)
                 </span>
-                <span className="text-[11px] text-[#756B67] font-mono font-medium">Auto-Compressed</span>
+                <span className={"text-[11px] font-mono font-medium " + adminMuted}>Auto-Compressed</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-18 h-18 rounded-[20px] bg-white/60 border border-white/80 p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+                <div className={"w-18 h-18 rounded-[20px] p-1 flex items-center justify-center overflow-hidden shrink-0 shadow-md border " + (isAdminDarkMode ? 'bg-black/40 border-white/20' : 'bg-white/60 border-white/80')}>
                   {draft.studioLogo ? (
                     <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
-                    <Crown className="w-8 h-8 text-[#756B67]" />
+                    <Crown className="w-8 h-8 text-[#6E6864]" />
                   )}
                 </div>
 
@@ -2688,7 +2699,7 @@ export default function App() {
                     onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
                     className={"w-full p-3 rounded-[16px] text-[13px] font-mono border " + adminInputBg}
                   />
-                  <label className="inline-block px-4 py-2 rounded-[14px] bg-[#C9A46A]/20 text-[#241E1C] text-[13px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
+                  <label className="inline-block px-4 py-2 rounded-[14px] bg-[#B89462]/20 text-[#B89462] text-[13px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
                     Upload & Compress Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
@@ -2696,16 +2707,16 @@ export default function App() {
               </div>
             </div>
 
-            <div className={"p-5 rounded-[22px] border border-white/40 space-y-3.5 " + adminInnerCard}>
+            <div className={"p-5 rounded-[22px] border space-y-3.5 " + adminInnerCard}>
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#C9A46A] uppercase flex items-center gap-2">
+                <span className="text-[12px] font-bold text-[#B89462] uppercase flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
                 </span>
-                <span className="text-[11px] text-[#756B67] font-mono font-medium">Avatar Card</span>
+                <span className={"text-[11px] font-mono font-medium " + adminMuted}>Avatar Card</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-18 h-18 rounded-[20px] overflow-hidden bg-neutral-200 border-2 border-[#C9A46A]/50 shrink-0 shadow-md">
+                <div className="w-18 h-18 rounded-[20px] overflow-hidden bg-neutral-200 border-2 border-[#B89462]/50 shrink-0 shadow-md">
                   <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
 
@@ -2717,7 +2728,7 @@ export default function App() {
                     onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
                     className={"w-full p-3 rounded-[16px] text-[13px] font-mono border " + adminInputBg}
                   />
-                  <label className="inline-block px-4 py-2 rounded-[14px] bg-[#C9A46A]/20 text-[#241E1C] text-[13px] font-bold cursor-pointer border border-[#C9A46A]/40 hover:bg-[#C9A46A]/35 transition shadow-sm">
+                  <label className="inline-block px-4 py-2 rounded-[14px] bg-[#B89462]/20 text-[#B89462] text-[13px] font-bold cursor-pointer border border-[#B89462]/40 hover:bg-[#B89462]/35 transition shadow-sm">
                     Upload & Compress Profile Photo
                     <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
@@ -2732,11 +2743,11 @@ export default function App() {
               </div>
               <div>
                 <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Booking Contact Number</label>
-                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#C9A46A] border " + adminInputBg} />
+                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-[#B89462] border " + adminInputBg} />
               </div>
               <div>
                 <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-pink-600 border " + adminInputBg} />
+                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={"w-full p-3 rounded-[16px] text-[13px] font-mono text-pink-500 border " + adminInputBg} />
               </div>
               <div>
                 <label className={"block text-[12px] font-bold mb-1.5 " + adminMuted}>Artist Tagline / Subtitle</label>
