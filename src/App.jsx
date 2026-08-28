@@ -225,7 +225,7 @@ const ADMIN_FOLDERS = [
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, desc: 'Edit bottom offer pill & auto-hide rules' },
   { id: 'coupons', label: 'Promo Coupons & Timers', icon: Tag, desc: 'Manage discount codes, timers & active status' },
-  { id: 'toggles_master', label: 'Master Feature Toggles', icon: SlidersHorizontal, desc: 'Enable/disable logo, profile & features' },
+  { id: 'toggles_master', label: 'Master Feature & Section Toggles', icon: SlidersHorizontal, desc: 'Enable/disable any tab, section or feature' },
   { id: 'traffic_logs', label: 'Visitor Logs & Traffic', icon: Activity, desc: 'Track real-time Instagram bio & link visits' },
   { id: 'promotions', label: 'WhatsApp Broadcast Studio', icon: Megaphone, desc: 'Send bulk promo alerts via Baileys gateway' },
   { id: 'announcements', label: 'Top Announcements Ticker', icon: Volume2, desc: 'Configure top rotating ticker announcements' },
@@ -445,6 +445,7 @@ export default function AdminApp() {
     }
   };
 
+  // 🖼️ Admin Canvas Slip Generator with Embedded Logo, Watermark & Rejection Reason
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -453,216 +454,247 @@ export default function AdminApp() {
     canvas.width = 1080;
     canvas.height = 1760;
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 1080, 1760);
-
-    const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
-    bgGrad.addColorStop(0, '#ffffff');
-    bgGrad.addColorStop(1, '#fafafa');
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(20, 20, 1040, 1720);
-
     const isRejected = b.status === 'rejected';
     const isConfirmed = b.status === 'confirmed';
 
-    ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#b48a3c');
-    ctx.lineWidth = 4;
-    ctx.strokeRect(40, 40, 1000, 1680);
+    const drawAdminSlip = (logoImgObj) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 1080, 1760);
 
-    // 🖼️ Render Official Studio Logo on Download Slip Top Center
-    const logoImg = new Image();
-    logoImg.crossOrigin = "anonymous";
-    logoImg.src = draft.studioLogo || DEFAULT_STUDIO_LOGO;
-    logoImg.onload = () => {
-      ctx.drawImage(logoImg, 490, 60, 100, 100);
-      drawSlipContent(ctx, b, isRejected, isConfirmed);
-    };
-    logoImg.onerror = () => {
-      drawSlipContent(ctx, b, isRejected, isConfirmed);
-    };
-  };
+      const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
+      bgGrad.addColorStop(0, '#ffffff');
+      bgGrad.addColorStop(1, '#fafafa');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(20, 20, 1040, 1720);
 
-  const drawSlipContent = (ctx, b, isRejected, isConfirmed) => {
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 42px serif';
-    ctx.fillText('H&F MAKEUP ARTIST', 540, 195);
+      ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#b48a3c');
+      ctx.lineWidth = 4;
+      ctx.strokeRect(40, 40, 1000, 1680);
 
-    ctx.fillStyle = '#b48a3c';
-    ctx.font = '600 20px sans-serif';
-    ctx.fillText('Beauty, Styled Your Way', 540, 230);
+      // 💧 Embedded Subtle Watermark
+      ctx.save();
+      ctx.translate(540, 880);
+      ctx.rotate(-Math.PI / 6);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(180, 138, 60, 0.05)';
+      ctx.font = 'bold 84px serif';
+      ctx.fillText('H&F MAKEUP ARTIST', 0, 0);
+      ctx.restore();
 
-    ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(180, 255);
-    ctx.lineTo(900, 255);
-    ctx.stroke();
+      if (logoImgObj) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(logoImgObj, 95, 105, 90, 90);
+        ctx.restore();
 
-    ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText(
-      isRejected 
-        ? 'BOOKING STATUS: DECLINED / REJECTED' 
-        : (isConfirmed ? 'OFFICIAL CONFIRMED APPOINTMENT SLIP' : 'PENDING BOOKING REQUEST SLIP'), 
-      540, 
-      300
-    );
-
-    const rows = [
-      { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
-      { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
-      { label: 'CONTACT NUMBER', val: b.clientPhone || 'Not Provided' },
-      { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
-      { label: 'MAIN LOOK TIER', val: b.kitType || 'Luxury Vanity' },
-      { label: 'MAIN LOOK PACKAGE', val: b.packageName || 'Bridal Makeup' },
-      { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
-      { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' }
-    ];
-
-    let startY = 370;
-    rows.forEach((row, idx) => {
-      ctx.fillStyle = idx === 0 
-        ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : '#f0f9ff')) 
-        : (idx % 2 === 0 ? '#f8fafc' : '#ffffff');
-      ctx.fillRect(80, startY - 26, 920, 56);
-
-      ctx.textAlign = 'left';
-      ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#0284c7')) : '#64748b';
-      ctx.font = idx === 0 ? 'bold 19px monospace' : 'bold 18px sans-serif';
-      ctx.fillText(row.label, 100, startY + 9);
-
-      ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : '#0369a1')) : '#0f172a';
-      ctx.font = idx === 0 ? 'bold 21px monospace' : 'bold 20px sans-serif';
-
-      let displayVal = row.val;
-      while (ctx.measureText(displayVal).width > 560 && displayVal.length > 4) {
-        displayVal = displayVal.substring(0, displayVal.length - 4) + '...';
-      }
-      ctx.fillText(displayVal, 380, startY + 9);
-      startY += 64;
-    });
-
-    if (b.extraGuestsList && b.extraGuestsList.length > 0) {
-      startY += 10;
-      ctx.fillStyle = '#fdf4ff';
-      ctx.fillRect(80, startY - 26, 920, 48);
-
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#9333ea';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 100, startY + 6);
-
-      ctx.textAlign = 'right';
-      ctx.font = 'bold 20px monospace';
-      ctx.fillText(`+₹${(b.extraGuestsCost || 0).toLocaleString('en-IN')}`, 980, startY + 6);
-      startY += 54;
-
-      b.extraGuestsList.slice(0, 4).forEach((g, gIdx) => {
-        const raw = draft.pricingByKit[g.kit]?.[g.packageKey] || 2500;
-        const finalP = draft.guestDiscount?.enabled !== false ? Math.round(raw * (1 - (draft.guestDiscount?.discountPercent ?? 15) / 100)) : raw;
-        const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
-        const pkgName = draft.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
-
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(80, startY - 20, 920, 40);
+        ctx.strokeStyle = '#b48a3c';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
+        ctx.stroke();
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#475569';
-        ctx.font = '16px sans-serif';
-        ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${pkgName}`, 120, startY + 6);
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 36px serif';
+        ctx.fillText('H&F MAKEUP ARTIST', 210, 140);
 
-        ctx.textAlign = 'right';
-        ctx.font = '17px monospace';
-        ctx.fillText(`₹${finalP.toLocaleString('en-IN')}`, 980, startY + 6);
-        startY += 44;
-      });
-    }
+        ctx.fillStyle = '#b48a3c';
+        ctx.font = '600 18px sans-serif';
+        ctx.fillText('Beauty, Styled Your Way', 210, 170);
+      } else {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 42px serif';
+        ctx.fillText('H&F MAKEUP ARTIST', 540, 140);
 
-    if (b.appliedCoupon && b.appliedCoupon !== 'None') {
-      startY += 6;
-      ctx.fillStyle = '#ecfdf5';
-      ctx.fillRect(80, startY - 24, 920, 48);
-
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#059669';
-      ctx.font = 'bold 18px sans-serif';
-      ctx.fillText(`APPLIED PROMO: ${b.appliedCoupon}`, 100, startY + 7);
-
-      ctx.textAlign = 'right';
-      ctx.font = 'bold 20px monospace';
-      ctx.fillText(`-₹${(b.discountAmount || 0).toLocaleString('en-IN')}`, 980, startY + 7);
-      startY += 58;
-    }
-
-    startY += 10;
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(80, startY, 920, 140);
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(80, startY, 920, 140);
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText('TOTAL AMOUNT', 540, startY + 45);
-
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 56px serif';
-    ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
-
-    if (isRejected) {
-      startY += 160;
-      ctx.fillStyle = '#fff1f2';
-      ctx.fillRect(80, startY, 920, 130);
-      ctx.strokeStyle = '#f43f5e';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(80, startY, 920, 130);
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#be123c';
-      ctx.font = 'bold 19px sans-serif';
-      ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 32);
-
-      ctx.fillStyle = '#475569';
-      ctx.font = 'italic 16px sans-serif';
-       
-      const fullReason = b.rejectionReason || "Slot unavailable for requested date. Please connect with studio.";
-      const words = fullReason.split(' ');
-      let line1 = '';
-      let line2 = '';
-      let line3 = '';
-       
-      for (let n = 0; n < words.length; n++) {
-        const testLine = line1 + words[n] + ' ';
-        if (ctx.measureText(testLine).width < 820 && !line2) {
-          line1 = testLine;
-        } else if ((line2 + words[n] + ' ').length < 90 && !line3) {
-          line2 += words[n] + ' ';
-        } else {
-          line3 += words[n] + ' ';
-        }
+        ctx.fillStyle = '#b48a3c';
+        ctx.font = '600 20px sans-serif';
+        ctx.fillText('Beauty, Styled Your Way', 540, 175);
       }
 
-      ctx.fillText(line1.trim(), 540, startY + 62);
-      if (line2) ctx.fillText(line2.trim(), 540, startY + 86);
-      if (line3) ctx.fillText(line3.trim(), 540, startY + 110);
-    }
+      ctx.strokeStyle = 'rgba(180, 138, 60, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(80, 220);
+      ctx.lineTo(1000, 220);
+      ctx.stroke();
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#64748b';
-    ctx.font = '17px sans-serif';
-    ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1670);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
+      ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(
+        isRejected 
+          ? 'BOOKING STATUS: DECLINED / REJECTED' 
+          : (isConfirmed ? 'OFFICIAL CONFIRMED APPOINTMENT SLIP' : 'PENDING BOOKING REQUEST SLIP'), 
+        540, 
+        275
+      );
 
-    ctx.fillStyle = '#b48a3c';
-    ctx.font = 'italic 16px sans-serif';
-    ctx.fillText('Beauty, Styled Your Way', 540, 1700);
+      const rows = [
+        { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
+        { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
+        { label: 'CONTACT NUMBER', val: b.clientPhone || 'Not Provided' },
+        { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
+        { label: 'MAIN LOOK TIER', val: b.kitType || 'Luxury Vanity' },
+        { label: 'MAIN LOOK PACKAGE', val: b.packageName || 'Bridal Makeup' },
+        { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
+        { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' }
+      ];
 
-    const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
-    const downloadLink = document.createElement('a');
-    downloadLink.download = `${isRejected ? 'Declined' : 'Confirmed'}_Slip_${b.bookingNumber || b.clientName}.jpg`;
-    downloadLink.href = jpgUrl;
-    downloadLink.click();
+      let startY = 340;
+      rows.forEach((row, idx) => {
+        ctx.fillStyle = idx === 0 
+          ? (isRejected ? '#fff1f2' : (isConfirmed ? '#f0fdf4' : '#f0f9ff')) 
+          : (idx % 2 === 0 ? '#f8fafc' : '#ffffff');
+        ctx.fillRect(80, startY - 26, 920, 56);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = idx === 0 ? (isRejected ? '#e11d48' : (isConfirmed ? '#047857' : '#0284c7')) : '#64748b';
+        ctx.font = idx === 0 ? 'bold 19px monospace' : 'bold 18px sans-serif';
+        ctx.fillText(row.label, 100, startY + 9);
+
+        ctx.fillStyle = idx === 0 ? (isRejected ? '#be123c' : (isConfirmed ? '#065f46' : '#0369a1')) : '#0f172a';
+        ctx.font = idx === 0 ? 'bold 21px monospace' : 'bold 20px sans-serif';
+
+        let displayVal = row.val;
+        while (ctx.measureText(displayVal).width > 560 && displayVal.length > 4) {
+          displayVal = displayVal.substring(0, displayVal.length - 4) + '...';
+        }
+        ctx.fillText(displayVal, 380, startY + 9);
+        startY += 64;
+      });
+
+      if (b.extraGuestsList && b.extraGuestsList.length > 0) {
+        startY += 10;
+        ctx.fillStyle = '#fdf4ff';
+        ctx.fillRect(80, startY - 26, 920, 48);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#9333ea';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 100, startY + 6);
+
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText(`+₹${(b.extraGuestsCost || 0).toLocaleString('en-IN')}`, 980, startY + 6);
+        startY += 54;
+
+        b.extraGuestsList.slice(0, 4).forEach((g, gIdx) => {
+          const raw = draft.pricingByKit[g.kit]?.[g.packageKey] || 2500;
+          const finalP = draft.guestDiscount?.enabled !== false ? Math.round(raw * (1 - (draft.guestDiscount?.discountPercent ?? 15) / 100)) : raw;
+          const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
+          const pkgName = draft.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(80, startY - 20, 920, 40);
+
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#475569';
+          ctx.font = '16px sans-serif';
+          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${pkgName}`, 120, startY + 6);
+
+          ctx.textAlign = 'right';
+          ctx.font = '17px monospace';
+          ctx.fillText(`₹${finalP.toLocaleString('en-IN')}`, 980, startY + 6);
+          startY += 44;
+        });
+      }
+
+      if (b.appliedCoupon && b.appliedCoupon !== 'None') {
+        startY += 6;
+        ctx.fillStyle = '#ecfdf5';
+        ctx.fillRect(80, startY - 24, 920, 48);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#059669';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(`APPLIED PROMO: ${b.appliedCoupon}`, 100, startY + 7);
+
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText(`-₹${(b.discountAmount || 0).toLocaleString('en-IN')}`, 980, startY + 7);
+        startY += 58;
+      }
+
+      startY += 10;
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(80, startY, 920, 140);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(80, startY, 920, 140);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('TOTAL AMOUNT', 540, startY + 45);
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 56px serif';
+      ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN')}`, 540, startY + 110);
+
+      if (isRejected) {
+        startY += 160;
+        ctx.fillStyle = '#fff1f2';
+        ctx.fillRect(80, startY, 920, 130);
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(80, startY, 920, 130);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#be123c';
+        ctx.font = 'bold 19px sans-serif';
+        ctx.fillText('REJECTION REASON / REMARKS:', 540, startY + 32);
+
+        ctx.fillStyle = '#475569';
+        ctx.font = 'italic 16px sans-serif';
+         
+        const fullReason = b.rejectionReason || "Slot unavailable for requested date. Please connect with studio.";
+        const words = fullReason.split(' ');
+        let line1 = '';
+        let line2 = '';
+        let line3 = '';
+         
+        for (let n = 0; n < words.length; n++) {
+          const testLine = line1 + words[n] + ' ';
+          if (ctx.measureText(testLine).width < 820 && !line2) {
+            line1 = testLine;
+          } else if ((line2 + words[n] + ' ').length < 90 && !line3) {
+            line2 += words[n] + ' ';
+          } else {
+            line3 += words[n] + ' ';
+          }
+        }
+
+        ctx.fillText(line1.trim(), 540, startY + 62);
+        if (line2) ctx.fillText(line2.trim(), 540, startY + 86);
+        if (line3) ctx.fillText(line3.trim(), 540, startY + 110);
+      }
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#64748b';
+      ctx.font = '17px sans-serif';
+      ctx.fillText(`Base Location: ${draft.baseLocation} • Instagram: @${draft.instagramHandle || 'husna_farooqui_makeup'}`, 540, 1670);
+
+      ctx.fillStyle = '#b48a3c';
+      ctx.font = 'italic 16px sans-serif';
+      ctx.fillText('Beauty, Styled Your Way', 540, 1700);
+
+      const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `${isRejected ? 'Declined' : 'Confirmed'}_Slip_${b.bookingNumber || b.clientName}.jpg`;
+      downloadLink.href = jpgUrl;
+      downloadLink.click();
+    };
+
+    const logoUrlToLoad = draft.studioLogo || DEFAULT_STUDIO_LOGO;
+    const logoImg = new Image();
+    logoImg.crossOrigin = "anonymous";
+    logoImg.src = logoUrlToLoad;
+    logoImg.onload = () => drawAdminSlip(logoImg);
+    logoImg.onerror = () => drawAdminSlip(null);
   };
 
   const handleMediaUpload = async (e, index) => {
@@ -1458,7 +1490,7 @@ export default function AdminApp() {
           </div>
         )}
 
-        {/* TAB: FLOATING PROMO BANNER (FIXED BLANK ISSUE) */}
+        {/* TAB: FLOATING PROMO BANNER */}
         {activeFolderId === 'floating' && (
           <div className={`p-6 rounded-3xl border space-y-5 ${cardBgClass}`}>
             <div>
@@ -1814,7 +1846,7 @@ export default function AdminApp() {
               <h3 className="font-bold text-xs uppercase text-cyan-400 flex items-center gap-1.5">
                 <SlidersHorizontal className="w-4 h-4" /> Master Feature & Section Toggles
               </h3>
-              <p className={`text-xs ${adminMuted} mt-0.5`}>Enable or disable any section, widget or logo on the customer app.</p>
+              <p className={`text-xs ${adminMuted} mt-0.5`}>Enable or disable any tab, section or feature on the customer app.</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
