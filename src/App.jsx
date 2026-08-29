@@ -160,22 +160,18 @@ const DEFAULT_CONFIG = {
 const THEME_STYLES = {
   real_glass_lens: {
     cardBg: "bg-gradient-to-br from-white/80 via-sky-50/40 to-indigo-50/50 backdrop-blur-[24px] border border-white/80 shadow-[0_12px_40px_rgba(0,122,255,0.12)]",
-    accentGradient: "from-sky-400 via-blue-500 to-indigo-600",
     btnPrimary: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-[0_10px_25px_rgba(0,122,255,0.3)] rounded-[18px]",
   },
   admin_aurora: {
     cardBg: "bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 backdrop-blur-[28px] border border-purple-500/20 shadow-[0_12px_40px_rgba(168,85,247,0.15)]",
-    accentGradient: "from-purple-500 via-pink-500 to-rose-500",
     btnPrimary: "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-bold shadow-[0_10px_25px_rgba(236,72,153,0.35)] rounded-[18px]",
   },
   sunset_glow: {
     cardBg: "bg-gradient-to-br from-amber-500/10 via-rose-500/10 to-purple-500/10 backdrop-blur-[28px] border border-amber-500/20 shadow-[0_12px_40px_rgba(245,158,11,0.15)]",
-    accentGradient: "from-amber-400 via-rose-500 to-purple-600",
     btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-600 text-white font-bold shadow-[0_10px_25px_rgba(244,63,94,0.35)] rounded-[18px]",
   },
   cyber_matrix: {
     cardBg: "bg-gradient-to-br from-emerald-500/10 via-cyan-500/15 to-blue-500/10 backdrop-blur-[28px] border border-cyan-500/25 shadow-[0_12px_40px_rgba(6,182,212,0.15)]",
-    accentGradient: "from-emerald-400 via-cyan-400 to-blue-500",
     btnPrimary: "bg-gradient-to-r from-emerald-500 to-cyan-600 text-neutral-950 font-bold shadow-[0_10px_25px_rgba(6,182,212,0.35)] rounded-[18px]",
   }
 };
@@ -208,6 +204,7 @@ const INITIAL_FOLDERS = [
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
   { id: 'packages_master', label: 'Package Management (Images & Titles)', icon: Layers, desc: 'Manage package photos, names and descriptions per kit' },
+  { id: 'guest_discount_folder', label: 'Extra Guest Offer Controller', icon: Gift, desc: 'Manage family/group discount tiers & percentage' },
   { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, desc: 'Edit bottom offer pill & auto-hide rules' },
@@ -223,7 +220,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.6.1", date: "August 29, 2026", status: "Active Live Production", changes: "Fixed post-login blank screen render error by ensuring robust state initializers and fallback rendering." }
+  { version: "v3.6.2", date: "August 29, 2026", status: "Active Live Production", changes: "Added Guest Offer control folder card, robust fallback renders, and centered confirmation dialogs." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -279,7 +276,6 @@ export default function App() {
   const [visitorLogs, setVisitorLogs] = useState([]);
   const [savingSection, setSavingSection] = useState('');
   
-  // Central popup confirmation toast state
   const [popupToast, setPopupToast] = useState(null);
 
   const [isScanningFinger, setIsScanningFinger] = useState(false);
@@ -304,7 +300,6 @@ export default function App() {
 
   const canvasRef = useRef(null);
 
-  // Auto-hide central popup toast after 4 seconds
   useEffect(() => {
     if (popupToast) {
       const timer = setTimeout(() => {
@@ -361,6 +356,7 @@ export default function App() {
               international: { ...DEFAULT_CONFIG.pricingByKit.international, ...(data.pricingByKit?.international || {}) },
               drugstore: { ...DEFAULT_CONFIG.pricingByKit.drugstore, ...(data.pricingByKit?.drugstore || {}) }
             },
+            guestDiscount: { ...DEFAULT_CONFIG.guestDiscount, ...(data.guestDiscount || {}) },
             theme: { ...DEFAULT_CONFIG.theme, ...(data.theme || {}) },
             adminTheme: { ...DEFAULT_CONFIG.adminTheme, ...(data.adminTheme || {}) },
             toggles: { ...DEFAULT_CONFIG.toggles, ...(data.toggles || {}) },
@@ -1970,6 +1966,63 @@ export default function App() {
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {activeFolderId === 'guest_discount_folder' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div>
+              <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                <Gift className="w-5 h-5" /> Extra Guest Group Discount Controller
+              </h3>
+              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure automatic percentage discounts for additional family guests.</p>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs">Enable Extra Guest Group Discount</span>
+                <button
+                  type="button"
+                  onClick={() => setDraft({
+                    ...draft,
+                    guestDiscount: {
+                      ...(draft.guestDiscount || {}),
+                      enabled: !(draft.guestDiscount?.enabled !== false)
+                    }
+                  })}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                >
+                  {draft.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{draft.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                </button>
+              </div>
+
+              <div>
+                <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Discount Percentage (%)</label>
+                <input
+                  type="number"
+                  value={draft.guestDiscount?.discountPercent ?? 15}
+                  onChange={e => setDraft({
+                    ...draft,
+                    guestDiscount: {
+                      ...(draft.guestDiscount || {}),
+                      discountPercent: Number(e.target.value)
+                    }
+                  })}
+                  className={`w-full p-3.5 rounded-[16px] font-mono text-purple-400 font-bold text-sm ${iosInputBg}`}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Guest Discount'}
+              onClick={() => handleSaveSpecificCard('Guest Discount')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Guest Discount' ? 'Saving...' : 'Save Guest Offer Live'}</span>
             </button>
           </div>
         )}
