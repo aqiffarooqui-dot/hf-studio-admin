@@ -268,11 +268,8 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.2.0", date: "August 29, 2026", status: "Active Live Production", changes: "10 aesthetic themes, translucent glass lens theme, and fixed blank section bugs." }
+  { version: "v3.3.0", date: "August 29, 2026", status: "Active Live Production", changes: "Added package add/remove, universal delete confirmation modals, auto-dismiss toast alerts, live status banner, and iOS pills layout." }
 ];
-
-const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
-const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
@@ -337,8 +334,8 @@ export default function App() {
   const [bookingDateFilter, setBookingDateFilter] = useState('');
   const [bookingSearchQuery, setBookingSearchQuery] = useState('');
   const [selectedBookings, setSelectedBookings] = useState([]);
+  
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null);
-
   const [rejectModalData, setRejectModalData] = useState(null);
   const [rejectionReasonText, setRejectionReasonText] = useState(PRE_ADDED_REJECTION_REASONS[0]);
 
@@ -346,6 +343,16 @@ export default function App() {
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
   const canvasRef = useRef(null);
+
+  // Auto-hide popup toast after 3.5 seconds
+  useEffect(() => {
+    if (actionStatus) {
+      const timer = setTimeout(() => {
+        setActionStatus('');
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [actionStatus]);
 
   useEffect(() => {
     const handlePopState = (e) => {
@@ -389,6 +396,10 @@ export default function App() {
             kitImages: {
               international: { ...DEFAULT_CONFIG.kitImages.international, ...(data.kitImages?.international || {}) },
               drugstore: { ...DEFAULT_CONFIG.kitImages.drugstore, ...(data.kitImages?.drugstore || {}) }
+            },
+            pricingByKit: {
+              international: { ...DEFAULT_CONFIG.pricingByKit.international, ...(data.pricingByKit?.international || {}) },
+              drugstore: { ...DEFAULT_CONFIG.pricingByKit.drugstore, ...(data.pricingByKit?.drugstore || {}) }
             },
             theme: { ...DEFAULT_CONFIG.theme, ...(data.theme || {}) },
             toggles: { ...DEFAULT_CONFIG.toggles, ...(data.toggles || {}) },
@@ -623,7 +634,7 @@ export default function App() {
       };
       const cleanData = JSON.parse(JSON.stringify(payload));
       await updateLiveConfig(cleanData);
-      setActionStatus(`🎉 ${sectionName} saved & synced live to Customer App!`);
+      setActionStatus(`🎉 ${sectionName} saved & synced live successfully!`);
     } catch (err) {
       setActionStatus(`❌ Error saving ${sectionName}: ${err.message}`);
     } finally {
@@ -704,8 +715,28 @@ export default function App() {
     if (!deleteConfirmModal) return;
     try {
       if (deleteConfirmModal.type === 'single') {
-        await deleteDoc(doc(db, "bookings", deleteConfirmModal.id));
-        setActionStatus("🗑️ Booking deleted successfully.");
+        if (deleteConfirmModal.isBooking) {
+          await deleteDoc(doc(db, "bookings", deleteConfirmModal.id));
+        } else if (deleteConfirmModal.isFeedback) {
+          await deleteDoc(doc(db, "feedbacks", deleteConfirmModal.id));
+        } else if (deleteConfirmModal.isPackage) {
+          const { kit, pkgKey } = deleteConfirmModal;
+          const updatedKitText = { ...draft.kitText };
+          const updatedKitImages = { ...draft.kitImages };
+          const updatedPricing = { ...draft.pricingByKit };
+          
+          if (updatedKitText[kit]) delete updatedKitText[kit][pkgKey];
+          if (updatedKitImages[kit]) delete updatedKitImages[kit][pkgKey];
+          if (updatedPricing[kit]) delete updatedPricing[kit][pkgKey];
+          
+          setDraft({
+            ...draft,
+            kitText: updatedKitText,
+            kitImages: updatedKitImages,
+            pricingByKit: updatedPricing
+          });
+        }
+        setActionStatus("🗑️ Item deleted successfully.");
       } else if (deleteConfirmModal.type === 'batch') {
         for (const id of selectedBookings) {
           await deleteDoc(doc(db, "bookings", id));
@@ -714,7 +745,7 @@ export default function App() {
         setSelectedBookings([]);
       }
     } catch (err) {
-      alert("Error deleting booking(s): " + err.message);
+      alert("Error executing deletion: " + err.message);
     } finally {
       setDeleteConfirmModal(null);
     }
@@ -726,6 +757,37 @@ export default function App() {
     } else {
       setSelectedBookings(filteredBookingsList.map(b => b.id));
     }
+  };
+
+  const handleAddNewPackage = () => {
+    const rawKey = prompt("Enter Package Key (e.g. deluxe_glam, royal_reception):");
+    if (!rawKey) return;
+    const cleanKey = rawKey.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const titleName = prompt("Enter Package Display Name (e.g. Deluxe Glamour Makeup):", "Deluxe Makeup");
+    if (!titleName) return;
+
+    const updatedKitText = { ...draft.kitText };
+    const updatedKitImages = { ...draft.kitImages };
+    const updatedPricing = { ...draft.pricingByKit };
+
+    ['international', 'drugstore'].forEach(kit => {
+      if (!updatedKitText[kit]) updatedKitText[kit] = {};
+      updatedKitText[kit][cleanKey] = { num: Object.keys(updatedKitText[kit]).length + 1, name: titleName, desc: "Professional signature look with premium cosmetics and styling." };
+
+      if (!updatedKitImages[kit]) updatedKitImages[kit] = {};
+      updatedKitImages[kit][cleanKey] = "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&auto=format&fit=crop&q=80";
+
+      if (!updatedPricing[kit]) updatedPricing[kit] = {};
+      updatedPricing[kit][cleanKey] = kit === 'international' ? 5000 : 3000;
+    });
+
+    setDraft({
+      ...draft,
+      kitText: updatedKitText,
+      kitImages: updatedKitImages,
+      pricingByKit: updatedPricing
+    });
+    setActionStatus(`🎉 Package "${titleName}" added successfully!`);
   };
 
   const handleGenerateSlipJpgOnDemand = (b) => {
@@ -883,16 +945,6 @@ export default function App() {
     }
   };
 
-  const handleDeleteFeedback = async (id) => {
-    if (confirm("Delete this client feedback?")) {
-      try {
-        await deleteDoc(doc(db, "feedbacks", id));
-      } catch (err) {
-        alert("Error deleting: " + err.message);
-      }
-    }
-  };
-
   const year = calendarDate.getFullYear();
   const month = calendarDate.getMonth();
   const firstDayIndex = new Date(year, month, 1).getDay();
@@ -925,6 +977,10 @@ export default function App() {
 
     return statusMatch && dateMatch && queryMatch;
   });
+
+  // Calculate live status metrics for header banner
+  const nextConfirmedBooking = bookingsList.find(b => b.status === 'confirmed');
+  const pendingBookingsCount = bookingsList.filter(b => b.status === 'pending').length;
 
   const activeColorThemeKey = draft.theme?.colorTheme || 'real_glass_lens';
   const currentTheme = THEME_STYLES[activeColorThemeKey] || THEME_STYLES.real_glass_lens;
@@ -1010,13 +1066,13 @@ export default function App() {
             <div className="w-14 h-14 rounded-full bg-rose-500/15 text-rose-500 flex items-center justify-center mx-auto shadow-md">
               <AlertTriangle className="w-7 h-7" />
             </div>
-            <h3 className="font-bold text-[18px]">Delete Booking?</h3>
+            <h3 className="font-bold text-[18px]">Confirm Deletion</h3>
             <p className={`text-[13px] ${iosMuted}`}>
-              {deleteConfirmModal.type === 'single' ? "Are you sure you want to delete this booking record? This action cannot be undone." : `Are you sure you want to delete ${selectedBookings.length} selected bookings?`}
+              {deleteConfirmModal.message || "Are you sure you want to delete this item? This action cannot be undone."}
             </p>
             <div className="flex gap-2.5 pt-2">
               <button onClick={() => setDeleteConfirmModal(null)} className={`flex-1 py-3 rounded-[14px] font-bold text-[13px] ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>Cancel</button>
-              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Delete</button>
+              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Delete</button>
             </div>
           </div>
         </div>
@@ -1055,38 +1111,61 @@ export default function App() {
         </div>
       )}
 
-      <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-5 sm:px-8 py-3.5 flex justify-between items-center shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#1C1C1E]/80 border-white/10 text-white' : 'bg-[#F2F2F7]/85 border-black/10 text-[#1C1C1E]'}`}>
-        <div className="flex items-center gap-3">
-          {draft.studioLogo ? (
-            <div className="w-10 h-10 rounded-[14px] bg-white/20 p-1 overflow-hidden shadow-sm">
-              <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
-            </div>
-          ) : (
-            <div className="w-10 h-10 rounded-[14px] bg-blue-500/15 text-blue-500 flex items-center justify-center shadow-sm">
-              <Crown className="w-5 h-5" />
-            </div>
-          )}
+      {/* Perfectly Aligned Sticky Header */}
+      <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#1C1C1E]/85 border-white/10 text-white' : 'bg-[#F2F2F7]/90 border-black/10 text-[#1C1C1E]'}`}>
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+          <div className="flex items-center gap-3">
+            {draft.studioLogo ? (
+              <div className="w-10 h-10 rounded-[14px] bg-white/20 p-1 overflow-hidden shadow-sm shrink-0">
+                <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-[14px] bg-blue-500/15 text-blue-500 flex items-center justify-center shadow-sm shrink-0">
+                <Crown className="w-5 h-5" />
+              </div>
+            )}
 
-          <div>
-            <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight">
-              H&F Studio Admin
-            </h1>
-            <p className={`text-[11px] ${iosMuted}`}>iOS 19 Liquid Glass Control</p>
+            <div>
+              <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
+                H&F Studio Admin
+              </h1>
+              <p className={`text-[11px] ${iosMuted}`}>iOS 19 Liquid Glass Control</p>
+            </div>
+          </div>
+
+          <div className="flex sm:hidden items-center gap-2">
+            <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2 rounded-[12px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-white text-slate-800 shadow-sm'}`}>
+              {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-blue-600" />}
+            </button>
+            <button onClick={() => setIsAuthenticated(false)} className="text-[12px] text-rose-500 font-bold px-2 py-1">Lock</button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-[14px] border ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-black/10 shadow-sm'}`}>
+        {/* Header Live Status Banner */}
+        <div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10 text-slate-200' : 'bg-white border-black/5 shadow-sm text-slate-700'}`}>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span>Next Booking: <strong className="text-[#007AFF]">{nextConfirmedBooking ? `${nextConfirmedBooking.clientName} (${nextConfirmedBooking.eventDate})` : 'None Confirmed'}</strong></span>
+          </div>
+          <span className="text-slate-300 dark:text-slate-600">•</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+            <span>Pending Review: <strong className="text-amber-500">{pendingBookingsCount}</strong></span>
+          </div>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-2.5">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[14px] border ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-black/10 shadow-sm'}`}>
             <ZoomIn className="w-3.5 h-3.5 text-blue-500" />
             <select
               value={screenZoom}
               onChange={e => setScreenZoom(Number(e.target.value))}
               className="bg-transparent text-xs font-bold outline-none cursor-pointer"
             >
-              <option value={80} className="text-black">80% (Compact)</option>
-              <option value={100} className="text-black">100% (Standard)</option>
-              <option value={115} className="text-black">115% (Zoomed)</option>
-              <option value={130} className="text-black">130% (Large)</option>
+              <option value={80} className="text-black">80%</option>
+              <option value={100} className="text-black">100%</option>
+              <option value={115} className="text-black">115%</option>
+              <option value={130} className="text-black">130%</option>
             </select>
           </div>
 
@@ -1137,14 +1216,16 @@ export default function App() {
         </div>
 
         {actionStatus && (
-          <div className="p-3.5 rounded-[16px] bg-blue-500/15 border border-blue-500/30 font-bold text-[13px] text-center text-blue-500 shadow-sm animate-fade-in">
-            {actionStatus}
+          <div className="p-3.5 rounded-[16px] bg-blue-500/15 border border-blue-500/30 font-bold text-[13px] text-center text-blue-500 shadow-sm animate-fade-in flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{actionStatus}</span>
           </div>
         )}
 
+        {/* iOS-Like Settings Pills Directory */}
         {!activeFolderId && (
           <div className={`p-4 sm:p-5 ${iosGroupCard}`}>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               {adminFolders.map((f, index) => {
                 const Icon = f.icon;
                 const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
@@ -1156,11 +1237,11 @@ export default function App() {
                     className={`flex items-center justify-between p-3.5 sm:p-4 rounded-[16px] transition-all duration-200 cursor-pointer group ${
                       isReorderMode 
                         ? 'bg-blue-500/10 ring-2 ring-blue-500 my-1' 
-                        : (isAdminDarkMode ? 'hover:bg-white/10' : 'hover:bg-[#E5E5EA]/60')
+                        : (isAdminDarkMode ? 'hover:bg-white/10 bg-white/[0.02]' : 'hover:bg-[#E5E5EA]/70 bg-slate-50/50')
                     }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] bg-[#007AFF] text-white flex items-center justify-center shadow-md shrink-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[12px] bg-[#007AFF] text-white flex items-center justify-center shadow-md shrink-0">
                         <Icon className="w-5 h-5" />
                       </div>
                       <div className="truncate">
@@ -1454,7 +1535,7 @@ export default function App() {
                 {selectedBookings.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setDeleteConfirmModal({ type: 'batch' })}
+                    onClick={() => setDeleteConfirmModal({ type: 'batch', message: `Are you sure you want to delete ${selectedBookings.length} selected bookings?` })}
                     className="px-4 py-2 rounded-[12px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md active:scale-95 flex items-center gap-1.5 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1511,7 +1592,7 @@ export default function App() {
 
                         <button
                           type="button"
-                          onClick={() => setDeleteConfirmModal({ type: 'single', id: b.id })}
+                          onClick={() => setDeleteConfirmModal({ type: 'single', isBooking: true, id: b.id, message: `Are you sure you want to delete booking for ${b.clientName}?` })}
                           className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
                           title="Delete Booking"
                         >
@@ -1630,7 +1711,7 @@ export default function App() {
                           <p className={`text-[11px] font-mono ${iosMuted}`}>📞 {item.clientPhone}</p>
                         )}
                       </div>
-                      <button onClick={() => handleDeleteFeedback(item.id)} className="p-1 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => setDeleteConfirmModal({ type: 'single', isFeedback: true, id: item.id, message: `Are you sure you want to delete feedback from ${item.clientName}?` })} className="p-1 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                     </div>
 
                     <p className={`text-[13px] leading-relaxed p-3 rounded-[14px] ${isAdminDarkMode ? 'bg-black/30 text-slate-300' : 'bg-white text-slate-800 shadow-sm'}`}>
@@ -1751,34 +1832,56 @@ export default function App() {
                 <p className={`text-[13px] ${iosMuted} mt-0.5`}>Manage custom look photos, package display names and descriptions per kit type.</p>
               </div>
 
-              <div className={`inline-flex p-1.5 rounded-[16px] border gap-1 self-start ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setEditingKitTab('international')}
-                  className={`px-4 py-2 rounded-[12px] text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
+                  onClick={handleAddNewPackage}
+                  className="px-4 py-2 rounded-[12px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
                 >
-                  👑 Luxury Kit
+                  <Plus className="w-4 h-4" /> Add Package
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingKitTab('drugstore')}
-                  className={`px-4 py-2 rounded-[12px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
-                >
-                  ✨ HD Kit
-                </button>
+
+                <div className={`inline-flex p-1.5 rounded-[16px] border gap-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingKitTab('international')}
+                    className={`px-4 py-2 rounded-[12px] text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
+                  >
+                    👑 Luxury Kit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingKitTab('drugstore')}
+                    className={`px-4 py-2 rounded-[12px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
+                  >
+                    ✨ HD Kit
+                  </button>
+                </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {partyPackages.concat(bridalPackages).map(k => {
-                const pkgText = draft.kitText?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitText[editingKitTab][k];
-                const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitImages[editingKitTab][k];
+              {Object.keys(draft.kitText?.[editingKitTab] || {}).map(k => {
+                const kitData = draft.kitText[editingKitTab] || {};
+                const pkgText = kitData[k] || { name: k, desc: '' };
+                const imgData = draft.kitImages?.[editingKitTab] || {};
+                const pkgImg = imgData[k] || '';
 
                 return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[22px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#007AFF] font-mono uppercase">{k.replace(/_/g, ' ')}</span>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase font-bold">{editingKitTab}</span>
+                      <span className="text-xs font-bold text-[#007AFF] font-mono uppercase">Key: {k}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase font-bold">{editingKitTab}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmModal({ type: 'single', isPackage: true, kit: editingKitTab, pkgKey: k, message: `Are you sure you want to delete package "${pkgText.name}"?` })}
+                          className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"
+                          title="Delete Package"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-3.5">
@@ -2073,9 +2176,16 @@ export default function App() {
                         </button>
 
                         <button onClick={() => {
-                          const copy = { ...draft.validCoupons };
-                          delete copy[code];
-                          setDraft({ ...draft, validCoupons: copy });
+                          setDeleteConfirmModal({
+                            type: 'single',
+                            message: `Are you sure you want to delete coupon "${code}"?`,
+                            isCustomAction: true,
+                            onConfirm: () => {
+                              const copy = { ...draft.validCoupons };
+                              delete copy[code];
+                              setDraft({ ...draft, validCoupons: copy });
+                            }
+                          });
                         }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
@@ -2414,7 +2524,15 @@ export default function App() {
                   />
                   <button
                     type="button"
-                    onClick={() => setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) })}
+                    onClick={() => {
+                      setDeleteConfirmModal({
+                        type: 'single',
+                        message: `Are you sure you want to delete announcement line #${idx + 1}?`,
+                        onConfirm: () => {
+                          setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) });
+                        }
+                      });
+                    }}
                     className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -2501,9 +2619,15 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => {
-                        const copy = { ...draft.convenienceZones };
-                        delete copy[zKey];
-                        setDraft({ ...draft, convenienceZones: copy });
+                        setDeleteConfirmModal({
+                          type: 'single',
+                          message: `Are you sure you want to delete zone "${zData.name}"?`,
+                          onConfirm: () => {
+                            const copy = { ...draft.convenienceZones };
+                            delete copy[zKey];
+                            setDraft({ ...draft, convenienceZones: copy });
+                          }
+                        });
                       }}
                       className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
                     >
@@ -2527,23 +2651,56 @@ export default function App() {
         )}
 
         {activeFolderId === 'prices' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
-            <h3 className="font-bold text-[16px] uppercase text-[#007AFF]">👑 International Luxury Vanity Kit (₹)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-              {partyPackages.concat(bridalPackages).map(k => (
-                <div key={k}>
-                  <label className={`block text-[11px] mb-1.5 capitalize font-bold ${iosMuted}`}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-[#007AFF] text-[13px] font-bold ${iosInputBg}`} />
-                </div>
-              ))}
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-3">
+              <h3 className="font-bold text-[16px] uppercase text-[#007AFF]">👑 International Luxury Vanity Kit (₹)</h3>
+              <button
+                type="button"
+                onClick={handleAddNewPackage}
+                className="px-3.5 py-1.5 rounded-[10px] bg-emerald-600 text-white text-xs font-bold flex items-center gap-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Package Rate
+              </button>
             </div>
-
-            <h3 className="font-bold text-[16px] uppercase text-rose-500 pt-4">✨ Premium HD Kit Rates (₹)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
-              {partyPackages.concat(bridalPackages).map(k => (
-                <div key={k}>
-                  <label className={`block text-[11px] mb-1.5 capitalize font-bold ${iosMuted}`}>{k.replace(/_/g, ' ')}</label>
-                  <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-[13px] font-bold ${iosInputBg}`} />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Object.keys(draft.pricingByKit?.international || {}).map(k => (
+                <div key={k} className={`p-4 rounded-[16px] border space-y-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono font-bold uppercase text-[#007AFF]">{k.replace(/_/g, ' ')}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteConfirmModal({
+                          type: 'single',
+                          message: `Are you sure you want to delete rate for "${k}"?`,
+                          onConfirm: () => {
+                            const updatedInt = { ...draft.pricingByKit.international };
+                            const updatedDrug = { ...draft.pricingByKit.drugstore };
+                            delete updatedInt[k];
+                            delete updatedDrug[k];
+                            setDraft({
+                              ...draft,
+                              pricingByKit: { international: updatedInt, drugstore: updatedDrug }
+                            });
+                          }
+                        });
+                      }}
+                      className="p-1 text-rose-500 hover:bg-rose-500/10 rounded"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>Luxury Rate (₹)</label>
+                      <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-[12px] font-mono text-[#007AFF] text-xs font-bold ${iosInputBg}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>HD Rate (₹)</label>
+                      <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-[12px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
