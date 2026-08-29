@@ -220,7 +220,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.6.2", date: "August 29, 2026", status: "Active Live Production", changes: "Added Guest Offer control folder card, robust fallback renders, and centered confirmation dialogs." }
+  { version: "v3.6.3", date: "August 29, 2026", status: "Active Live Production", changes: "Added null-safety checks to prevent white/blank screen crashes on initial render." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -424,7 +424,7 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (pinInput === (draft.adminPin || "8760")) {
+    if (pinInput === ((draft && draft.adminPin) || "8760")) {
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
     } else {
@@ -545,7 +545,7 @@ export default function App() {
 
   const handleForgotPasswordSubmit = (e) => {
     e.preventDefault();
-    const targetEmail = draft.recoveryEmail || "aqiffarooqui@gmail.com";
+    const targetEmail = (draft && draft.recoveryEmail) || "aqiffarooqui@gmail.com";
     setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}! Check inbox.`);
     setTimeout(() => {
       setShowForgotPasswordModal(false);
@@ -555,7 +555,8 @@ export default function App() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (oldPinInput !== (draft.adminPin || "8760") && oldPinInput !== "8760") {
+    const currentPin = (draft && draft.adminPin) || "8760";
+    if (oldPinInput !== currentPin && oldPinInput !== "8760") {
       alert("Current PIN is incorrect.");
       return;
     }
@@ -683,9 +684,9 @@ export default function App() {
           await deleteDoc(doc(db, "feedbacks", deleteConfirmModal.id));
         } else if (deleteConfirmModal.isPackage) {
           const { kit, pkgKey } = deleteConfirmModal;
-          const updatedKitText = { ...draft.kitText };
-          const updatedKitImages = { ...draft.kitImages };
-          const updatedPricing = { ...draft.pricingByKit };
+          const updatedKitText = { ...(draft?.kitText || {}) };
+          const updatedKitImages = { ...(draft?.kitImages || {}) };
+          const updatedPricing = { ...(draft?.pricingByKit || {}) };
           
           if (updatedKitText[kit]) delete updatedKitText[kit][pkgKey];
           if (updatedKitImages[kit]) delete updatedKitImages[kit][pkgKey];
@@ -728,9 +729,9 @@ export default function App() {
     const titleName = prompt("Enter Package Display Name (e.g. Deluxe Glamour Makeup):", "Deluxe Makeup");
     if (!titleName) return;
 
-    const updatedKitText = { ...draft.kitText };
-    const updatedKitImages = { ...draft.kitImages };
-    const updatedPricing = { ...draft.pricingByKit };
+    const updatedKitText = { ...(draft?.kitText || {}) };
+    const updatedKitImages = { ...(draft?.kitImages || {}) };
+    const updatedPricing = { ...(draft?.pricingByKit || {}) };
 
     ['international', 'drugstore'].forEach(kit => {
       if (!updatedKitText[kit]) updatedKitText[kit] = {};
@@ -815,7 +816,7 @@ export default function App() {
       downloadLink.click();
     };
 
-    const logoUrlToLoad = draft.studioLogo || DEFAULT_CONFIG.studioLogo;
+    const logoUrlToLoad = (draft && draft.studioLogo) || DEFAULT_CONFIG.studioLogo;
     const logoImg = new Image();
     logoImg.crossOrigin = "anonymous";
     logoImg.src = logoUrlToLoad;
@@ -844,7 +845,7 @@ export default function App() {
           finalUrl = await compressImageFile(file, 900, 0.85);
         }
 
-        const copy = [...(draft.galleryPhotos || [])];
+        const copy = [...(draft?.galleryPhotos || [])];
         copy[index] = {
           title: copy[index]?.title || "Signature Transformation",
           sub: copy[index]?.sub || "HD Artistry",
@@ -867,9 +868,9 @@ export default function App() {
         setDraft({
           ...draft,
           kitImages: {
-            ...draft.kitImages,
+            ...(draft?.kitImages || {}),
             [kit]: {
-              ...(draft.kitImages?.[kit] || {}),
+              ...(draft?.kitImages?.[kit] || {}),
               [pkgKey]: compressedBase64
             }
           }
@@ -943,12 +944,12 @@ export default function App() {
   const nextConfirmedBooking = bookingsList.find(b => b.status === 'confirmed');
   const pendingBookingsCount = bookingsList.filter(b => b.status === 'pending').length;
 
-  const activeAdminThemeKey = draft?.adminTheme?.colorTheme || 'real_glass_lens';
+  const activeAdminThemeKey = (draft && draft.adminTheme && draft.adminTheme.colorTheme) || 'real_glass_lens';
   const adminThemeStyle = THEME_STYLES[activeAdminThemeKey] || THEME_STYLES.real_glass_lens;
-  const currentFontFamily = FONT_MAP[draft?.theme?.fontFamily] || FONT_MAP.sans;
+  const currentFontFamily = FONT_MAP[(draft && draft.theme && draft.theme.fontFamily)] || FONT_MAP.sans;
 
   const iosBg = isAdminDarkMode ? "bg-[#090a0f] text-[#F2F2F7]" : "bg-[#f4f7fe] text-[#1C1C1E]";
-  const iosGroupCard = adminThemeStyle?.cardBg || THEME_STYLES.real_glass_lens.cardBg;
+  const iosGroupCard = adminThemeStyle.cardBg;
   const iosInputBg = isAdminDarkMode ? "bg-white/10 text-white border border-white/15 rounded-[16px]" : "bg-white text-[#1C1C1E] border border-black/10 rounded-[16px] shadow-sm";
   const iosMuted = isAdminDarkMode ? "text-[#a1a1aa]" : "text-[#71717a]";
 
@@ -965,7 +966,7 @@ export default function App() {
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
             <h2 className="text-[22px] font-bold tracking-tight">Recover Password</h2>
-            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{draft?.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
+            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{(draft && draft.recoveryEmail) || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
               <div className="p-3.5 rounded-[16px] bg-emerald-500/20 text-emerald-300 text-[13px] font-semibold border border-emerald-500/30">
@@ -2516,7 +2517,7 @@ export default function App() {
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-purple-400 font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
                       </div>
                       <p className={`text-[12px] truncate max-w-md ${iosMuted}`}>{log.userAgent}</p>
                     </div>
