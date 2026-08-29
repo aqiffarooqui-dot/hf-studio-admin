@@ -364,7 +364,7 @@ export default function App() {
           }));
           if (data.adminFoldersOrder && Array.isArray(data.adminFoldersOrder)) {
             const reordered = data.adminFoldersOrder.map(id => INITIAL_FOLDERS.find(f => f.id === id)).filter(Boolean);
-            if (reordered.length === INITIAL_FOLDERS.length) {
+            if (reordered.length > 0) {
               setAdminFolders(reordered);
             }
           }
@@ -940,16 +940,15 @@ export default function App() {
     return statusMatch && dateMatch && queryMatch;
   });
 
-  // Calculate live status metrics for header banner
   const nextConfirmedBooking = bookingsList.find(b => b.status === 'confirmed');
   const pendingBookingsCount = bookingsList.filter(b => b.status === 'pending').length;
 
-  const activeAdminThemeKey = draft.adminTheme?.colorTheme || 'real_glass_lens';
+  const activeAdminThemeKey = draft?.adminTheme?.colorTheme || 'real_glass_lens';
   const adminThemeStyle = THEME_STYLES[activeAdminThemeKey] || THEME_STYLES.real_glass_lens;
-  const currentFontFamily = FONT_MAP[draft.theme?.fontFamily] || FONT_MAP.sans;
+  const currentFontFamily = FONT_MAP[draft?.theme?.fontFamily] || FONT_MAP.sans;
 
   const iosBg = isAdminDarkMode ? "bg-[#090a0f] text-[#F2F2F7]" : "bg-[#f4f7fe] text-[#1C1C1E]";
-  const iosGroupCard = adminThemeStyle.cardBg;
+  const iosGroupCard = adminThemeStyle?.cardBg || THEME_STYLES.real_glass_lens.cardBg;
   const iosInputBg = isAdminDarkMode ? "bg-white/10 text-white border border-white/15 rounded-[16px]" : "bg-white text-[#1C1C1E] border border-black/10 rounded-[16px] shadow-sm";
   const iosMuted = isAdminDarkMode ? "text-[#a1a1aa]" : "text-[#71717a]";
 
@@ -966,7 +965,7 @@ export default function App() {
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
             <h2 className="text-[22px] font-bold tracking-tight">Recover Password</h2>
-            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{draft.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
+            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{draft?.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
               <div className="p-3.5 rounded-[16px] bg-emerald-500/20 text-emerald-300 text-[13px] font-semibold border border-emerald-500/30">
@@ -1100,7 +1099,7 @@ export default function App() {
       <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
-            {draft.studioLogo ? (
+            {draft?.studioLogo ? (
               <div className="w-10 h-10 rounded-[14px] bg-white/20 p-1 overflow-hidden shadow-sm shrink-0 border border-purple-500/30">
                 <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
               </div>
@@ -1324,14 +1323,14 @@ export default function App() {
                 ) : (
                   <div className="space-y-2">
                     <p className={`text-[12px] ${iosMuted}`}>
-                      {draft.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
+                      {draft?.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
                     </p>
                     <button
                       type="button"
                       onClick={handleRegisterFingerprintScan}
                       className="px-5 py-2.5 rounded-[14px] bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[13px] shadow active:scale-95 transition"
                     >
-                      {draft.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
+                      {draft?.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
                     </button>
                   </div>
                 )}
@@ -1343,9 +1342,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, biometricEnabled: !draft.biometricEnabled })}
-                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft?.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
                   >
-                    {draft.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
+                    {draft?.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
 
@@ -1354,9 +1353,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, faceIdEnabled: !draft.faceIdEnabled })}
-                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft?.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
                   >
-                    {draft.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
+                    {draft?.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
               </div>
@@ -1392,7 +1391,7 @@ export default function App() {
               
               <input
                 type="email"
-                value={draft.recoveryEmail || "aqiffarooqui@gmail.com"}
+                value={draft?.recoveryEmail || "aqiffarooqui@gmail.com"}
                 onChange={e => setDraft({ ...draft, recoveryEmail: e.target.value })}
                 className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-purple-400 border ${iosInputBg}`}
               />
@@ -1866,7 +1865,7 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {Object.keys(draft.kitText?.[editingKitTab] || {}).map(k => {
+              {Object.keys(draft?.kitText?.[editingKitTab] || {}).map(k => {
                 const pkgText = draft.kitText[editingKitTab][k] || { name: k, desc: '' };
                 const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || '';
 
@@ -1991,10 +1990,10 @@ export default function App() {
                       enabled: !(draft.guestDiscount?.enabled !== false)
                     }
                   })}
-                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft?.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                 >
-                  {draft.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{draft.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                  {draft?.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{draft?.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
                 </button>
               </div>
 
@@ -2002,7 +2001,7 @@ export default function App() {
                 <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Discount Percentage (%)</label>
                 <input
                   type="number"
-                  value={draft.guestDiscount?.discountPercent ?? 15}
+                  value={draft?.guestDiscount?.discountPercent ?? 15}
                   onChange={e => setDraft({
                     ...draft,
                     guestDiscount: {
@@ -2041,11 +2040,11 @@ export default function App() {
             <div className={`p-5 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
+                  <span className={`w-3 h-3 rounded-full ${draft?.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
                   <h4 className="font-bold text-sm">App Down / Maintenance Mode</h4>
                 </div>
                 <p className={`text-xs max-w-lg leading-relaxed ${iosMuted}`}>
-                  {draft.isAppDown 
+                  {draft?.isAppDown 
                     ? "🔴 ON: Customer App is locked. Visitors see a polite maintenance banner stating system upgrades are in progress."
                     : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
                 </p>
@@ -2055,11 +2054,11 @@ export default function App() {
                 type="button"
                 onClick={() => setDraft({ ...draft, isAppDown: !draft.isAppDown })}
                 className={`px-5 py-3 rounded-[16px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
-                  draft.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
+                  draft?.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
                 }`}
               >
-                {draft.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                <span>{draft.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
+                {draft?.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                <span>{draft?.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
               </button>
             </div>
 
@@ -2096,10 +2095,10 @@ export default function App() {
                       enabled: !(draft.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft?.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                 >
-                  {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                  {draft?.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{draft?.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
                 </button>
               </div>
 
@@ -2108,7 +2107,7 @@ export default function App() {
                   <label className={`block text-[10px] mb-1 ${iosMuted}`}>Badge Tag</label>
                   <input
                     type="text"
-                    value={draft.floatingBanner?.tag || ''}
+                    value={draft?.floatingBanner?.tag || ''}
                     onChange={e => setDraft({
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
@@ -2120,7 +2119,7 @@ export default function App() {
                   <label className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Code</label>
                   <input
                     type="text"
-                    value={draft.floatingBanner?.code || ''}
+                    value={draft?.floatingBanner?.code || ''}
                     onChange={e => setDraft({
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
@@ -2134,7 +2133,7 @@ export default function App() {
                 <label className={`block text-[10px] mb-1 ${iosMuted}`}>Banner Title</label>
                 <input
                   type="text"
-                  value={draft.floatingBanner?.title || ''}
+                  value={draft?.floatingBanner?.title || ''}
                   onChange={e => setDraft({
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
@@ -2147,7 +2146,7 @@ export default function App() {
                 <label className={`block text-[10px] mb-1 ${iosMuted}`}>Action Button Text</label>
                 <input
                   type="text"
-                  value={draft.floatingBanner?.actionText || ''}
+                  value={draft?.floatingBanner?.actionText || ''}
                   onChange={e => setDraft({
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
@@ -2207,7 +2206,7 @@ export default function App() {
             </div>
 
             <div className="space-y-4">
-              {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
+              {Object.entries(draft?.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
                   <div key={code} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
@@ -2360,7 +2359,7 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(draft.galleryPhotos || []).map((item, idx) => (
+              {(draft?.galleryPhotos || []).map((item, idx) => (
                 <div key={idx} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-purple-400 font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
@@ -2456,7 +2455,7 @@ export default function App() {
                 { key: 'enableBrands', label: 'Vanity Brands Kit Tab', desc: 'Show/hide authentic cosmetics brand list' },
                 { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
               ].map(toggle => {
-                const isEnabled = draft.toggles?.[toggle.key] !== false;
+                const isEnabled = draft?.toggles?.[toggle.key] !== false;
                 return (
                   <div key={toggle.key} className={`p-4 rounded-[18px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="space-y-0.5">
@@ -2538,7 +2537,7 @@ export default function App() {
             </h3>
             <textarea
               rows={6}
-              value={draft.announcements?.[0] || ""}
+              value={draft?.announcements?.[0] || ""}
               onChange={e => {
                 const updated = [...(draft.announcements || [])];
                 updated[0] = e.target.value;
@@ -2576,7 +2575,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-              {(draft.announcements || []).map((line, idx) => (
+              {(draft?.announcements || []).map((line, idx) => (
                 <div key={idx} className="flex gap-2.5 items-center">
                   <span className="text-[13px] font-mono font-bold text-purple-400 w-6">#{idx + 1}</span>
                   <input
@@ -2651,7 +2650,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-              {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
+              {Object.entries(draft?.convenienceZones || {}).map(([zKey, zData]) => (
                 <div key={zKey} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex-1 w-full space-y-1">
                     <span className="text-[11px] font-mono text-purple-400 uppercase font-bold">Zone Key: {zKey}</span>
@@ -2731,7 +2730,7 @@ export default function App() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Object.keys(draft.pricingByKit?.international || {}).map(k => (
+              {Object.keys(draft?.pricingByKit?.international || {}).map(k => (
                 <div key={k} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-mono font-bold uppercase text-purple-400">Key: {k}</span>
@@ -2761,11 +2760,11 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
                       <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>Luxury Rate (₹)</label>
-                      <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-purple-400 text-xs font-bold ${iosInputBg}`} />
+                      <input type="number" value={draft?.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-purple-400 text-xs font-bold ${iosInputBg}`} />
                     </div>
                     <div>
                       <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>HD Rate (₹)</label>
-                      <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
+                      <input type="number" value={draft?.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
                     </div>
                   </div>
                 </div>
@@ -2799,7 +2798,7 @@ export default function App() {
                 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Color Theme</label>
-                  <select value={draft.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
+                  <select value={draft?.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
                     <option value="real_glass_lens">🔮 Real Glass Lens (Translucent Mirror)</option>
                     <option value="real_ios_glass">🍎 Real iOS Liquid Glass</option>
                     <option value="liquid_glass">💎 Liquid Glass iOS</option>
@@ -2815,7 +2814,7 @@ export default function App() {
 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Font Family</label>
-                  <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
+                  <select value={draft?.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
                     <option value="sans">Plus Jakarta Sans</option>
                     <option value="outfit">Outfit (iOS Glass Minimal)</option>
                     <option value="serif">Playfair Display (Royal)</option>
@@ -2837,7 +2836,7 @@ export default function App() {
                 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Admin Aura Theme</label>
-                  <select value={draft.adminTheme?.colorTheme || 'admin_aurora'} onChange={e => setDraft({ ...draft, adminTheme: { ...draft.adminTheme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
+                  <select value={draft?.adminTheme?.colorTheme || 'admin_aurora'} onChange={e => setDraft({ ...draft, adminTheme: { ...draft.adminTheme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
                     <option value="admin_aurora">✨ Admin Aurora (Purple Neon Glow)</option>
                     <option value="sunset_glow">🌅 Sunset Amber Glow</option>
                     <option value="cyber_matrix">⚡ Cyber Matrix Emerald</option>
@@ -2847,7 +2846,7 @@ export default function App() {
 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Default Customer Mode</label>
-                  <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
+                  <select value={draft?.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
                     <option value="light">☀️ Light Mode</option>
                     <option value="dark">🌙 Dark Mode</option>
                   </select>
@@ -2886,7 +2885,7 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow border">
-                  {draft.studioLogo ? (
+                  {draft?.studioLogo ? (
                     <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
                     <Crown className="w-7 h-7 text-slate-400" />
@@ -2897,7 +2896,7 @@ export default function App() {
                   <input
                     type="text"
                     placeholder="Paste Logo Image URL"
-                    value={draft.studioLogo || ''}
+                    value={draft?.studioLogo || ''}
                     onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
                     className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
@@ -2919,14 +2918,14 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-purple-500/40 shrink-0 shadow">
-                  <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={draft?.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex-1 w-full space-y-2">
                   <input
                     type="text"
                     placeholder="Paste Profile Photo URL"
-                    value={draft.profileImage || ''}
+                    value={draft?.profileImage || ''}
                     onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
                     className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
@@ -2941,19 +2940,19 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Display Title</label>
-                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
+                <input type="text" value={draft?.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Booking Contact Number</label>
-                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-purple-400 ${iosInputBg}`} />
+                <input type="text" value={draft?.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-purple-400 ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
+                <input type="text" value={draft?.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Artist Tagline / Subtitle</label>
-                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
+                <input type="text" value={draft?.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
               </div>
             </div>
 
