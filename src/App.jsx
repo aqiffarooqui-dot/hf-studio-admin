@@ -271,6 +271,9 @@ const ADMIN_APP_VERSIONS = [
   { version: "v3.2.0", date: "August 29, 2026", status: "Active Live Production", changes: "10 aesthetic themes, translucent glass lens theme, and fixed blank section bugs." }
 ];
 
+const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
+const bridalPackages = ['engagement_bride', 'royal_bridal'];
+
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1193,16 +1196,16 @@ export default function App() {
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
                           </button>
-                        </div>
-                      ) : (
-                        <ChevronRight className={`w-4 h-4 ${iosMuted}`} />
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <ChevronRight className={`w-4 h-4 ${iosMuted}`} />
+                    )}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
+        </div>
         )}
 
         {activeFolderId === 'general' && (
@@ -1484,10 +1487,10 @@ export default function App() {
                               } else {
                                 setSelectedBookings([...selectedBookings, b.id]);
                               }
-                            }}
-                            className="mt-1 w-4 h-4 accent-[#007AFF] cursor-pointer"
-                          />
-                          <div className="min-w-0">
+                          }}
+                          className="mt-1 w-4 h-4 accent-[#007AFF] cursor-pointer"
+                        />
+                        <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-mono text-[12px] font-bold text-[#007AFF] bg-blue-500/10 px-2 py-0.5 rounded-[8px]">
                                 {b.bookingNumber || '#HF-PENDING'}
@@ -1504,95 +1507,95 @@ export default function App() {
                             <h4 className="font-bold text-[16px] mt-1.5 truncate">{b.clientName}</h4>
                             <p className={`text-[12px] font-mono ${iosMuted}`}>📞 {b.clientPhone}</p>
                           </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setDeleteConfirmModal({ type: 'single', id: b.id })}
-                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
-                          title="Delete Booking"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       </div>
 
-                      {conflictingConfirmedBooking && (
-                        <div className="p-3 rounded-[14px] bg-rose-500/15 text-rose-700 text-[12px] space-y-0.5">
-                          <div className="flex items-center gap-1.5 font-bold">
-                            <AlertTriangle className="w-4 h-4 shrink-0" />
-                            <span>STUDIO BUSY FOR THIS DATE!</span>
-                          </div>
-                          <p className="text-[11px]">You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.</p>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirmModal({ type: 'single', id: b.id })}
+                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
+                        title="Delete Booking"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {conflictingConfirmedBooking && (
+                      <div className="p-3 rounded-[14px] bg-rose-500/15 text-rose-700 text-[12px] space-y-0.5">
+                        <div className="flex items-center gap-1.5 font-bold">
+                          <AlertTriangle className="w-4 h-4 shrink-0" />
+                          <span>STUDIO BUSY FOR THIS DATE!</span>
+                        </div>
+                        <p className="text-[11px]">You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.</p>
+                      </div>
+                    )}
+
+                    <div className={`text-[13px] space-y-1 border-t border-b py-2.5 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+                      <div className="flex justify-between"><span className={iosMuted}>Event Date:</span><strong className="text-[#007AFF] font-mono">{b.eventDate}</strong></div>
+                      <div className="flex justify-between"><span className={iosMuted}>Package:</span><span className="font-medium">{b.packageName}</span></div>
+                      <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
+                      <div className="flex justify-between"><span className={iosMuted}>Extra Guests:</span><span className="font-medium">{b.extraGuestsCount || 0} Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                      <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName}</span></div>
+                      <div className="flex justify-between"><span className={iosMuted}>Address:</span><span className="truncate max-w-[180px]">{b.venueAddress}</span></div>
+                      {b.rejectionReason && (
+                        <div className="p-2.5 rounded-[10px] bg-rose-500/15 text-rose-700 text-[11px]">
+                          <strong>Rejection Note:</strong> {b.rejectionReason}
                         </div>
                       )}
-
-                      <div className={`text-[13px] space-y-1 border-t border-b py-2.5 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
-                        <div className="flex justify-between"><span className={iosMuted}>Event Date:</span><strong className="text-[#007AFF] font-mono">{b.eventDate}</strong></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Package:</span><span className="font-medium">{b.packageName}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Extra Guests:</span><span className="font-medium">{b.extraGuestsCount || 0} Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Address:</span><span className="truncate max-w-[180px]">{b.venueAddress}</span></div>
-                        {b.rejectionReason && (
-                          <div className="p-2.5 rounded-[10px] bg-rose-500/15 text-rose-700 text-[11px]">
-                            <strong>Rejection Note:</strong> {b.rejectionReason}
-                          </div>
-                        )}
-                        <div className="flex justify-between pt-1 font-bold"><span>Total Amount:</span><span className="text-[#007AFF] font-mono">₹{b.totalAmount?.toLocaleString('en-IN')}</span></div>
-                      </div>
-
-                      <div className="space-y-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleAcceptBookingWhatsApp(b)}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[12px] shadow-sm flex items-center justify-center gap-1.5 transition"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                          <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
-                        </button>
-
-                        <div className="grid grid-cols-3 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleManualStatusChange(b.id, 'confirmed')}
-                            className="py-2 bg-blue-500/15 text-blue-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
-                          >
-                            <Check className="w-3 h-3" /> Accept
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleManualStatusChange(b.id, 'pending')}
-                            className="py-2 bg-amber-500/15 text-amber-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
-                          >
-                            <RotateCcw className="w-3 h-3" /> Pending
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRejectModalData(b);
-                              setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
-                            }}
-                            className="py-2 bg-rose-500/15 text-rose-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
-                          >
-                            <Ban className="w-3 h-3" /> Reject
-                          </button>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className="w-full py-2 bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1.5 transition"
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Download Status Slip (.JPG)</span>
-                        </button>
-                      </div>
+                      <div className="flex justify-between pt-1 font-bold"><span>Total Amount:</span><span className="text-[#007AFF] font-mono">₹{b.totalAmount?.toLocaleString('en-IN')}</span></div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+
+                    <div className="space-y-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptBookingWhatsApp(b)}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[12px] shadow-sm flex items-center justify-center gap-1.5 transition"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
+                      </button>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleManualStatusChange(b.id, 'confirmed')}
+                          className="py-2 bg-blue-500/15 text-blue-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
+                        >
+                          <Check className="w-3 h-3" /> Accept
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleManualStatusChange(b.id, 'pending')}
+                          className="py-2 bg-amber-500/15 text-amber-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
+                        >
+                          <RotateCcw className="w-3 h-3" /> Pending
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRejectModalData(b);
+                            setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
+                          }}
+                          className="py-2 bg-rose-500/15 text-rose-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
+                        >
+                          <Ban className="w-3 h-3" /> Reject
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleGenerateSlipJpgOnDemand(b)}
+                        className="w-full py-2 bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1.5 transition"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download Status Slip (.JPG)</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
         )}
 
         {activeFolderId === 'feedbacks' && (
@@ -1767,11 +1770,9 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {(partyPackages.concat(bridalPackages)).map(k => {
-                const kitData = draft.kitText?.[editingKitTab] || DEFAULT_KIT_TEXT[editingKitTab];
-                const pkgText = kitData?.[k] || DEFAULT_KIT_TEXT[editingKitTab][k] || { num: 1, name: k, desc: '' };
-                const imgData = draft.kitImages?.[editingKitTab] || DEFAULT_KIT_IMAGES[editingKitTab];
-                const pkgImg = imgData?.[k] || DEFAULT_KIT_IMAGES[editingKitTab][k] || '';
+              {partyPackages.concat(bridalPackages).map(k => {
+                const pkgText = draft.kitText?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitText[editingKitTab][k];
+                const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || DEFAULT_CONFIG.kitImages[editingKitTab][k];
 
                 return (
                   <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
@@ -1788,7 +1789,7 @@ export default function App() {
                         <input
                           type="text"
                           placeholder="Image URL"
-                          value={pkgImg}
+                          value={pkgImg || ''}
                           onChange={e => setDraft({
                             ...draft,
                             kitImages: {
@@ -1813,715 +1814,52 @@ export default function App() {
                         <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Package Display Name</span>
                         <input
                           type="text"
-                          value={pkgText.name}
+                          value={pkgText.name || ''}
                           onChange={e => setDraft({
                             ...draft,
                             kitText: {
                               ...(draft.kitText || {}),
                               [editingKitTab]: {
-                                ...kitData,
+                                ...(draft.kitText?.[editingKitTab] || {}),
                                 [k]: { ...pkgText, name: e.target.value }
-                              }
                             }
-                          })}
-                          className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
-                        />
+                          }
+                        })}
+                        className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                      />
                       </div>
                       <div>
                         <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description</span>
                         <textarea
                           rows={2}
-                          value={pkgText.desc}
+                          value={pkgText.desc || ''}
                           onChange={e => setDraft({
                             ...draft,
                             kitText: {
                               ...(draft.kitText || {}),
                               [editingKitTab]: {
-                                ...kitData,
+                                ...(draft.kitText?.[editingKitTab] || {}),
                                 [k]: { ...pkgText, desc: e.target.value }
                               }
                             }
-                          })}
-                          className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Package Master'}
-              onClick={() => handleSaveSpecificCard('Package Master')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'app_maintenance' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-            <div>
-              <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                <Wrench className="w-5 h-5" /> App Down & Maintenance Controller
-              </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                Turn on to politely lock customer app with an elegant maintenance notice during upgrades.
-              </p>
-            </div>
-
-            <div className={`p-5 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
-                  <h4 className="font-bold text-sm">App Down / Maintenance Mode</h4>
-                </div>
-                <p className={`text-xs max-w-lg leading-relaxed ${iosMuted}`}>
-                  {draft.isAppDown 
-                    ? "🔴 ON: Customer App is locked. Visitors see a polite maintenance banner stating system upgrades are in progress."
-                    : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setDraft({ ...draft, isAppDown: !draft.isAppDown })}
-                className={`px-5 py-3 rounded-[14px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
-                  draft.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
-                }`}
-              >
-                {draft.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                <span>{draft.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Maintenance Mode'}
-              onClick={() => handleSaveSpecificCard('Maintenance Mode')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'floating' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-            <div>
-              <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                <Gift className="w-5 h-5" /> Floating Promo Offer Banner Controller
-              </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure bottom-right floating offer pill text, code and activation status.</p>
-            </div>
-
-            <div className={`p-5 rounded-[18px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-xs">Enable Floating Promo Banner Widget</span>
-                <button
-                  type="button"
-                  onClick={() => setDraft({
-                    ...draft,
-                    floatingBanner: {
-                      ...(draft.floatingBanner || {}),
-                      enabled: !(draft.floatingBanner?.enabled !== false)
-                    }
-                  })}
-                  className={`px-3 py-1.5 rounded-[12px] font-bold text-xs flex items-center gap-1.5 ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
-                >
-                  {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className={`block text-[10px] mb-1 ${iosMuted}`}>Badge Tag</label>
-                  <input
-                    type="text"
-                    value={draft.floatingBanner?.tag || ''}
-                    onChange={e => setDraft({
-                      ...draft,
-                      floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
-                    })}
-                    className={`w-full p-3 rounded-[12px] text-xs ${iosInputBg}`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Code</label>
-                  <input
-                    type="text"
-                    value={draft.floatingBanner?.code || ''}
-                    onChange={e => setDraft({
-                      ...draft,
-                      floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
-                    })}
-                    className={`w-full p-3 rounded-[12px] text-xs font-mono font-bold text-[#007AFF] ${iosInputBg}`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className={`block text-[10px] mb-1 ${iosMuted}`}>Banner Title</label>
-                <input
-                  type="text"
-                  value={draft.floatingBanner?.title || ''}
-                  onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
-                  })}
-                  className={`w-full p-3 rounded-[12px] text-xs ${iosInputBg}`}
-                />
-              </div>
-
-              <div>
-                <label className={`block text-[10px] mb-1 ${iosMuted}`}>Action Button Text</label>
-                <input
-                  type="text"
-                  value={draft.floatingBanner?.actionText || ''}
-                  onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
-                  })}
-                  className={`w-full p-3 rounded-[12px] text-xs ${iosInputBg}`}
-                />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Floating Banner'}
-              onClick={() => handleSaveSpecificCard('Floating Banner')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'coupons' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
-              <div>
-                <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                  <Tag className="w-5 h-5" /> Promo Coupons Manager & Expiry Timers
-                </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Set coupon discounts, active status and expiry timer dates.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const code = prompt("Enter Coupon Code:");
-                  if (code) {
-                    const clean = code.toUpperCase().trim();
-                    setDraft({
-                      ...draft,
-                      validCoupons: {
-                        ...draft.validCoupons,
-                        [clean]: {
-                          type: "percent",
-                          value: 10,
-                          label: "Special Seasonal Promo",
-                          maxUses: 1,
-                          enabled: true,
-                          expiryDate: "2026-12-31T23:59"
-                        }
-                      }
-                    });
-                  }
-                }}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Coupon
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
-                const isCodeActive = c.enabled !== false;
-                return (
-                  <div key={code} className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-mono text-[#007AFF] font-bold text-[15px]">{code}</span>
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
-                          {isCodeActive ? 'ACTIVE' : 'DISABLED'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setDraft({
-                            ...draft,
-                            validCoupons: {
-                              ...draft.validCoupons,
-                              [code]: { ...c, enabled: !isCodeActive }
-                            }
-                          })}
-                          className={`px-3 py-1.5 rounded-[12px] font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
-                        >
-                          {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                          <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
-                        </button>
-
-                        <button onClick={() => {
-                          const copy = { ...draft.validCoupons };
-                          delete copy[code];
-                          setDraft({ ...draft, validCoupons: copy });
-                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div>
-                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>Discount Type</span>
-                        <select
-                          value={c.type || 'percent'}
-                          onChange={e => setDraft({
-                            ...draft,
-                            validCoupons: {
-                              ...draft.validCoupons,
-                              [code]: { ...c, type: e.target.value }
-                            }
-                          })}
-                          className={`w-full p-2.5 rounded-[12px] text-xs font-bold ${iosInputBg}`}
-                        >
-                          <option value="percent">% Percent Off</option>
-                          <option value="flat">₹ Flat Discount</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
-                        <input
-                          type="number"
-                          value={c.value || 0}
-                          onChange={e => setDraft({
-                            ...draft,
-                            validCoupons: {
-                              ...draft.validCoupons,
-                              [code]: { ...c, value: Number(e.target.value) }
-                            }
-                          })}
-                          className={`w-full p-2.5 rounded-[12px] font-mono text-[#007AFF] text-xs font-bold ${iosInputBg}`}
-                        />
-                      </div>
-
-                      <div>
-                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>⏱️ Expiry Date & Time</span>
-                        <input
-                          type="datetime-local"
-                          value={c.expiryDate || ''}
-                          onChange={e => setDraft({
-                            ...draft,
-                            validCoupons: {
-                              ...draft.validCoupons,
-                              [code]: { ...c, expiryDate: e.target.value }
-                            }
-                          })}
-                          className={`w-full p-2.5 rounded-[12px] text-xs font-mono text-amber-500 ${iosInputBg}`}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Display Description / Label</span>
-                      <input
-                        type="text"
-                        value={c.label || ''}
-                        onChange={e => setDraft({
-                          ...draft,
-                          validCoupons: {
-                            ...draft.validCoupons,
-                            [code]: { ...c, label: e.target.value }
-                          }
                         })}
-                        className={`w-full p-2.5 rounded-[12px] text-xs ${iosInputBg}`}
+                        className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
                       />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Coupons'}
-              onClick={() => handleSaveSpecificCard('Coupons')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Coupons' ? 'Saving...' : 'Save Promo Coupons Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'gallery' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
-              <div>
-                <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                  <Film className="w-5 h-5" /> Transformations, Videos & GIFs Studio (20MB Max)
-                </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setDraft({
-                    ...draft,
-                    galleryPhotos: [
-                      ...(draft.galleryPhotos || []),
-                      { type: "video", title: "New Glam Transformation", sub: "16HR HD Finish", url: "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-applying-makeup-41419-large.mp4" }
-                    ]
-                  });
-                }}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Card
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(draft.galleryPhotos || []).map((item, idx) => (
-                <div key={idx} className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#007AFF] font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
-                    <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className={`block text-[10px] mb-1 ${iosMuted}`}>Type</label>
-                      <select value={item.type || 'video'} onChange={e => {
-                        const copy = [...draft.galleryPhotos];
-                        copy[idx] = { ...copy[idx], type: e.target.value };
-                        setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={`w-full p-2.5 rounded-[12px] text-xs font-bold ${iosInputBg}`}>
-                        <option value="video">🎥 Auto-play Video</option>
-                        <option value="image">🖼️ Image / Animated GIF</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className={`block text-[10px] mb-1 ${iosMuted}`}>Subtitle</label>
-                      <input type="text" value={item.sub || ''} onChange={e => {
-                        const copy = [...draft.galleryPhotos];
-                        copy[idx] = { ...copy[idx], sub: e.target.value };
-                        setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={`w-full p-2.5 rounded-[12px] text-xs ${iosInputBg}`} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className={`block text-[10px] mb-1 ${iosMuted}`}>Title</label>
-                    <input type="text" value={item.title || ''} onChange={e => {
-                      const copy = [...draft.galleryPhotos];
-                      copy[idx] = { ...copy[idx], title: e.target.value };
-                      setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={`w-full p-2.5 rounded-[12px] text-xs font-bold ${iosInputBg}`} />
-                  </div>
-
-                  <div>
-                    <label className={`block text-[10px] mb-1 ${iosMuted}`}>Direct URL (Video, GIF, or Image link)</label>
-                    <input type="text" value={item.url || ''} onChange={e => {
-                      const copy = [...draft.galleryPhotos];
-                      copy[idx] = { ...copy[idx], url: e.target.value };
-                      setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={`w-full p-2.5 rounded-[12px] text-xs font-mono text-[#007AFF] ${iosInputBg}`} />
-                  </div>
-
-                  <label className="block text-center py-2.5 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition shadow-sm">
-                    Upload Video / GIF / Image (&lt;20MB)
-                    <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Gallery Media'}
-              onClick={() => handleSaveSpecificCard('Gallery Media')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'toggles_master' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
-            <div>
-              <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                <SlidersHorizontal className="w-5 h-5" /> Master Feature & Section Toggles
-              </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Enable or disable any tab, section or feature on the customer app.</p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {[
-                { key: 'showLogoOnApp', label: 'Show Studio Logo on Main App', desc: 'Render uploaded brand logo in header and splash' },
-                { key: 'showProfileOnApp', label: 'Show Profile Photo on Main App', desc: 'Render artist avatar photo in header' },
-                { key: 'enableAnnouncements', label: 'Top Announcements Ticker', desc: 'Show/hide rotating top announcement bar' },
-                { key: 'enableCoupons', label: 'Promo Coupon System', desc: 'Enable/disable coupon codes application' },
-                { key: 'enableGuestDiscount', label: 'Extra Guest Group Discount', desc: 'Apply automatic savings on multiple guests' },
-                { key: 'enableFloatingBanner', label: 'Bottom Floating Offer Widget', desc: 'Show/hide bottom right floating promo pill' },
-                { key: 'enableGallery', label: 'Transformations Video Gallery Tab', desc: 'Show/hide signature video & photo lookbook' },
-                { key: 'enableBrands', label: 'Vanity Brands Kit Tab', desc: 'Show/hide authentic cosmetics brand list' },
-                { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
-              ].map(toggle => {
-                const isEnabled = draft.toggles?.[toggle.key] !== false;
-                return (
-                  <div key={toggle.key} className={`p-3.5 rounded-[16px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="space-y-0.5">
-                      <h4 className="font-bold text-[13px]">{toggle.label}</h4>
-                      <p className={`text-[11px] ${iosMuted}`}>{toggle.desc}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setDraft({
-                        ...draft,
-                        toggles: {
-                          ...(draft.toggles || {}),
-                          [toggle.key]: !isEnabled
-                        }
-                      })}
-                      className={`px-3.5 py-2 rounded-[14px] flex items-center gap-1 font-bold text-xs transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
-                    >
-                      {isEnabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                      <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Master Toggles'}
-              onClick={() => handleSaveSpecificCard('Master Toggles')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'traffic_logs' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                  <Activity className="w-5 h-5" /> Live Traffic & Instagram Visitor Logs
-                </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
-              </div>
-              <span className="text-[13px] font-mono font-bold bg-[#007AFF]/15 text-[#007AFF] px-3.5 py-1.5 rounded-full">
-                {visitorLogs.length} Recent Visits Logged
-              </span>
-            </div>
-
-            {visitorLogs.length === 0 ? (
-              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No visitor traffic recorded yet.</p>
-            ) : (
-              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
-                {visitorLogs.map(log => (
-                  <div key={log.id} className={`p-3.5 rounded-[16px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[13px] ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#007AFF] font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
                       </div>
-                      <p className={`text-[12px] truncate max-w-md ${iosMuted}`}>{log.userAgent}</p>
                     </div>
-                    <span className="text-[12px] text-[#007AFF] font-mono font-medium">
-                      {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeFolderId === 'promotions' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-              <Megaphone className="w-5 h-5" /> WhatsApp Broadcast Studio
-            </h3>
-            <textarea
-              rows={6}
-              value={draft.announcements?.[0] || ""}
-              onChange={e => {
-                const updated = [...(draft.announcements || [])];
-                updated[0] = e.target.value;
-                setDraft({...draft, announcements: updated});
-              }}
-              className={`w-full p-4 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
-            />
-            <button
-              type="button"
-              onClick={() => handleSaveSpecificCard('Broadcast Studio')}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 flex items-center justify-center gap-2 transition"
-            >
-              <Send className="w-4 h-4" />
-              <span>Save Broadcast Settings</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'announcements' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                  <Volume2 className="w-5 h-5" /> Top Announcement Lines Ticker
-                </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Edit rotating top banner messages displayed to clients.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDraft({ ...draft, announcements: [...(draft.announcements || []), "✨ New studio announcement line ✨"] })}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Line
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {(draft.announcements || []).map((line, idx) => (
-                <div key={idx} className="flex gap-2.5 items-center">
-                  <span className="text-[13px] font-mono font-bold text-[#007AFF] w-6">#{idx + 1}</span>
-                  <input
-                    type="text"
-                    value={line}
-                    onChange={(e) => {
-                      const copy = [...draft.announcements];
-                      copy[idx] = e.target.value;
-                      setDraft({ ...draft, announcements: copy });
-                    }}
-                    className={`flex-1 p-3.5 rounded-[14px] text-[13px] ${iosInputBg}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) })}
-                    className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Announcements'}
-              onClick={() => handleSaveSpecificCard('Announcements')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements Live'}</span>
-            </button>
+              );
+            })}
           </div>
-        )}
 
-        {activeFolderId === 'convenience' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                  <Car className="w-5 h-5" /> Travel Fees & Convenience Zones
-                </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Manage venue travel charges for customer locations.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const keyName = prompt("Enter Unique Zone Key (e.g. noida_ext):");
-                  if (keyName) {
-                    const cleanKey = keyName.toLowerCase().replace(/[^a-z0-9_]/g, '');
-                    setDraft({
-                      ...draft,
-                      convenienceZones: {
-                        ...draft.convenienceZones,
-                        [cleanKey]: { name: "New Location Zone", fee: 500 }
-                      }
-                    });
-                  }
-                }}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add Zone
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={`p-4 rounded-[16px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <div className="flex-1 w-full space-y-1">
-                    <span className="text-[11px] font-mono text-[#007AFF] uppercase font-bold">Zone Key: {zKey}</span>
-                    <input
-                      type="text"
-                      value={zData.name}
-                      onChange={(e) => setDraft({
-                        ...draft,
-                        convenienceZones: {
-                          ...draft.convenienceZones,
-                          [zKey]: { ...zData, name: e.target.value }
-                        }
-                      })}
-                      className={`w-full p-3 rounded-[12px] text-[13px] font-semibold ${iosInputBg}`}
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                    <label className={`text-[13px] font-bold ${iosMuted}`}>Fee (₹):</label>
-                    <input
-                      type="number"
-                      value={zData.fee}
-                      onChange={(e) => setDraft({
-                        ...draft,
-                        convenienceZones: {
-                          ...draft.convenienceZones,
-                          [zKey]: { ...zData, fee: Number(e.target.value) }
-                        }
-                      })}
-                      className={`w-32 p-3 rounded-[12px] font-mono text-[#007AFF] font-bold text-[13px] ${iosInputBg}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const copy = { ...draft.convenienceZones };
-                        delete copy[zKey];
-                        setDraft({ ...draft, convenienceZones: copy });
-                      }}
-                      className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Travel Fees'}
-              onClick={() => handleSaveSpecificCard('Travel Fees')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
-            </button>
+          <button
+            type="button"
+            disabled={savingSection === 'Package Master'}
+            onClick={() => handleSaveSpecificCard('Package Master')}
+            className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
           </div>
         )}
 
@@ -2555,165 +1893,7 @@ export default function App() {
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Rates' ? 'Saving...' : 'Save Package Rates Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'theme' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
-            <h3 className="font-bold text-[16px] uppercase text-[#007AFF]">Aesthetic Themes & Fonts (Synced)</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Color Theme</label>
-                <select value={draft.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-[#007AFF] ${iosInputBg}`}>
-                  <option value="real_glass_lens">🔮 Real Glass Lens (Translucent Mirror)</option>
-                  <option value="real_ios_glass">🍎 Real iOS Liquid Glass</option>
-                  <option value="liquid_glass">💎 Liquid Glass iOS</option>
-                  <option value="one_ui_9">✨ Samsung One UI 9</option>
-                  <option value="gold_rose">👑 Royal Gold Rose</option>
-                  <option value="champagne">🥂 Champagne Gold</option>
-                  <option value="emerald">💚 Emerald Luxe</option>
-                  <option value="violet">🔮 Midnight Orchid Violet</option>
-                  <option value="ruby">❤️ Ruby Velvet</option>
-                  <option value="sapphire">💙 Sapphire Royal</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Font Family</label>
-                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-[#007AFF] ${iosInputBg}`}>
-                  <option value="sans">Plus Jakarta Sans</option>
-                  <option value="outfit">Outfit (iOS Glass Minimal)</option>
-                  <option value="serif">Playfair Display (Royal)</option>
-                  <option value="cormorant">Cormorant Garamond</option>
-                  <option value="cinzel">Cinzel</option>
-                  <option value="montserrat">Montserrat</option>
-                  <option value="inter">Inter</option>
-                  <option value="poppins">Poppins</option>
-                  <option value="roboto">Roboto</option>
-                </select>
-              </div>
-
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Default Customer Mode</label>
-                <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
-                  <option value="light">☀️ Light Mode</option>
-                  <option value="dark">🌙 Dark Mode</option>
-                </select>
-              </div>
             </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Theme & Styles'}
-              onClick={() => handleSaveSpecificCard('Theme & Styles')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'profile' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-            <div>
-              <h3 className="font-bold text-[16px] text-[#007AFF] flex items-center gap-2">
-                <User className="w-5 h-5" /> Studio Identity, Logo & Social Profiles
-              </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure official studio title, upload custom logo & artist profile photo.</p>
-            </div>
-
-            <div className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#007AFF] uppercase flex items-center gap-2">
-                  <Crown className="w-4 h-4" /> 1. Official Studio Logo (Header & Splash)
-                </span>
-                <span className={`text-[11px] font-mono ${iosMuted}`}>Auto-Compressed</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-16 h-16 rounded-[16px] bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow border">
-                  {draft.studioLogo ? (
-                    <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
-                  ) : (
-                    <Crown className="w-7 h-7 text-slate-400" />
-                  )}
-                </div>
-
-                <div className="flex-1 w-full space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Paste Logo Image URL"
-                    value={draft.studioLogo || ''}
-                    onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
-                    className={`w-full p-3 rounded-[14px] text-[13px] font-mono ${iosInputBg}`}
-                  />
-                  <label className="inline-block px-4 py-2 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
-                    Upload & Compress Logo File
-                    <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <div className="flex items-center justify-between">
-                <span className="text-[12px] font-bold text-[#007AFF] uppercase flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
-                </span>
-                <span className={`text-[11px] font-mono ${iosMuted}`}>Avatar Card</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-[#007AFF]/40 shrink-0 shadow">
-                  <img src={draft.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
-                </div>
-
-                <div className="flex-1 w-full space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Paste Profile Photo URL"
-                    value={draft.profileImage || ''}
-                    onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
-                    className={`w-full p-3 rounded-[14px] text-[13px] font-mono ${iosInputBg}`}
-                  />
-                  <label className="inline-block px-4 py-2 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
-                    Upload & Compress Profile Photo
-                    <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Display Title</label>
-                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`} />
-              </div>
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Booking Contact Number</label>
-                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] font-mono text-[#007AFF] ${iosInputBg}`} />
-              </div>
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
-              </div>
-              <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Artist Tagline / Subtitle</label>
-                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`} />
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Studio Profile'}
-              onClick={() => handleSaveSpecificCard('Studio Profile')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile & Logo Live'}</span>
-            </button>
           </div>
         )}
 
