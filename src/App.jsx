@@ -27,9 +27,9 @@ const DEFAULT_CONFIG = {
   instagramHandle: "husna_farooqui_makeup",
   baseLocation: "Okhla / Jamia Nagar, New Delhi",
 
-  activeAppVersion: "v4.0.0",
+  activeAppVersion: "v4.1.0",
   appVersionsList: [
-    { version: "v4.0.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Ultimate production build with comprehensive booking breakdown, premium watermarked slips, and universal theme injection." }
+    { version: "v4.1.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Full exact pricing per guest package, detailed discount subsections for guest/promo discounts on slips & admin queues." }
   ],
 
   theme: {
@@ -241,7 +241,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.9.2", date: "August 30, 2026", status: "Active Live Production", changes: "Instant theme application without save, rich guest breakdown on booking cards and downloaded JPG slips with watermark logo." }
+  { version: "v4.1.0", date: "August 30, 2026", status: "Active Live Production", changes: "Added exact guest package pricing & rich promotional vs guest discount subsections in admin queue & generated watermarked slips." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -813,40 +813,40 @@ export default function App() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // Premium High-Resolution Canvas Dimensions (1200 x 2000)
+    // High-Resolution Professional Slip Canvas (1200 x 2200)
     canvas.width = 1200;
-    canvas.height = 2000;
+    canvas.height = 2200;
 
     const isRejected = b.status === 'rejected';
     const isConfirmed = b.status === 'confirmed';
 
     const drawAdminSlip = (logoImgObj) => {
-      // 1. Background Fill with Elegant Gradient
-      const bgGrad = ctx.createLinearGradient(0, 0, 1200, 2000);
-      bgGrad.addColorStop(0, '#0f172a');
+      // 1. Elegant Deep Gradient Background
+      const bgGrad = ctx.createLinearGradient(0, 0, 1200, 2200);
+      bgGrad.addColorStop(0, '#09090b');
       bgGrad.addColorStop(0.5, '#1e1b4b');
-      bgGrad.addColorStop(1, '#09090b');
+      bgGrad.addColorStop(1, '#0f172a');
       ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1200, 2000);
+      ctx.fillRect(0, 0, 1200, 2200);
 
-      // 2. Gold / Accent Border Frame
+      // 2. Gold / Purple Outer Accent Frames
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 6;
-      ctx.strokeRect(40, 40, 1120, 1920);
+      ctx.strokeRect(40, 40, 1120, 2120);
 
-      ctx.strokeStyle = 'rgba(192, 132, 252, 0.3)';
+      ctx.strokeStyle = 'rgba(192, 132, 252, 0.35)';
       ctx.lineWidth = 2;
-      ctx.strokeRect(55, 55, 1090, 1890);
+      ctx.strokeRect(55, 55, 1090, 2090);
 
-      // 3. Watermark Logo / Crest Background
+      // 3. Watermark Logo Center Crest
       if (logoImgObj) {
         ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.drawImage(logoImgObj, 300, 700, 600, 600);
+        ctx.globalAlpha = 0.08;
+        ctx.drawImage(logoImgObj, 300, 800, 600, 600);
         ctx.restore();
       }
 
-      // 4. Header Branding / Logo
+      // 4. Header Section with Logo & Studio Title
       if (logoImgObj) {
         ctx.save();
         ctx.beginPath();
@@ -904,7 +904,7 @@ export default function App() {
         600, 305
       );
 
-      // 5. Booking Rows Data with Full Pricing & Discount Breakdown
+      // 5. Booking Details Rows with full breakdown
       const rows = [
         { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
         { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
@@ -915,10 +915,10 @@ export default function App() {
         { label: 'BASE PACKAGE PRICE', val: `₹${b.basePackagePrice?.toLocaleString('en-IN') || 0}` },
         { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (+₹${b.zoneFee || 350})` },
         { label: 'EXACT VENUE ADDRESS', val: b.venueAddress || 'To be confirmed' },
-        { label: 'APPLIED PROMO COUPON', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0})` : 'None Applied' }
+        { label: 'PROMO CODE DISCOUNT', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0})` : 'None Applied' }
       ];
 
-      let startY = 375;
+      let startY = 370;
       rows.forEach((row, idx) => {
         ctx.fillStyle = idx % 2 === 0 ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.02)';
         ctx.fillRect(90, startY, 1020, 60);
@@ -936,10 +936,10 @@ export default function App() {
         startY += 64;
       });
 
-      // 6. Extra Family Guests Section if any
+      // 6. Extra Family Guests Section with individual package/pricing details
       if (b.extraGuestsList && b.extraGuestsList.length > 0) {
         startY += 10;
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.15)';
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
         ctx.fillRect(90, startY, 1020, 55);
 
         ctx.textAlign = 'left';
@@ -954,43 +954,49 @@ export default function App() {
 
         b.extraGuestsList.forEach((g, gIdx) => {
           const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
+          const rawP = currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 2500;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-          ctx.fillRect(90, startY, 1020, 48);
+          ctx.fillRect(90, startY, 1020, 50);
 
           ctx.textAlign = 'left';
           ctx.fillStyle = '#cbd5e1';
           ctx.font = '18px sans-serif';
-          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${g.packageKey || 'Party Makeup'}`, 140, startY + 31);
-          startY += 52;
+          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}) — Look: ${g.packageKey || 'Party'}`, 130, startY + 32);
+
+          ctx.textAlign = 'right';
+          ctx.font = '18px monospace';
+          ctx.fillStyle = '#34d399';
+          ctx.fillText(`₹${rawP.toLocaleString('en-IN')}`, 1070, startY + 32);
+          startY += 56;
         });
       }
 
       // 7. Total Final Amount Box
       startY += 15;
-      ctx.fillStyle = 'rgba(192, 132, 252, 0.2)';
-      ctx.fillRect(90, startY, 1020, 110);
+      ctx.fillStyle = 'rgba(192, 132, 252, 0.25)';
+      ctx.fillRect(90, startY, 1020, 115);
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 3;
-      ctx.strokeRect(90, startY, 1020, 110);
+      ctx.strokeRect(90, startY, 1020, 115);
 
       ctx.textAlign = 'center';
       ctx.fillStyle = '#e2e8f0';
       ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('FINAL LOCKED TOTAL AMOUNT', 600, startY + 38);
+      ctx.fillText('FINAL LOCKED TOTAL PAYABLE AMOUNT', 600, startY + 38);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 46px serif';
-      ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN') || 0}`, 600, startY + 90);
+      ctx.font = 'bold 48px serif';
+      ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN') || 0}`, 600, startY + 92);
 
       // Footer
       ctx.textAlign = 'center';
       ctx.fillStyle = '#64748b';
       ctx.font = '18px sans-serif';
-      ctx.fillText(`Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${currentDraftSafe.instagramHandle}`, 600, 1910);
+      ctx.fillText(`Studio Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${currentDraftSafe.instagramHandle}`, 600, 2110);
 
       ctx.fillStyle = '#c084fc';
       ctx.font = 'italic 18px sans-serif';
-      ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 1945);
+      ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 2145);
 
       const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
       const downloadLink = document.createElement('a');
@@ -1172,7 +1178,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.9.2 Production Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v4.1.0 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1301,7 +1307,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 {currentDraftSafe.studioName || 'H&F Studio Admin'}
               </h1>
-              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v3.9.2 Pro Suite</p>
+              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v4.1.0 Pro Suite</p>
             </div>
           </div>
 
@@ -2225,17 +2231,22 @@ export default function App() {
                         <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
                         <div className="flex justify-between"><span className={iosMuted}>Base Price:</span><span className="font-mono">₹{b.basePackagePrice?.toLocaleString('en-IN') || 0}</span></div>
                         
-                        {/* Rich Guest Breakdown */}
+                        {/* Rich Guest Breakdown with Exact Package & Price */}
                         <div className="pt-1 pb-1 border-t border-dashed border-slate-500/30">
                           <span className={`block text-[11px] font-bold ${adminThemeStyle.accentText}`}>Extra Family Guests ({b.extraGuestsCount || 0}):</span>
                           {b.extraGuestsList && b.extraGuestsList.length > 0 ? (
                             <div className="mt-1 space-y-1 pl-2">
-                              {b.extraGuestsList.map((g, gIdx) => (
-                                <div key={gIdx} className="text-[11px] flex justify-between">
-                                  <span className={iosMuted}>• Guest #{gIdx + 1} ({g.kit === 'international' ? 'Luxury' : 'HD'}):</span>
-                                  <span className="font-mono font-medium">{g.packageKey || 'Party Makeup'}</span>
-                                </div>
-                              ))}
+                              {b.extraGuestsList.map((g, gIdx) => {
+                                const guestRawP = currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 2500;
+                                const guestKitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
+                                const guestPkgName = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
+                                return (
+                                  <div key={gIdx} className="text-[11px] flex justify-between items-center">
+                                    <span className={iosMuted}>• Guest #{gIdx + 1} ({guestKitLabel}) — {guestPkgName}:</span>
+                                    <span className="font-mono font-medium text-emerald-400">₹{guestRawP.toLocaleString('en-IN')}</span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           ) : (
                             <span className={`text-[11px] ${iosMuted} pl-2`}>None</span>
@@ -3348,7 +3359,7 @@ export default function App() {
                 <span className={`text-[11px] font-mono ${iosMuted}`}>Avatar Card</span>
               </div>
 
-              <div className="flex flex-content items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-purple-500/40 shrink-0 shadow">
                   <img src={currentDraftSafe.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
@@ -3363,7 +3374,7 @@ export default function App() {
                   />
                   <label className={`inline-block px-4 py-2.5 rounded-[14px] bg-purple-500/15 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition`}>
                     Upload & Compress Profile Photo
-                    <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
+                    <input type="file" accept="image/*" onChange={e => handleProfileUpload(e)} className="hidden" />
                   </label>
                 </div>
               </div>
