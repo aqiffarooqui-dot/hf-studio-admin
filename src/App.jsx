@@ -223,7 +223,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.6.0", date: "August 29, 2026", status: "Active Live Production", changes: "Floating card animations, central modal confirmation toasts with close buttons, and separate Admin Console theme picker." }
+  { version: "v3.6.1", date: "August 29, 2026", status: "Active Live Production", changes: "Fixed post-login blank screen render error by ensuring robust state initializers and fallback rendering." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -988,7 +988,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.6.0 Colorful Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.6.1 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1051,7 +1051,7 @@ export default function App() {
 
       {deleteConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-sm w-full rounded-[32px] p-6 text-center space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+          <div className={`max-w-sm w-full rounded-[28px] p-6 text-center space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
             <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center mx-auto shadow-lg">
               <AlertTriangle className="w-8 h-8" />
             </div>
@@ -1060,8 +1060,8 @@ export default function App() {
               {deleteConfirmModal.message || "Are you sure you want to delete this item? This action cannot be undone."}
             </p>
             <div className="flex gap-2.5 pt-2">
-              <button onClick={() => setDeleteConfirmModal(null)} className={`flex-1 py-3.5 rounded-[16px] font-bold text-[13px] ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>Cancel</button>
-              <button onClick={handleExecuteDelete} className="flex-1 py-3.5 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Delete</button>
+              <button onClick={() => setDeleteConfirmModal(null)} className={`flex-1 py-3 rounded-[16px] font-bold text-[13px] ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>Cancel</button>
+              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Delete</button>
             </div>
           </div>
         </div>
@@ -1069,7 +1069,7 @@ export default function App() {
 
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-lg w-full rounded-[32px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+          <div className={`max-w-lg w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Ban className="w-5 h-5 text-rose-500" />
@@ -1118,7 +1118,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 H&F Studio Admin
               </h1>
-              <p className={`text-[11px] font-mono text-purple-400`}>v3.6.0 Pro Suite</p>
+              <p className={`text-[11px] font-mono text-purple-400`}>v3.6.1 Pro Suite</p>
             </div>
           </div>
 
