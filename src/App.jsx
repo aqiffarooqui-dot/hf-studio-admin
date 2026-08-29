@@ -268,7 +268,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.4.0", date: "August 29, 2026", status: "Active Live Production", changes: "iOS pill-shaped settings layout, perfectly aligned header with live booking badge, and full package/rate customization." }
+  { version: "v3.5.0", date: "August 29, 2026", status: "Active Live Production", changes: "Floating card animations, mobile-friendly edit order controls, and fully polished iOS pill styling." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -994,8 +994,8 @@ export default function App() {
 
   const iosBg = isAdminDarkMode ? "bg-black text-[#F2F2F7]" : "bg-[#F2F2F7] text-[#1C1C1E]";
   const iosGroupCard = isAdminDarkMode 
-    ? "bg-[#1C1C1E] border border-white/10 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden p-3 sm:p-5" 
-    : "bg-white border border-black/5 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden p-3 sm:p-5";
+    ? "bg-[#1C1C1E] border border-white/10 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden p-4 sm:p-6" 
+    : "bg-white border border-black/5 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden p-4 sm:p-6";
   const iosInputBg = isAdminDarkMode ? "bg-[#2C2C2E] text-white border-none rounded-[16px]" : "bg-[#F2F2F7] text-[#1C1C1E] border-none rounded-[16px]";
   const iosMuted = isAdminDarkMode ? "text-[#8E8E93]" : "text-[#8E8E93]";
 
@@ -1030,7 +1030,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>Apple iOS 19 Liquid Glass Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.5.0 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-[#007AFF] ${iosInputBg}`} />
             
@@ -1117,7 +1117,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Perfectly Aligned Sticky Header */}
+      {/* Perfectly Aligned Sticky Header with Version Info */}
       <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#1C1C1E]/85 border-white/10 text-white' : 'bg-[#F2F2F7]/90 border-black/10 text-[#1C1C1E]'}`}>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
@@ -1135,15 +1135,26 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 H&F Studio Admin
               </h1>
-              <p className={`text-[11px] ${iosMuted}`}>iOS 19 Liquid Glass Control</p>
+              <p className={`text-[11px] ${iosMuted}`}>v3.5.0 Production Suite</p>
             </div>
           </div>
 
           <div className="flex sm:hidden items-center gap-2">
+            {!activeFolderId && (
+              <button
+                onClick={() => {
+                  if (isReorderMode) handleSaveSpecificCard("Card Sequence");
+                  setIsReorderMode(!isReorderMode);
+                }}
+                className={`px-3 py-1.5 rounded-[12px] text-xs font-bold ${isReorderMode ? 'bg-[#007AFF] text-white' : 'bg-white/10 text-[#007AFF]'}`}
+              >
+                {isReorderMode ? 'Save' : 'Reorder'}
+              </button>
+            )}
             <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2 rounded-[12px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-white text-slate-800 shadow-sm'}`}>
               {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-blue-600" />}
             </button>
-            <button onClick={() => setIsAuthenticated(false)} className="text-[12px] text-rose-500 font-bold px-2 py-1">Lock</button>
+            <button onClick={() => setIsAuthenticated(false)} className="text-[12px] text-rose-500 font-bold px-1 py-1">Lock</button>
           </div>
         </div>
 
@@ -1206,11 +1217,21 @@ export default function App() {
               <span>Back to Settings Folders</span>
             </button>
           ) : (
-            <div className="flex items-center gap-2">
-              <Folder className="w-4 h-4 text-[#007AFF]" />
-              <h3 className={`font-bold text-[12px] uppercase tracking-wider ${iosMuted}`}>
-                {isReorderMode ? 'Reorder Mode Active: Use ⬆️ ⬇️ to move pills' : 'System Control Center Settings'}
+            <div className="flex items-center justify-between w-full">
+              <h3 className={`font-bold text-[13px] uppercase tracking-wider ${iosMuted}`}>
+                {isReorderMode ? 'Reorder Mode Active: Use ⬆️ ⬇️ to move cards' : 'Master Control Dashboard'}
               </h3>
+              {/* Mobile Edit Order Button */}
+              <button
+                onClick={() => {
+                  if (isReorderMode) handleSaveSpecificCard("Card Sequence");
+                  setIsReorderMode(!isReorderMode);
+                }}
+                className={`sm:hidden px-3 py-1.5 rounded-[12px] text-xs font-bold flex items-center gap-1 ${isReorderMode ? 'bg-[#007AFF] text-white' : 'bg-blue-500/15 text-[#007AFF]'}`}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>{isReorderMode ? 'Save Order' : 'Edit Order'}</span>
+              </button>
             </div>
           )}
 
@@ -1228,9 +1249,9 @@ export default function App() {
           </div>
         )}
 
-        {/* iOS-Like Pill-Shaped Settings Grid Layout */}
+        {/* Floating Animated Cards & iOS Pill Layout Grid */}
         {!activeFolderId && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {adminFolders.map((f, index) => {
               const Icon = f.icon;
               const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
@@ -1239,57 +1260,54 @@ export default function App() {
                 <div
                   key={f.id}
                   onClick={() => !isReorderMode && openFolder(f.id)}
-                  className={`flex items-center justify-between p-4 rounded-[24px] transition-all duration-200 cursor-pointer group border ${
+                  className={`p-5 rounded-[28px] transition-all duration-300 cursor-pointer group border flex flex-col justify-between space-y-4 hover:-translate-y-1 hover:shadow-xl ${
                     isReorderMode 
                       ? 'bg-blue-500/10 ring-2 ring-blue-500' 
                       : (isAdminDarkMode 
-                          ? 'bg-[#1C1C1E] border-white/10 hover:bg-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' 
-                          : 'bg-white border-black/5 hover:bg-slate-50 shadow-[0_4px_20px_rgba(0,0,0,0.04)]')
+                          ? 'bg-[#1C1C1E]/90 border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.4)]' 
+                          : 'bg-white border-black/5 shadow-[0_8px_30px_rgba(0,0,0,0.06)]')
                   }`}
                 >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="w-11 h-11 rounded-[16px] bg-[#007AFF] text-white flex items-center justify-center shadow-md shrink-0">
-                      <Icon className="w-5 h-5" />
+                  <div className="flex items-start justify-between">
+                    <div className="w-12 h-12 rounded-[20px] bg-[#007AFF] text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Icon className="w-6 h-6" />
                     </div>
-                    <div className="truncate">
-                      <h4 className="font-bold text-[15px] tracking-tight truncate group-hover:text-[#007AFF] transition-colors">
-                        {f.label}
-                      </h4>
-                      <p className={`text-[12px] truncate ${iosMuted}`}>{f.desc}</p>
+
+                    <div className="flex items-center gap-2">
+                      {count !== null && (
+                        <span className="text-[11px] font-mono font-bold bg-[#007AFF]/20 text-[#007AFF] px-2.5 py-1 rounded-full">
+                          {count} Active
+                        </span>
+                      )}
+                      
+                      {isReorderMode && (
+                        <div className="flex items-center gap-1 bg-black/10 p-1 rounded-[12px]">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
+                            className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === adminFolders.length - 1}
+                            onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
+                            className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 pl-2">
-                    {count !== null && (
-                      <span className="text-[11px] font-mono font-bold bg-[#007AFF]/20 text-[#007AFF] px-2.5 py-0.5 rounded-full">
-                        {count}
-                      </span>
-                    )}
-
-                    {isReorderMode ? (
-                      <div className="flex items-center gap-1 bg-black/10 p-1 rounded-[10px]">
-                        <button
-                          type="button"
-                          disabled={index === 0}
-                          onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
-                          className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={index === adminFolders.length - 1}
-                          onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
-                          className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-400 group-hover:text-[#007AFF] transition-colors">
-                        <ChevronRight className="w-4 h-4" />
-                      </div>
-                    )}
+                  <div>
+                    <h4 className="font-bold text-[17px] tracking-tight group-hover:text-[#007AFF] transition-colors">
+                      {f.label}
+                    </h4>
+                    <p className={`text-[13px] mt-1 line-clamp-2 leading-relaxed ${iosMuted}`}>{f.desc}</p>
                   </div>
                 </div>
               );
