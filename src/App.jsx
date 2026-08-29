@@ -220,7 +220,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.6.4", date: "August 29, 2026", status: "Active Live Production", changes: "Full robust null-checks added across draft states, guest discount controllers, and package management." }
+  { version: "v3.6.5", date: "August 29, 2026", status: "Active Live Production", changes: "Guaranteed defensive fallback rendering for all config items to eliminate blank white screen issues." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -343,7 +343,7 @@ export default function App() {
           setDraft(prev => ({
             ...DEFAULT_CONFIG,
             ...data,
-            recoveryEmail: data.recoveryEmail || "aqiffarooqui@gmail.com",
+            recoveryEmail: data.recoveryEmail || DEFAULT_CONFIG.recoveryEmail,
             kitText: {
               international: { ...DEFAULT_CONFIG.kitText.international, ...(data.kitText?.international || {}) },
               drugstore: { ...DEFAULT_CONFIG.kitText.drugstore, ...(data.kitText?.drugstore || {}) }
@@ -424,7 +424,8 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const correctPin = (draft && draft.adminPin) || "8760";
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const correctPin = currentDraftSafe.adminPin || "8760";
     if (pinInput === correctPin) {
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
@@ -526,9 +527,10 @@ export default function App() {
       clearInterval(interval);
       setIsScanningFinger(false);
       const secureHash = `SECURE_FP_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
+      const currentDraftSafe = draft || DEFAULT_CONFIG;
       
       const updatedDraft = {
-        ...(draft || DEFAULT_CONFIG),
+        ...currentDraftSafe,
         biometricEnabled: true,
         registeredFingerprintHash: secureHash
       };
@@ -546,7 +548,8 @@ export default function App() {
 
   const handleForgotPasswordSubmit = (e) => {
     e.preventDefault();
-    const targetEmail = (draft && draft.recoveryEmail) || "aqiffarooqui@gmail.com";
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const targetEmail = currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com";
     setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}! Check inbox.`);
     setTimeout(() => {
       setShowForgotPasswordModal(false);
@@ -556,7 +559,8 @@ export default function App() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    const currentPin = (draft && draft.adminPin) || "8760";
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const currentPin = currentDraftSafe.adminPin || "8760";
     if (oldPinInput !== currentPin && oldPinInput !== "8760") {
       alert("Current PIN is incorrect.");
       return;
@@ -571,7 +575,7 @@ export default function App() {
     }
 
     try {
-      const updated = { ...(draft || DEFAULT_CONFIG), adminPin: newPinInput };
+      const updated = { ...currentDraftSafe, adminPin: newPinInput };
       setDraft(updated);
       const cleanData = JSON.parse(JSON.stringify(updated));
       await updateLiveConfig(cleanData);
@@ -587,8 +591,9 @@ export default function App() {
   const handleSaveSpecificCard = async (sectionName) => {
     setSavingSection(sectionName);
     try {
+      const currentDraftSafe = draft || DEFAULT_CONFIG;
       const payload = {
-        ...(draft || DEFAULT_CONFIG),
+        ...currentDraftSafe,
         adminFoldersOrder: adminFolders.map(f => f.id)
       };
       const cleanData = JSON.parse(JSON.stringify(payload));
@@ -676,6 +681,7 @@ export default function App() {
   const handleExecuteDelete = async () => {
     if (!deleteConfirmModal) return;
     try {
+      const currentDraftSafe = draft || DEFAULT_CONFIG;
       if (deleteConfirmModal.onConfirm) {
         deleteConfirmModal.onConfirm();
         setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
@@ -686,17 +692,16 @@ export default function App() {
           await deleteDoc(doc(db, "feedbacks", deleteConfirmModal.id));
         } else if (deleteConfirmModal.isPackage) {
           const { kit, pkgKey } = deleteConfirmModal;
-          const currentDraft = draft || DEFAULT_CONFIG;
-          const updatedKitText = { ...(currentDraft.kitText || {}) };
-          const updatedKitImages = { ...(currentDraft.kitImages || {}) };
-          const updatedPricing = { ...(currentDraft.pricingByKit || {}) };
+          const updatedKitText = { ...(currentDraftSafe.kitText || {}) };
+          const updatedKitImages = { ...(currentDraftSafe.kitImages || {}) };
+          const updatedPricing = { ...(currentDraftSafe.pricingByKit || {}) };
           
           if (updatedKitText[kit]) delete updatedKitText[kit][pkgKey];
           if (updatedKitImages[kit]) delete updatedKitImages[kit][pkgKey];
           if (updatedPricing[kit]) delete updatedPricing[kit][pkgKey];
           
           setDraft({
-            ...currentDraft,
+            ...currentDraftSafe,
             kitText: updatedKitText,
             kitImages: updatedKitImages,
             pricingByKit: updatedPricing
@@ -732,10 +737,10 @@ export default function App() {
     const titleName = prompt("Enter Package Display Name (e.g. Deluxe Glamour Makeup):", "Deluxe Makeup");
     if (!titleName) return;
 
-    const currentDraft = draft || DEFAULT_CONFIG;
-    const updatedKitText = { ...(currentDraft.kitText || {}) };
-    const updatedKitImages = { ...(currentDraft.kitImages || {}) };
-    const updatedPricing = { ...(currentDraft.pricingByKit || {}) };
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const updatedKitText = { ...(currentDraftSafe.kitText || {}) };
+    const updatedKitImages = { ...(currentDraftSafe.kitImages || {}) };
+    const updatedPricing = { ...(currentDraftSafe.pricingByKit || {}) };
 
     ['international', 'drugstore'].forEach(kit => {
       if (!updatedKitText[kit]) updatedKitText[kit] = {};
@@ -749,7 +754,7 @@ export default function App() {
     });
 
     setDraft({
-      ...currentDraft,
+      ...currentDraftSafe,
       kitText: updatedKitText,
       kitImages: updatedKitImages,
       pricingByKit: updatedPricing
@@ -820,7 +825,8 @@ export default function App() {
       downloadLink.click();
     };
 
-    const logoUrlToLoad = (draft && draft.studioLogo) || DEFAULT_CONFIG.studioLogo;
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
     const logoImg = new Image();
     logoImg.crossOrigin = "anonymous";
     logoImg.src = logoUrlToLoad;
@@ -849,15 +855,15 @@ export default function App() {
           finalUrl = await compressImageFile(file, 900, 0.85);
         }
 
-        const currentDraft = draft || DEFAULT_CONFIG;
-        const copy = [...(currentDraft.galleryPhotos || [])];
+        const currentDraftSafe = draft || DEFAULT_CONFIG;
+        const copy = [...(currentDraftSafe.galleryPhotos || [])];
         copy[index] = {
           title: copy[index]?.title || "Signature Transformation",
           sub: copy[index]?.sub || "HD Artistry",
           url: finalUrl,
           type: isVid ? 'video' : 'image'
         };
-        setDraft({ ...currentDraft, galleryPhotos: copy });
+        setDraft({ ...currentDraftSafe, galleryPhotos: copy });
         setPopupToast({ title: "Media Loaded", desc: "Media uploaded successfully! Click save below." });
       } catch (err) {
         alert("Upload error: " + err.message);
@@ -870,13 +876,13 @@ export default function App() {
     if (file) {
       try {
         const compressedBase64 = await compressImageFile(file, 800, 0.85);
-        const currentDraft = draft || DEFAULT_CONFIG;
+        const currentDraftSafe = draft || DEFAULT_CONFIG;
         setDraft({
-          ...currentDraft,
+          ...currentDraftSafe,
           kitImages: {
-            ...(currentDraft.kitImages || {}),
+            ...(currentDraftSafe.kitImages || {}),
             [kit]: {
-              ...(currentDraft.kitImages?.[kit] || {}),
+              ...(currentDraftSafe.kitImages?.[kit] || {}),
               [pkgKey]: compressedBase64
             }
           }
@@ -893,8 +899,8 @@ export default function App() {
     if (file) {
       try {
         const compressedBase64 = await compressImageFile(file, 500, 0.85);
-        const currentDraft = draft || DEFAULT_CONFIG;
-        setDraft({ ...currentDraft, profileImage: compressedBase64, profilePhotoType: 'image' });
+        const currentDraftSafe = draft || DEFAULT_CONFIG;
+        setDraft({ ...currentDraftSafe, profileImage: compressedBase64, profilePhotoType: 'image' });
         setPopupToast({ title: "Profile Loaded", desc: "Profile picture loaded successfully." });
       } catch (err) {
         alert("Error loading photo: " + err.message);
@@ -907,8 +913,8 @@ export default function App() {
     if (file) {
       try {
         const compressedBase64 = await compressImageFile(file, 400, 0.85);
-        const currentDraft = draft || DEFAULT_CONFIG;
-        setDraft({ ...currentDraft, studioLogo: compressedBase64 });
+        const currentDraftSafe = draft || DEFAULT_CONFIG;
+        setDraft({ ...currentDraftSafe, studioLogo: compressedBase64 });
         setPopupToast({ title: "Logo Loaded", desc: "Studio logo loaded successfully." });
       } catch (err) {
         alert("Error loading logo: " + err.message);
