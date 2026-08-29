@@ -237,6 +237,9 @@ const ADMIN_APP_VERSIONS = [
   { version: "v3.9.0", date: "August 30, 2026", status: "Active Live Production", changes: "Added Live App Version Controller & Instant Rollback System, Dynamic Vanity Brands Manager, and bottom-only reorder controls." }
 ];
 
+const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
+const bridalPackages = ['engagement_bride', 'royal_bridal'];
+
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -355,7 +358,7 @@ export default function App() {
             ...DEFAULT_CONFIG,
             ...data,
             activeAppVersion: data.activeAppVersion || DEFAULT_CONFIG.activeAppVersion,
-            appVersionsList: data.appVersionsList || DEFAULT_CONFIG.appVersionsList,
+            appVersionsList: (data.appVersionsList && data.appVersionsList.length > 0) ? data.appVersionsList : DEFAULT_CONFIG.appVersionsList,
             recoveryEmail: data.recoveryEmail || DEFAULT_CONFIG.recoveryEmail,
             kitText: {
               international: { ...DEFAULT_CONFIG.kitText.international, ...(data.kitText?.international || {}) },
@@ -369,7 +372,7 @@ export default function App() {
               international: { ...DEFAULT_CONFIG.pricingByKit.international, ...(data.pricingByKit?.international || {}) },
               drugstore: { ...DEFAULT_CONFIG.pricingByKit.drugstore, ...(data.pricingByKit?.drugstore || {}) }
             },
-            internationalBrands: data.internationalBrands || DEFAULT_CONFIG.internationalBrands,
+            internationalBrands: (data.internationalBrands && data.internationalBrands.length > 0) ? data.internationalBrands : DEFAULT_CONFIG.internationalBrands,
             guestDiscount: { ...DEFAULT_CONFIG.guestDiscount, ...(data.guestDiscount || {}) },
             theme: { ...DEFAULT_CONFIG.theme, ...(data.theme || {}) },
             adminTheme: { ...DEFAULT_CONFIG.adminTheme, ...(data.adminTheme || {}) },
@@ -378,8 +381,9 @@ export default function App() {
           }));
           if (data.adminFoldersOrder && Array.isArray(data.adminFoldersOrder)) {
             const reordered = data.adminFoldersOrder.map(id => INITIAL_FOLDERS.find(f => f.id === id)).filter(Boolean);
+            const remaining = INITIAL_FOLDERS.filter(f => !data.adminFoldersOrder.includes(f.id));
             if (reordered.length > 0) {
-              setAdminFolders(reordered);
+              setAdminFolders([...reordered, ...remaining]);
             }
           }
         }
@@ -1055,7 +1059,6 @@ export default function App() {
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
-      {/* Central Interactive Confirmation Modal Toast */}
       {popupToast && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
           <div className={`max-w-md w-full rounded-[32px] p-7 text-center space-y-4 shadow-2xl relative ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
@@ -1746,7 +1749,1014 @@ export default function App() {
           </div>
         )}
 
-        {/* 4. MASTER FEATURE TOGGLES */}
+        {/* 4. GENERAL & SECURITY SETTINGS */}
+        {activeFolderId === 'general' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div>
+              <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                <Settings className="w-5 h-5" /> General & Security Settings
+              </h3>
+              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Fingerprint className="w-4 h-4 text-purple-400" /> Hardware Fingerprint Scanner Integration
+              </h4>
+              <p className={`text-[13px] ${iosMuted}`}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
+
+              <div className="p-4 rounded-[18px] bg-purple-500/10 border border-purple-500/20 text-center space-y-3">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center mx-auto shadow-md">
+                  <Fingerprint className={`w-7 h-7 ${isScanningFinger ? 'animate-pulse text-amber-300' : ''}`} />
+                </div>
+                
+                {isScanningFinger ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[13px] font-bold text-amber-500">Scanning Fingerprint... ({scanProgress}%)</p>
+                    <div className="w-48 h-2 bg-slate-200 rounded-full mx-auto overflow-hidden">
+                      <div className="h-full bg-amber-500 transition-all duration-300" style={{ width: `${scanProgress}%` }} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className={`text-[12px] ${iosMuted}`}>
+                      {currentDraftSafe.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleRegisterFingerprintScan}
+                      className="px-5 py-2.5 rounded-[14px] bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[13px] shadow active:scale-95 transition"
+                    >
+                      {currentDraftSafe.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className={`p-3.5 rounded-[16px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                  <span className="text-[13px] font-bold">Enable Touch ID / Biometrics</span>
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ ...currentDraftSafe, biometricEnabled: !currentDraftSafe.biometricEnabled })}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${currentDraftSafe.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                  >
+                    {currentDraftSafe.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
+                  </button>
+                </div>
+
+                <div className={`p-3.5 rounded-[16px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                  <span className="text-[13px] font-bold">Enable Face ID / Passkey</span>
+                  <button
+                    type="button"
+                    onClick={() => setDraft({ ...currentDraftSafe, faceIdEnabled: !currentDraftSafe.faceIdEnabled })}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${currentDraftSafe.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                  >
+                    {currentDraftSafe.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <GitBranch className="w-4 h-4 text-purple-400" /> Admin App Version & History
+              </h4>
+              <p className={`text-[13px] ${iosMuted}`}>Deployment timeline and release changes for Admin Console.</p>
+
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
+                  <div key={vIdx} className={`p-3.5 rounded-[16px] border text-[13px] space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold font-mono text-purple-400">{ver.version}</span>
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600">
+                        {ver.status}
+                      </span>
+                    </div>
+                    <p className="text-[12px]">{ver.changes}</p>
+                    <span className={`text-[11px] font-mono ${iosMuted}`}>Released: {ver.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Mail className="w-4 h-4 text-amber-500" /> Permanent Recovery Email ID
+              </h4>
+              <p className={`text-[13px] ${iosMuted}`}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
+              
+              <input
+                type="email"
+                value={currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com"}
+                onChange={e => setDraft({ ...currentDraftSafe, recoveryEmail: e.target.value })}
+                className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-purple-400 border ${iosInputBg}`}
+              />
+            </div>
+
+            <form onSubmit={handlePasswordChange} className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Key className="w-4 h-4 text-purple-400" /> Change Admin PIN Password
+              </h4>
+
+              <div className="space-y-3">
+                <div>
+                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Current PIN</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter current PIN"
+                    value={oldPinInput}
+                    onChange={e => setOldPinInput(e.target.value)}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>New PIN (Min 4 digits)</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Enter new PIN"
+                      value={newPinInput}
+                      onChange={e => setNewPinInput(e.target.value)}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Confirm New PIN</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Confirm new PIN"
+                      value={confirmPinInput}
+                      onChange={e => setConfirmPinInput(e.target.value)}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className={`w-full py-4 ${adminThemeStyle.btnPrimary}`}
+                >
+                  Update Admin Password
+                </button>
+              </div>
+            </form>
+
+            <button
+              type="button"
+              disabled={savingSection === 'General Settings'}
+              onClick={() => handleSaveSpecificCard('General Settings')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'General Settings' ? 'Saving...' : 'Save General & Security Settings Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 5. LIVE BOOKINGS QUEUE */}
+        {activeFolderId === 'bookings' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-3">
+              <div>
+                <h3 className="font-bold text-[16px] text-purple-400">Incoming Customer Bookings Queue</h3>
+                <p className={`text-[13px] ${iosMuted}`}>Filter, search by name/phone/no, select all, or delete multiple records.</p>
+              </div>
+              <span className="text-[13px] font-mono font-bold bg-purple-500/20 text-purple-400 px-3.5 py-1.5 rounded-full shadow-sm border border-purple-500/30">
+                {filteredBookingsList.length} / {bookingsList.length} Bookings
+              </span>
+            </div>
+
+            <div className={`p-4 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="relative">
+                <Search className={`absolute left-3.5 top-3.5 w-4 h-4 ${iosMuted}`} />
+                <input
+                  type="text"
+                  placeholder="Search by client name, phone number, or booking #..."
+                  value={bookingSearchQuery}
+                  onChange={e => setBookingSearchQuery(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-3 text-[13px] outline-none ${iosInputBg}`}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Filter by Status</label>
+                  <select
+                    value={bookingStatusFilter}
+                    onChange={e => setBookingStatusFilter(e.target.value)}
+                    className={`w-full p-3 text-[13px] font-bold outline-none ${iosInputBg}`}
+                  >
+                    <option value="all" className="text-black">🌟 All Statuses</option>
+                    <option value="confirmed" className="text-black">✅ Confirmed / Accepted</option>
+                    <option value="pending" className="text-black">⏳ Pending Review</option>
+                    <option value="rejected" className="text-black">❌ Cancelled / Rejected</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Filter by Event Date</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={bookingDateFilter}
+                      onChange={e => setBookingDateFilter(e.target.value)}
+                      className={`flex-1 p-3 text-[13px] outline-none ${iosInputBg}`}
+                    />
+                    {bookingDateFilter && (
+                      <button
+                        type="button"
+                        onClick={() => setBookingDateFilter('')}
+                        className="px-3.5 py-2.5 rounded-[14px] bg-slate-200 text-xs font-bold text-slate-700"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-500/20">
+                <button
+                  type="button"
+                  onClick={handleToggleSelectAll}
+                  className="flex items-center gap-2 text-[13px] font-bold text-purple-400 hover:underline"
+                >
+                  {selectedBookings.length === filteredBookingsList.length && filteredBookingsList.length > 0 ? (
+                    <CheckSquare className="w-4 h-4 text-purple-400" />
+                  ) : (
+                    <Square className="w-4 h-4 text-slate-400" />
+                  )}
+                  <span>Select All Visible ({filteredBookingsList.length})</span>
+                </button>
+
+                {selectedBookings.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmModal({ type: 'batch', message: `Are you sure you want to delete ${selectedBookings.length} selected bookings?` })}
+                    className="px-4 py-2 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md active:scale-95 flex items-center gap-1.5 transition"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Selected ({selectedBookings.length})</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {filteredBookingsList.length === 0 ? (
+              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No bookings match the search or filter criteria.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredBookingsList.map(b => {
+                  const isSelected = selectedBookings.includes(b.id);
+                  const conflictingConfirmedBooking = b.status === 'pending' 
+                    ? bookingsList.find(other => other.id !== b.id && other.eventDate === b.eventDate && other.status === 'confirmed')
+                    : null;
+
+                  return (
+                    <div key={b.id} className={`p-5 rounded-[24px] border space-y-3.5 transition-all ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'} ${isSelected ? 'ring-2 ring-purple-500' : ''} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/60' : ''}`}>
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              if (isSelected) {
+                                setSelectedBookings(selectedBookings.filter(id => id !== b.id));
+                              } else {
+                                setSelectedBookings([...selectedBookings, b.id]);
+                              }
+                            }}
+                            className="mt-1 w-4 h-4 accent-purple-500 cursor-pointer"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-[12px] font-bold text-purple-400 bg-purple-500/10 px-2.5 py-0.5 rounded-[8px]">
+                                {b.bookingNumber || '#HF-PENDING'}
+                              </span>
+                              <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
+                                b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-600' : 
+                                b.status === 'rejected' ? 'bg-rose-500/20 text-rose-600' : 
+                                'bg-amber-500/20 text-amber-600'
+                              }`}>
+                                {b.status === 'confirmed' ? '✅ Confirmed' : b.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
+                              </span>
+                            </div>
+                            
+                            <h4 className="font-bold text-[16px] mt-1.5 truncate">{b.clientName}</h4>
+                            <p className={`text-[12px] font-mono ${iosMuted}`}>📞 {b.clientPhone}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmModal({ type: 'single', isBooking: true, id: b.id, message: `Are you sure you want to delete booking for ${b.clientName}?` })}
+                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
+                          title="Delete Booking"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {conflictingConfirmedBooking && (
+                        <div className="p-3 rounded-[14px] bg-rose-500/15 text-rose-700 text-[12px] space-y-0.5">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <AlertTriangle className="w-4 h-4 shrink-0" />
+                            <span>STUDIO BUSY FOR THIS DATE!</span>
+                          </div>
+                          <p className="text-[11px]">You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.</p>
+                        </div>
+                      )}
+
+                      <div className={`text-[13px] space-y-1 border-t border-b py-2.5 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+                        <div className="flex justify-between"><span className={iosMuted}>Event Date:</span><strong className="text-purple-400 font-mono">{b.eventDate}</strong></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Package:</span><span className="font-medium">{b.packageName}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Extra Guests:</span><span className="font-medium">{b.extraGuestsCount || 0} Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Address:</span><span className="truncate max-w-[180px]">{b.venueAddress}</span></div>
+                        {b.rejectionReason && (
+                          <div className="p-2.5 rounded-[10px] bg-rose-500/15 text-rose-700 text-[11px]">
+                            <strong>Rejection Note:</strong> {b.rejectionReason}
+                          </div>
+                        )}
+                        <div className="flex justify-between pt-1 font-bold"><span>Total Amount:</span><span className="text-purple-400 font-mono">₹{b.totalAmount?.toLocaleString('en-IN')}</span></div>
+                      </div>
+
+                      <div className="space-y-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleAcceptBookingWhatsApp(b)}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[14px] shadow-sm flex items-center justify-center gap-1.5 transition"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
+                        </button>
+
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleManualStatusChange(b.id, 'confirmed')}
+                            className="py-2.5 bg-blue-500/15 text-blue-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
+                          >
+                            <Check className="w-3 h-3" /> Accept
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleManualStatusChange(b.id, 'pending')}
+                            className="py-2.5 bg-amber-500/15 text-amber-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw className="w-3 h-3" /> Pending
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRejectModalData(b);
+                              setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
+                            }}
+                            className="py-2.5 bg-rose-500/15 text-rose-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
+                          >
+                            <Ban className="w-3 h-3" /> Reject
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateSlipJpgOnDemand(b)}
+                          className="w-full py-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1.5 transition"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download Status Slip (.JPG)</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 6. FEEDBACKS */}
+        {activeFolderId === 'feedbacks' && (
+          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" /> Client Feedback & Suggestions Box
+                </h3>
+                <p className={`text-[13px] ${iosMuted}`}>Reviews, ratings, and creative suggestions submitted by clients.</p>
+              </div>
+              <span className="text-[13px] font-mono font-bold bg-purple-500/20 text-purple-400 px-3.5 py-1.5 rounded-full border border-purple-500/30">
+                {feedbacksList.length} Feedbacks
+              </span>
+            </div>
+
+            {feedbacksList.length === 0 ? (
+              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No client feedback submitted yet.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {feedbacksList.map(item => (
+                  <div key={item.id} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {Array.from({ length: item.rating || 5 }).map((_, i) => (
+                            <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+                          ))}
+                        </div>
+                        <h4 className="font-bold text-[15px] mt-1">{item.clientName}</h4>
+                        {item.clientPhone && item.clientPhone !== 'Not Provided' && (
+                          <p className={`text-[11px] font-mono ${iosMuted}`}>📞 {item.clientPhone}</p>
+                        )}
+                      </div>
+                      <button onClick={() => setDeleteConfirmModal({ type: 'single', isFeedback: true, id: item.id, message: `Are you sure you want to delete feedback from ${item.clientName}?` })} className="p-1 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+
+                    <p className={`text-[13px] leading-relaxed p-3.5 rounded-[16px] ${isAdminDarkMode ? 'bg-black/30 text-slate-300' : 'bg-white text-slate-800 shadow-sm'}`}>
+                      "{item.message}"
+                    </p>
+
+                    <div className="flex justify-end">
+                      <span className={`text-[10px] font-mono ${iosMuted}`}>
+                        {item.submittedAt ? new Date(item.submittedAt.toDate?.() || item.submittedAt).toLocaleDateString() : 'Recent'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 7. AVAILABILITY CALENDAR */}
+        {activeFolderId === 'calendar_view' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                  <Calendar className="w-5 h-5" /> Interactive Monthly Booking Calendar
+                </h3>
+                <p className={`text-[13px] ${iosMuted} mt-0.5`}>
+                  Visual color tags show free vs booked dates (🟢 Green = Confirmed / Busy, 🟡 Amber = Pending).
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2.5 rounded-[14px] bg-slate-200 text-purple-600">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-bold text-[14px] font-mono min-w-[130px] text-center">
+                  {monthNames[month]} {year}
+                </span>
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2.5 rounded-[14px] bg-slate-200 text-purple-600">
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-2 text-center">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                <span key={d} className={`text-[11px] font-bold py-1 uppercase ${iosMuted}`}>{d}</span>
+              ))}
+
+              {Array.from({ length: firstDayIndex }).map((_, i) => (
+                <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-[16px]" />
+              ))}
+
+              {Array.from({ length: totalDaysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const status = getDayBookingStatus(day);
+                return (
+                  <div
+                    key={`day_${day}`}
+                    onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
+                    className={`h-16 sm:h-20 rounded-[16px] p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
+                      status.hasBookings 
+                        ? (status.isConfirmed 
+                            ? 'bg-emerald-500/20 border-emerald-500/50 hover:scale-105 shadow-md' 
+                            : 'bg-amber-500/20 border-amber-500/50 hover:scale-105 shadow-md')
+                        : (isAdminDarkMode ? 'bg-white/5 border-white/10 opacity-75' : 'bg-slate-100 border-slate-200 opacity-75')
+                    }`}
+                  >
+                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-500' : 'text-amber-500') : ''}`}>
+                      {day}
+                    </span>
+
+                    {status.hasBookings && (
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${status.isConfirmed ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>
+                        {status.count} Booked
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {selectedCalendarDay && (
+              <div className={`p-4 rounded-[18px] border space-y-3 animate-fade-in ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-sm text-purple-400">Date: {selectedCalendarDay.dateStr}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${selectedCalendarDay.isConfirmed ? 'bg-emerald-500/20 text-emerald-600' : 'bg-amber-500/20 text-amber-600'}`}>
+                      {selectedCalendarDay.isConfirmed ? 'LOCKED / CONFIRMED' : 'PENDING REVIEW'}
+                    </span>
+                  </div>
+                  <button onClick={() => setSelectedCalendarDay(null)} className="text-purple-400 text-xs underline font-bold">Close</button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {selectedCalendarDay.list.map(b => (
+                    <div key={b.id} className={`p-3 rounded-[14px] border text-xs space-y-1 ${isAdminDarkMode ? 'bg-black/40 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                      <div className="flex justify-between font-bold">
+                        <span>{b.bookingNumber || ''} • {b.clientName}</span>
+                        <span className="font-mono text-purple-400">₹{b.totalAmount?.toLocaleString('en-IN')}</span>
+                      </div>
+                      <p className={iosMuted}>Look: {b.packageName} ({b.kitType})</p>
+                      <p className={`text-[11px] truncate ${iosMuted}`}>📍 {b.venueAddress}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 8. EXTRA GUEST OFFER */}
+        {activeFolderId === 'guest_discount_folder' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div>
+              <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                <Gift className="w-5 h-5" /> Extra Guest Group Discount Controller
+              </h3>
+              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure automatic percentage discounts for additional family guests.</p>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs">Enable Extra Guest Group Discount</span>
+                <button
+                  type="button"
+                  onClick={() => setDraft({
+                    ...currentDraftSafe,
+                    guestDiscount: {
+                      ...(currentDraftSafe.guestDiscount || {}),
+                      enabled: !(currentDraftSafe.guestDiscount?.enabled !== false)
+                    }
+                  })}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                >
+                  {currentDraftSafe?.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{currentDraftSafe?.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                </button>
+              </div>
+
+              <div>
+                <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Discount Percentage (%)</label>
+                <input
+                  type="number"
+                  value={currentDraftSafe?.guestDiscount?.discountPercent ?? 15}
+                  onChange={e => setDraft({
+                    ...currentDraftSafe,
+                    guestDiscount: {
+                      ...(currentDraftSafe.guestDiscount || {}),
+                      discountPercent: Number(e.target.value)
+                    }
+                  })}
+                  className={`w-full p-3.5 rounded-[16px] font-mono text-purple-400 font-bold text-sm ${iosInputBg}`}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Guest Discount'}
+              onClick={() => handleSaveSpecificCard('Guest Discount')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Guest Discount' ? 'Saving...' : 'Save Guest Offer Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 9. GALLERY & MEDIA */}
+        {activeFolderId === 'gallery' && (
+          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-3">
+              <div>
+                <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                  <Film className="w-5 h-5" /> Transformations, Videos & GIFs Studio (20MB Max)
+                </h3>
+                <p className={`text-[13px] ${iosMuted}`}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft({
+                    ...currentDraftSafe,
+                    galleryPhotos: [
+                      ...(currentDraftSafe.galleryPhotos || []),
+                      { type: "video", title: "New Glam Transformation", sub: "16HR HD Finish", url: "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-applying-makeup-41419-large.mp4" }
+                    ]
+                  });
+                }}
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Card
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {(currentDraftSafe?.galleryPhotos || []).map((item, idx) => (
+                <div key={idx} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-purple-400 font-mono uppercase">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
+                    <button onClick={() => {
+                      setDeleteConfirmModal({
+                        type: 'single',
+                        message: `Are you sure you want to delete media item #${idx + 1}?`,
+                        onConfirm: () => {
+                          setDraft({ ...currentDraftSafe, galleryPhotos: currentDraftSafe.galleryPhotos.filter((_, i) => i !== idx) });
+                        }
+                      });
+                    }} className="text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className={`block text-[10px] mb-1 ${iosMuted}`}>Type</label>
+                      <select value={item.type || 'video'} onChange={e => {
+                        const copy = [...currentDraftSafe.galleryPhotos];
+                        copy[idx] = { ...copy[idx], type: e.target.value };
+                        setDraft({ ...currentDraftSafe, galleryPhotos: copy });
+                      }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}>
+                        <option value="video">🎥 Auto-play Video</option>
+                        <option value="image">🖼️ Image / Animated GIF</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-[10px] mb-1 ${iosMuted}`}>Subtitle</label>
+                      <input type="text" value={item.sub || ''} onChange={e => {
+                        const copy = [...currentDraftSafe.galleryPhotos];
+                        copy[idx] = { ...copy[idx], sub: e.target.value };
+                        setDraft({ ...currentDraftSafe, galleryPhotos: copy });
+                      }} className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={`block text-[10px] mb-1 ${iosMuted}`}>Title</label>
+                    <input type="text" value={item.title || ''} onChange={e => {
+                      const copy = [...currentDraftSafe.galleryPhotos];
+                      copy[idx] = { ...copy[idx], title: e.target.value };
+                      setDraft({ ...currentDraftSafe, galleryPhotos: copy });
+                    }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
+                  </div>
+
+                  <div>
+                    <label className={`block text-[10px] mb-1 ${iosMuted}`}>Direct URL (Video, GIF, or Image link)</label>
+                    <input type="text" value={item.url || ''} onChange={e => {
+                      const copy = [...currentDraftSafe.galleryPhotos];
+                      copy[idx] = { ...copy[idx], url: e.target.value };
+                      setDraft({ ...currentDraftSafe, galleryPhotos: copy });
+                    }} className={`w-full p-3 rounded-[14px] text-xs font-mono text-purple-400 ${iosInputBg}`} />
+                  </div>
+
+                  <label className="block text-center py-3 rounded-[14px] bg-purple-500/15 text-purple-400 text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition shadow-sm">
+                    Upload Video / GIF / Image (&lt;20MB)
+                    <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Gallery Media'}
+              onClick={() => handleSaveSpecificCard('Gallery Media')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 10. MAINTENANCE MODE */}
+        {activeFolderId === 'app_maintenance' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div>
+              <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                <Wrench className="w-5 h-5" /> App Down & Maintenance Controller
+              </h3>
+              <p className={`text-[13px] ${iosMuted} mt-0.5`}>
+                Turn on to politely lock customer app with an elegant maintenance notice during upgrades.
+              </p>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className={`w-3 h-3 rounded-full ${currentDraftSafe.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
+                  <h4 className="font-bold text-sm">App Down / Maintenance Mode</h4>
+                </div>
+                <p className={`text-xs max-w-lg leading-relaxed ${iosMuted}`}>
+                  {currentDraftSafe.isAppDown 
+                    ? "🔴 ON: Customer App is locked. Visitors see a polite maintenance banner stating system upgrades are in progress."
+                    : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDraft({ ...currentDraftSafe, isAppDown: !currentDraftSafe.isAppDown })}
+                className={`px-5 py-3 rounded-[16px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
+                  currentDraftSafe.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
+                }`}
+              >
+                {currentDraftSafe.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                <span>{currentDraftSafe.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Maintenance Mode'}
+              onClick={() => handleSaveSpecificCard('Maintenance Mode')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 11. FLOATING PROMO BANNER */}
+        {activeFolderId === 'floating' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div>
+              <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                <Gift className="w-5 h-5" /> Floating Promo Offer Banner Controller
+              </h3>
+              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure bottom-right floating offer pill text, code and activation status.</p>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs">Enable Floating Promo Banner Widget</span>
+                <button
+                  type="button"
+                  onClick={() => setDraft({
+                    ...currentDraftSafe,
+                    floatingBanner: {
+                      ...(currentDraftSafe.floatingBanner || {}),
+                      enabled: !(currentDraftSafe.floatingBanner?.enabled !== false)
+                    }
+                  })}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                >
+                  {currentDraftSafe?.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{currentDraftSafe?.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={`block text-[10px] mb-1 ${iosMuted}`}>Badge Tag</label>
+                  <input
+                    type="text"
+                    value={currentDraftSafe?.floatingBanner?.tag || ''}
+                    onChange={e => setDraft({
+                      ...currentDraftSafe,
+                      floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), tag: e.target.value }
+                    })}
+                    className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
+                  />
+                </div>
+                <div>
+                  <label className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Code</label>
+                  <input
+                    type="text"
+                    value={currentDraftSafe?.floatingBanner?.code || ''}
+                    onChange={e => setDraft({
+                      ...currentDraftSafe,
+                      floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), code: e.target.value.toUpperCase() }
+                    })}
+                    className={`w-full p-3.5 rounded-[14px] text-xs font-mono font-bold text-purple-400 ${iosInputBg}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={`block text-[10px] mb-1 ${iosMuted}`}>Banner Title</label>
+                <input
+                  type="text"
+                  value={currentDraftSafe?.floatingBanner?.title || ''}
+                  onChange={e => setDraft({
+                    ...currentDraftSafe,
+                    floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), title: e.target.value }
+                  })}
+                  className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
+                />
+              </div>
+
+              <div>
+                <label className={`block text-[10px] mb-1 ${iosMuted}`}>Action Button Text</label>
+                <input
+                  type="text"
+                  value={currentDraftSafe?.floatingBanner?.actionText || ''}
+                  onChange={e => setDraft({
+                    ...currentDraftSafe,
+                    floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), actionText: e.target.value }
+                  })}
+                  className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Floating Banner'}
+              onClick={() => handleSaveSpecificCard('Floating Banner')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 12. PROMO COUPONS & TIMERS */}
+        {activeFolderId === 'coupons' && (
+          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-3">
+              <div>
+                <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
+                  <Tag className="w-5 h-5" /> Promo Coupons Manager & Expiry Timers
+                </h3>
+                <p className={`text-[13px] ${iosMuted}`}>Set coupon discounts, active status and expiry timer dates.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const code = prompt("Enter Coupon Code:");
+                  if (code) {
+                    const clean = code.toUpperCase().trim();
+                    setDraft({
+                      ...currentDraftSafe,
+                      validCoupons: {
+                        ...(currentDraftSafe.validCoupons || {}),
+                        [clean]: {
+                          type: "percent",
+                          value: 10,
+                          label: "Special Seasonal Promo",
+                          maxUses: 1,
+                          enabled: true,
+                          expiryDate: "2026-12-31T23:59"
+                        }
+                      }
+                    });
+                  }
+                }}
+                className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Coupon
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {Object.entries(currentDraftSafe?.validCoupons || {}).map(([code, c]) => {
+                const isCodeActive = c.enabled !== false;
+                return (
+                  <div key={code} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-purple-400 font-bold text-[15px]">{code}</span>
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
+                          {isCodeActive ? 'ACTIVE' : 'DISABLED'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDraft({
+                            ...currentDraftSafe,
+                            validCoupons: {
+                              ...currentDraftSafe.validCoupons,
+                              [code]: { ...c, enabled: !isCodeActive }
+                            }
+                          })}
+                          className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                        >
+                          {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                          <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
+                        </button>
+
+                        <button onClick={() => {
+                          setDeleteConfirmModal({
+                            type: 'single',
+                            message: `Are you sure you want to delete coupon "${code}"?`,
+                            onConfirm: () => {
+                              const copy = { ...(currentDraftSafe.validCoupons || {}) };
+                              delete copy[code];
+                              setDraft({ ...currentDraftSafe, validCoupons: copy });
+                            }
+                          });
+                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>Discount Type</span>
+                        <select
+                          value={c.type || 'percent'}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            validCoupons: {
+                              ...currentDraftSafe.validCoupons,
+                              [code]: { ...c, type: e.target.value }
+                            }
+                          })}
+                          className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                        >
+                          <option value="percent">% Percent Off</option>
+                          <option value="flat">₹ Flat Discount</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
+                        <input
+                          type="number"
+                          value={c.value || 0}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            validCoupons: {
+                              ...currentDraftSafe.validCoupons,
+                              [code]: { ...c, value: Number(e.target.value) }
+                            }
+                          })}
+                          className={`w-full p-3 rounded-[14px] font-mono text-purple-400 text-xs font-bold ${iosInputBg}`}
+                        />
+                      </div>
+
+                      <div>
+                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>⏱️ Expiry Date & Time</span>
+                        <input
+                          type="datetime-local"
+                          value={c.expiryDate || ''}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            validCoupons: {
+                              ...currentDraftSafe.validCoupons,
+                              [code]: { ...c, expiryDate: e.target.value }
+                            }
+                          })}
+                          className={`w-full p-3 rounded-[14px] text-xs font-mono text-amber-500 ${iosInputBg}`}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Display Description / Label</span>
+                      <input
+                        type="text"
+                        value={c.label || ''}
+                        onChange={e => setDraft({
+                          ...currentDraftSafe,
+                          validCoupons: {
+                            ...currentDraftSafe.validCoupons,
+                            [code]: { ...c, label: e.target.value }
+                          }
+                        })}
+                        className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Coupons'}
+              onClick={() => handleSaveSpecificCard('Coupons')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Coupons' ? 'Saving...' : 'Save Promo Coupons Live'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* 13. MASTER FEATURE TOGGLES */}
         {activeFolderId === 'toggles_master' && (
           <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
             <div>
@@ -1806,7 +2816,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 5. VISITOR & TRAFFIC LOGS */}
+        {/* 14. VISITOR & TRAFFIC LOGS */}
         {activeFolderId === 'traffic_logs' && (
           <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -1844,7 +2854,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 6. PROMOTIONS & BROADCAST */}
+        {/* 15. PROMOTIONS & BROADCAST */}
         {activeFolderId === 'promotions' && (
           <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
             <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
@@ -1871,7 +2881,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 7. ANNOUNCEMENTS TICKER */}
+        {/* 16. ANNOUNCEMENTS TICKER */}
         {activeFolderId === 'announcements' && (
           <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -1935,7 +2945,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 8. TRAVEL FEES & CONVENIENCE ZONES */}
+        {/* 17. TRAVEL FEES & CONVENIENCE ZONES */}
         {activeFolderId === 'convenience' && (
           <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -2033,7 +3043,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 9. THEMES & TYPOGRAPHY */}
+        {/* 18. THEMES & TYPOGRAPHY */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <h3 className="font-bold text-[16px] uppercase text-purple-400 flex items-center gap-2">
@@ -2117,7 +3127,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 10. STUDIO IDENTITY & LOGO */}
+        {/* 19. STUDIO IDENTITY & LOGO */}
         {activeFolderId === 'profile' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div>
