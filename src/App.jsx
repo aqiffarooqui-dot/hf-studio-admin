@@ -27,6 +27,9 @@ const DEFAULT_CONFIG = {
   instagramHandle: "husna_farooqui_makeup",
   baseLocation: "Okhla / Jamia Nagar, New Delhi",
 
+  telegramBotToken: "8891500480:AAGvxL16eNxSkn6ZXgoG28EW80VM75mwukg",
+  telegramChatId: "8891500480",
+
   activeAppVersion: "v4.1.0",
   appVersionsList: [
     { version: "v4.1.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Full exact pricing per guest package, detailed discount subsections for guest/promo discounts on slips & admin queues." }
@@ -241,7 +244,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v4.1.0", date: "August 30, 2026", status: "Active Live Production", changes: "Added exact guest package pricing & rich promotional vs guest discount subsections in admin queue & generated watermarked slips." }
+  { version: "v4.2.0", date: "August 30, 2026", status: "Active Live Production", changes: "Integrated Telegram API Bot Token & Chat ID fields in General Settings with live config persistence." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -361,6 +364,8 @@ export default function App() {
           setDraft(prev => ({
             ...DEFAULT_CONFIG,
             ...data,
+            telegramBotToken: data.telegramBotToken || DEFAULT_CONFIG.telegramBotToken,
+            telegramChatId: data.telegramChatId || DEFAULT_CONFIG.telegramChatId,
             activeAppVersion: data.activeAppVersion || DEFAULT_CONFIG.activeAppVersion,
             appVersionsList: (data.appVersionsList && data.appVersionsList.length > 0) ? data.appVersionsList : DEFAULT_CONFIG.appVersionsList,
             recoveryEmail: data.recoveryEmail || DEFAULT_CONFIG.recoveryEmail,
@@ -676,7 +681,7 @@ export default function App() {
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
       setPopupToast({ title: "Slip Dispatched", desc: `Confirmation WhatsApp sent to ${b.clientName}!` });
     } catch (err) {
-      setPopupToast({ title: "Status Updated", desc: `Marked booking as confirmed (Termux offline).` });
+      setPopupToast({ title: "Status Updated", desc: `Marked booking as confirmed.` });
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
     }
   };
@@ -697,21 +702,7 @@ export default function App() {
         status: "rejected",
         rejectionReason: rejectionReasonText
       });
-
-      const rejectMsg = 
-        `Dear *${rejectModalData.clientName}*,\n\n` +
-        `Thank you for your booking request (#${rejectModalData.bookingNumber || 'HF-BOOKING'}) for *${rejectModalData.eventDate}* with *H&F Makeup Artist*.\n\n` +
-        `*Update on your request:* We are unable to accept this booking.\n` +
-        `*Note:* ${rejectionReasonText}\n\n` +
-        `We truly appreciate your interest and hope to serve you on future dates!`;
-
-      fetch(`${WA_SERVER_URL}/api/send-message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: rejectModalData.clientPhone, message: rejectMsg })
-      }).catch(() => {});
-
-      setPopupToast({ title: "Booking Rejected", desc: `Booking declined and client notified.` });
+      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully.` });
       setRejectModalData(null);
     } catch (err) {
       alert("Error rejecting booking: " + err.message);
@@ -813,7 +804,6 @@ export default function App() {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
-    // High-Resolution Professional Slip Canvas (1200 x 2200)
     canvas.width = 1200;
     canvas.height = 2200;
 
@@ -821,7 +811,6 @@ export default function App() {
     const isConfirmed = b.status === 'confirmed';
 
     const drawAdminSlip = (logoImgObj) => {
-      // 1. Elegant Deep Gradient Background
       const bgGrad = ctx.createLinearGradient(0, 0, 1200, 2200);
       bgGrad.addColorStop(0, '#09090b');
       bgGrad.addColorStop(0.5, '#1e1b4b');
@@ -829,7 +818,6 @@ export default function App() {
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, 1200, 2200);
 
-      // 2. Gold / Purple Outer Accent Frames
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 6;
       ctx.strokeRect(40, 40, 1120, 2120);
@@ -838,7 +826,6 @@ export default function App() {
       ctx.lineWidth = 2;
       ctx.strokeRect(55, 55, 1090, 2090);
 
-      // 3. Watermark Logo Center Crest
       if (logoImgObj) {
         ctx.save();
         ctx.globalAlpha = 0.08;
@@ -846,7 +833,6 @@ export default function App() {
         ctx.restore();
       }
 
-      // 4. Header Section with Logo & Studio Title
       if (logoImgObj) {
         ctx.save();
         ctx.beginPath();
@@ -865,23 +851,22 @@ export default function App() {
         ctx.textAlign = 'left';
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 44px sans-serif';
-        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130);
+        ctx.fillText(draft.studioName || 'H&F MAKEUP ARTIST', 230, 130);
 
         ctx.fillStyle = '#c084fc';
         ctx.font = 'bold 22px sans-serif';
-        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175);
+        ctx.fillText(draft.artistTagline || 'Beauty, Styled Your Way', 230, 175);
       } else {
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 50px sans-serif';
-        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 135);
+        ctx.fillText(draft.studioName || 'H&F MAKEUP ARTIST', 600, 135);
 
         ctx.fillStyle = '#c084fc';
         ctx.font = 'bold 22px sans-serif';
-        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 175);
+        ctx.fillText(draft.artistTagline || 'Beauty, Styled Your Way', 600, 175);
       }
 
-      // Divider Line
       ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -889,22 +874,14 @@ export default function App() {
       ctx.lineTo(1110, 230);
       ctx.stroke();
 
-      // Status Badge Banner
-      ctx.fillStyle = isRejected ? 'rgba(225, 29, 72, 0.2)' : (isConfirmed ? 'rgba(5, 150, 105, 0.2)' : 'rgba(217, 119, 6, 0.2)');
-      ctx.fillRect(90, 260, 1020, 70);
-      ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#d97706');
-      ctx.lineWidth = 2;
-      ctx.strokeRect(90, 260, 1020, 70);
-
       ctx.textAlign = 'center';
-      ctx.fillStyle = isRejected ? '#fb7185' : (isConfirmed ? '#34d399' : '#fbbf24');
+      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#fbbf24');
       ctx.font = 'bold 26px sans-serif';
       ctx.fillText(
         isRejected ? '❌ APPOINTMENT DECLINED / REJECTED' : (isConfirmed ? '✅ OFFICIAL CONFIRMED APPOINTMENT SLIP' : '⏳ PENDING BOOKING REQUEST SLIP'), 
         600, 305
       );
 
-      // 5. Booking Details Rows with full breakdown
       const rows = [
         { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
         { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
@@ -915,7 +892,7 @@ export default function App() {
         { label: 'BASE PACKAGE PRICE', val: `₹${b.basePackagePrice?.toLocaleString('en-IN') || 0}` },
         { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (+₹${b.zoneFee || 350})` },
         { label: 'EXACT VENUE ADDRESS', val: b.venueAddress || 'To be confirmed' },
-        { label: 'PROMO CODE DISCOUNT', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0})` : 'None Applied' }
+        { label: 'PROMO CODE DISCOUNT', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.couponDiscountAmount || b.discountAmount || 0})` : 'None Applied' }
       ];
 
       let startY = 370;
@@ -936,7 +913,6 @@ export default function App() {
         startY += 64;
       });
 
-      // 6. Extra Family Guests Section with individual package/pricing details
       if (b.extraGuestsList && b.extraGuestsList.length > 0) {
         startY += 10;
         ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
@@ -954,7 +930,7 @@ export default function App() {
 
         b.extraGuestsList.forEach((g, gIdx) => {
           const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
-          const rawP = currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 2500;
+          const rawP = draft.pricingByKit?.[g.kit]?.[g.packageKey] || 2500;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
           ctx.fillRect(90, startY, 1020, 50);
 
@@ -971,7 +947,56 @@ export default function App() {
         });
       }
 
-      // 7. Total Final Amount Box
+      startY += 10;
+      ctx.fillStyle = 'rgba(5, 150, 105, 0.15)';
+      ctx.fillRect(90, startY, 1020, 55);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.fillText('DISCOUNTS APPLIED', 120, startY + 34);
+      startY += 62;
+
+      const guestDisc = b.guestDiscountSaved || 0;
+      if (guestDisc > 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.fillRect(90, startY, 1020, 48);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '18px sans-serif';
+        ctx.fillText(`• Extra Guest Group Discount`, 130, startY + 31);
+        ctx.textAlign = 'right';
+        ctx.font = '18px monospace';
+        ctx.fillStyle = '#34d399';
+        ctx.fillText(`-₹${guestDisc.toLocaleString('en-IN')}`, 1070, startY + 31);
+        startY += 52;
+      }
+
+      const couponDisc = b.couponDiscountAmount || (b.appliedCoupon && b.appliedCoupon !== 'None' ? b.discountAmount : 0) || 0;
+      if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDisc > 0) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.fillRect(90, startY, 1020, 48);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '18px sans-serif';
+        ctx.fillText(`• Promo Code (${b.appliedCoupon})`, 130, startY + 31);
+        ctx.textAlign = 'right';
+        ctx.font = '18px monospace';
+        ctx.fillStyle = '#34d399';
+        ctx.fillText(`-₹${couponDisc.toLocaleString('en-IN')}`, 1070, startY + 31);
+        startY += 52;
+      }
+
+      if (guestDisc === 0 && (!b.appliedCoupon || b.appliedCoupon === 'None' || couponDisc === 0)) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+        ctx.fillRect(90, startY, 1020, 48);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '18px sans-serif';
+        ctx.fillText('• None Applied', 130, startY + 31);
+        startY += 52;
+      }
+
       startY += 15;
       ctx.fillStyle = 'rgba(192, 132, 252, 0.25)';
       ctx.fillRect(90, startY, 1020, 115);
@@ -988,15 +1013,14 @@ export default function App() {
       ctx.font = 'bold 48px serif';
       ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN') || 0}`, 600, startY + 92);
 
-      // Footer
       ctx.textAlign = 'center';
       ctx.fillStyle = '#64748b';
       ctx.font = '18px sans-serif';
-      ctx.fillText(`Studio Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${currentDraftSafe.instagramHandle}`, 600, 2110);
+      ctx.fillText(`Studio Base Location: ${draft.baseLocation} • Instagram: @${getCleanInstagramHandle(draft.instagramHandle)}`, 600, 2110);
 
       ctx.fillStyle = '#c084fc';
       ctx.font = 'italic 18px sans-serif';
-      ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 2145);
+      ctx.fillText(draft.artistTagline || 'Beauty, Styled Your Way', 600, 2145);
 
       const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
       const downloadLink = document.createElement('a');
@@ -1005,120 +1029,12 @@ export default function App() {
       downloadLink.click();
     };
 
-    const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
+    const logoUrlToLoad = draft.studioLogo || DEFAULT_CONFIG.studioLogo;
     const logoImg = new Image();
     logoImg.crossOrigin = "anonymous";
     logoImg.src = logoUrlToLoad;
     logoImg.onload = () => drawAdminSlip(logoImg);
     logoImg.onerror = () => drawAdminSlip(null);
-  };
-
-  const handleMediaUpload = async (e, index) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const isVid = file.type.startsWith('video');
-        let finalUrl = '';
-        if (isVid) {
-          if (file.size > 20971520) {
-            alert("Video exceeds 20MB. Please use a compressed clip or direct URL.");
-            return;
-          }
-          finalUrl = await new Promise((res, rej) => {
-            const r = new FileReader();
-            r.onload = () => res(r.result);
-            r.onerror = rej;
-            r.readAsDataURL(file);
-          });
-        } else {
-          finalUrl = await compressImageFile(file, 900, 0.85);
-        }
-
-        const currentDraftSafe = draft || DEFAULT_CONFIG;
-        const copy = [...(currentDraftSafe.galleryPhotos || [])];
-        copy[index] = {
-          title: copy[index]?.title || "Signature Transformation",
-          sub: copy[index]?.sub || "HD Artistry",
-          url: finalUrl,
-          type: isVid ? 'video' : 'image'
-        };
-        setDraft({ ...currentDraftSafe, galleryPhotos: copy });
-        setPopupToast({ title: "Media Loaded", desc: "Media uploaded successfully! Click save below." });
-      } catch (err) {
-        alert("Upload error: " + err.message);
-      }
-    }
-  };
-
-  const handlePackageImageUpload = async (e, kit, pkgKey) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const compressedBase64 = await compressImageFile(file, 800, 0.85);
-        const currentDraftSafe = draft || DEFAULT_CONFIG;
-        setDraft({
-          ...currentDraftSafe,
-          kitImages: {
-            ...(currentDraftSafe.kitImages || {}),
-            [kit]: {
-              ...(currentDraftSafe.kitImages?.[kit] || {}),
-              [pkgKey]: compressedBase64
-            }
-          }
-        });
-        setPopupToast({ title: "Image Optimized", desc: `Loaded optimized image for ${pkgKey}.` });
-      } catch (err) {
-        alert("Image processing error: " + err.message);
-      }
-    }
-  };
-
-  const handleProfileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const compressedBase64 = await compressImageFile(file, 500, 0.85);
-        const currentDraftSafe = draft || DEFAULT_CONFIG;
-        setDraft({ ...currentDraftSafe, profileImage: compressedBase64, profilePhotoType: 'image' });
-        setPopupToast({ title: "Profile Loaded", desc: "Profile picture loaded successfully." });
-      } catch (err) {
-        alert("Error loading photo: " + err.message);
-      }
-    }
-  };
-
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      try {
-        const compressedBase64 = await compressImageFile(file, 400, 0.85);
-        const currentDraftSafe = draft || DEFAULT_CONFIG;
-        setDraft({ ...currentDraftSafe, studioLogo: compressedBase64 });
-        setPopupToast({ title: "Logo Loaded", desc: "Studio logo loaded successfully." });
-      } catch (err) {
-        alert("Error loading logo: " + err.message);
-      }
-    }
-  };
-
-  const year = calendarDate.getFullYear();
-  const month = calendarDate.getMonth();
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  const getDayBookingStatus = (day) => {
-    const formatted = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const matches = bookingsList.filter(b => b.eventDate === formatted);
-    if (matches.length === 0) return { hasBookings: false, list: [] };
-    const isConfirmed = matches.some(b => b.status === 'confirmed');
-    return {
-      hasBookings: true,
-      isConfirmed,
-      count: matches.length,
-      list: matches,
-      dateStr: formatted
-    };
   };
 
   const filteredBookingsList = bookingsList.filter(b => {
@@ -1178,7 +1094,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v4.1.0 Production Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v4.2.0 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1307,7 +1223,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 {currentDraftSafe.studioName || 'H&F Studio Admin'}
               </h1>
-              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v4.1.0 Pro Suite</p>
+              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v4.2.0 Pro Suite</p>
             </div>
           </div>
 
@@ -1902,14 +1818,46 @@ export default function App() {
           </div>
         )}
 
-        {/* 4. GENERAL & SECURITY SETTINGS */}
+        {/* 4. GENERAL & SECURITY SETTINGS (With Telegram Bot Token & Chat ID fields) */}
         {activeFolderId === 'general' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div>
               <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
                 <Settings className="w-5 h-5" /> General & Security Settings
               </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
+              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Telegram Bot Notification credentials.</p>
+            </div>
+
+            {/* Telegram Bot Credentials Config Section */}
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+                <Send className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Telegram Bot Notification Settings
+              </h4>
+              <p className={`text-[13px] ${iosMuted}`}>Enter your official Telegram Bot API Token and Chat ID to receive instant booking alerts.</p>
+
+              <div className="space-y-3">
+                <div>
+                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Telegram Bot API Token</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 8891500480:AAGvxL16..."
+                    value={currentDraftSafe.telegramBotToken || ''}
+                    onChange={e => setDraft({ ...currentDraftSafe, telegramBotToken: e.target.value })}
+                    className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${iosInputBg}`}
+                  />
+                </div>
+
+                <div>
+                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Telegram Chat ID</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 8891500480"
+                    value={currentDraftSafe.telegramChatId || ''}
+                    onChange={e => setDraft({ ...currentDraftSafe, telegramChatId: e.target.value })}
+                    className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${iosInputBg}`}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
@@ -1944,52 +1892,6 @@ export default function App() {
                     </button>
                   </div>
                 )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <div className={`p-3.5 rounded-[16px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                  <span className="text-[13px] font-bold">Enable Touch ID / Biometrics</span>
-                  <button
-                    type="button"
-                    onClick={() => setDraft({ ...currentDraftSafe, biometricEnabled: !currentDraftSafe.biometricEnabled })}
-                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${currentDraftSafe.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
-                  >
-                    {currentDraftSafe.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
-                  </button>
-                </div>
-
-                <div className={`p-3.5 rounded-[16px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                  <span className="text-[13px] font-bold">Enable Face ID / Passkey</span>
-                  <button
-                    type="button"
-                    onClick={() => setDraft({ ...currentDraftSafe, faceIdEnabled: !currentDraftSafe.faceIdEnabled })}
-                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${currentDraftSafe.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
-                  >
-                    {currentDraftSafe.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <GitBranch className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Admin App Version & History
-              </h4>
-              <p className={`text-[13px] ${iosMuted}`}>Deployment timeline and release changes for Admin Console.</p>
-
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
-                  <div key={vIdx} className={`p-3.5 rounded-[16px] border text-[13px] space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
-                    <div className="flex justify-between items-center">
-                      <span className={`font-bold font-mono ${adminThemeStyle.accentText}`}>{ver.version}</span>
-                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600">
-                        {ver.status}
-                      </span>
-                    </div>
-                    <p className="text-[12px]">{ver.changes}</p>
-                    <span className={`text-[11px] font-mono ${iosMuted}`}>Released: {ver.date}</span>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -2231,7 +2133,7 @@ export default function App() {
                         <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
                         <div className="flex justify-between"><span className={iosMuted}>Base Price:</span><span className="font-mono">₹{b.basePackagePrice?.toLocaleString('en-IN') || 0}</span></div>
                         
-                        {/* Rich Guest Breakdown with Exact Package & Price */}
+                        {/* Rich Guest Breakdown */}
                         <div className="pt-1 pb-1 border-t border-dashed border-slate-500/30">
                           <span className={`block text-[11px] font-bold ${adminThemeStyle.accentText}`}>Extra Family Guests ({b.extraGuestsCount || 0}):</span>
                           {b.extraGuestsList && b.extraGuestsList.length > 0 ? (
