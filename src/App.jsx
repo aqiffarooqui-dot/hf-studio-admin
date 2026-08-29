@@ -7,7 +7,7 @@ import {
   ListFilter, Car, Volume2, Activity, SlidersHorizontal, CheckCircle2, 
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
-  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn
+  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -268,8 +268,11 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.3.0", date: "August 29, 2026", status: "Active Live Production", changes: "Added package add/remove, universal delete confirmation modals, auto-dismiss toast alerts, live status banner, and iOS pills layout." }
+  { version: "v3.4.0", date: "August 29, 2026", status: "Active Live Production", changes: "iOS pill-shaped settings layout, perfectly aligned header with live booking badge, and full package/rate customization." }
 ];
+
+const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
+const bridalPackages = ['engagement_bride', 'royal_bridal'];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
@@ -714,7 +717,10 @@ export default function App() {
   const handleExecuteDelete = async () => {
     if (!deleteConfirmModal) return;
     try {
-      if (deleteConfirmModal.type === 'single') {
+      if (deleteConfirmModal.onConfirm) {
+        deleteConfirmModal.onConfirm();
+        setActionStatus("🗑️ Item deleted successfully.");
+      } else if (deleteConfirmModal.type === 'single') {
         if (deleteConfirmModal.isBooking) {
           await deleteDoc(doc(db, "bookings", deleteConfirmModal.id));
         } else if (deleteConfirmModal.isFeedback) {
@@ -988,9 +994,9 @@ export default function App() {
 
   const iosBg = isAdminDarkMode ? "bg-black text-[#F2F2F7]" : "bg-[#F2F2F7] text-[#1C1C1E]";
   const iosGroupCard = isAdminDarkMode 
-    ? "bg-[#1C1C1E] border border-white/10 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.4)] overflow-hidden" 
-    : "bg-white border border-black/5 rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.06)] overflow-hidden";
-  const iosInputBg = isAdminDarkMode ? "bg-[#2C2C2E] text-white border-none rounded-[12px]" : "bg-[#F2F2F7] text-[#1C1C1E] border-none rounded-[12px]";
+    ? "bg-[#1C1C1E] border border-white/10 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden p-3 sm:p-5" 
+    : "bg-white border border-black/5 rounded-[28px] shadow-[0_8px_30px_rgba(0,0,0,0.06)] overflow-hidden p-3 sm:p-5";
+  const iosInputBg = isAdminDarkMode ? "bg-[#2C2C2E] text-white border-none rounded-[16px]" : "bg-[#F2F2F7] text-[#1C1C1E] border-none rounded-[16px]";
   const iosMuted = isAdminDarkMode ? "text-[#8E8E93]" : "text-[#8E8E93]";
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
@@ -1001,40 +1007,40 @@ export default function App() {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
         
         {showForgotPasswordModal ? (
-          <form onSubmit={handleForgotPasswordSubmit} className={`max-w-sm w-full p-8 rounded-[28px] border text-center space-y-4 shadow-2xl ${iosGroupCard} animate-fade-in`}>
-            <div className="w-16 h-16 rounded-[22px] bg-blue-500/15 text-blue-500 flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleForgotPasswordSubmit} className={`max-w-sm w-full p-8 rounded-[32px] border text-center space-y-4 shadow-2xl ${iosGroupCard} animate-fade-in`}>
+            <div className="w-16 h-16 rounded-[24px] bg-blue-500/15 text-blue-500 flex items-center justify-center mx-auto shadow-md">
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
             <h2 className="text-[22px] font-bold tracking-tight">Recover Password</h2>
             <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{draft.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
-              <div className="p-3.5 rounded-[14px] bg-emerald-500/15 text-emerald-700 text-[13px] font-semibold">
+              <div className="p-3.5 rounded-[16px] bg-emerald-500/15 text-emerald-700 text-[13px] font-semibold">
                 {forgotPasswordStatus}
               </div>
             )}
 
-            <button type="submit" className="w-full py-3.5 bg-[#007AFF] text-white font-bold text-[14px] rounded-[14px] shadow-lg active:scale-95 transition">Send PIN to Recovery Email</button>
+            <button type="submit" className="w-full py-3.5 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition">Send PIN to Recovery Email</button>
             <button type="button" onClick={() => setShowForgotPasswordModal(false)} className="text-[13px] text-[#007AFF] underline">Back to Login</button>
           </form>
         ) : (
-          <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-[28px] border text-center space-y-5 shadow-2xl ${iosGroupCard}`}>
-            <div className="w-16 h-16 rounded-[22px] bg-blue-500/15 text-blue-500 flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-[32px] border text-center space-y-5 shadow-2xl ${iosGroupCard}`}>
+            <div className="w-16 h-16 rounded-[24px] bg-blue-500/15 text-blue-500 flex items-center justify-center mx-auto shadow-md">
               <Lock className="w-8 h-8 animate-bounce" />
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
               <p className={`text-[13px] ${iosMuted} mt-1`}>Apple iOS 19 Liquid Glass Suite</p>
             </div>
-            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-3.5 font-mono text-[#007AFF] ${iosInputBg}`} />
+            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-[#007AFF] ${iosInputBg}`} />
             
-            <button type="submit" className="w-full py-3.5 bg-[#007AFF] text-white font-bold text-[14px] rounded-[14px] shadow-lg active:scale-95 transition">Unlock Console</button>
+            <button type="submit" className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition">Unlock Console</button>
             
             <div className="space-y-2.5 pt-3 border-t border-slate-200/20">
               <button
                 type="button"
                 onClick={handleBiometricOrFaceLogin}
-                className={`w-full py-3 font-bold text-[13px] text-[#007AFF] flex items-center justify-center gap-2 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10' : 'bg-slate-100'}`}
+                className={`w-full py-3.5 font-bold text-[13px] text-[#007AFF] flex items-center justify-center gap-2 rounded-[16px] ${isAdminDarkMode ? 'bg-white/10' : 'bg-slate-100'}`}
               >
                 <Fingerprint className="w-4 h-4 text-[#007AFF]" />
                 <span>Login with Fingerprint / Face ID</span>
@@ -1062,7 +1068,7 @@ export default function App() {
 
       {deleteConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[20px] animate-fade-in">
-          <div className={`max-w-sm w-full rounded-[24px] p-6 text-center space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#1C1C1E] text-white' : 'bg-white text-black'}`}>
+          <div className={`max-w-sm w-full rounded-[28px] p-6 text-center space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#1C1C1E] text-white' : 'bg-white text-black'}`}>
             <div className="w-14 h-14 rounded-full bg-rose-500/15 text-rose-500 flex items-center justify-center mx-auto shadow-md">
               <AlertTriangle className="w-7 h-7" />
             </div>
@@ -1071,8 +1077,8 @@ export default function App() {
               {deleteConfirmModal.message || "Are you sure you want to delete this item? This action cannot be undone."}
             </p>
             <div className="flex gap-2.5 pt-2">
-              <button onClick={() => setDeleteConfirmModal(null)} className={`flex-1 py-3 rounded-[14px] font-bold text-[13px] ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>Cancel</button>
-              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Delete</button>
+              <button onClick={() => setDeleteConfirmModal(null)} className={`flex-1 py-3 rounded-[16px] font-bold text-[13px] ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>Cancel</button>
+              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Delete</button>
             </div>
           </div>
         </div>
@@ -1080,7 +1086,7 @@ export default function App() {
 
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-[20px] animate-fade-in">
-          <div className={`max-w-lg w-full rounded-[24px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#1C1C1E] text-white' : 'bg-white text-black'}`}>
+          <div className={`max-w-lg w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#1C1C1E] text-white' : 'bg-white text-black'}`}>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <Ban className="w-5 h-5 text-rose-500" />
@@ -1099,13 +1105,13 @@ export default function App() {
                 rows={3}
                 value={rejectionReasonText}
                 onChange={e => setRejectionReasonText(e.target.value)}
-                className={`w-full p-3.5 rounded-[14px] text-[13px] ${iosInputBg}`}
+                className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
               />
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200/40">
-              <button onClick={() => setRejectModalData(null)} className="px-4 py-2.5 rounded-[14px] bg-slate-200 text-[13px] font-bold text-slate-700">Cancel</button>
-              <button onClick={handleConfirmRejection} className="px-5 py-2.5 rounded-[14px] bg-rose-600 text-white font-bold text-[13px] shadow-lg">Confirm Rejection</button>
+              <button onClick={() => setRejectModalData(null)} className="px-4 py-2.5 rounded-[16px] bg-slate-200 text-[13px] font-bold text-slate-700">Cancel</button>
+              <button onClick={handleConfirmRejection} className="px-5 py-2.5 rounded-[16px] bg-rose-600 text-white font-bold text-[13px] shadow-lg">Confirm Rejection</button>
             </div>
           </div>
         </div>
@@ -1222,70 +1228,72 @@ export default function App() {
           </div>
         )}
 
-        {/* iOS-Like Settings Pills Directory */}
+        {/* iOS-Like Pill-Shaped Settings Grid Layout */}
         {!activeFolderId && (
-          <div className={`p-4 sm:p-5 ${iosGroupCard}`}>
-            <div className="space-y-1.5">
-              {adminFolders.map((f, index) => {
-                const Icon = f.icon;
-                const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+            {adminFolders.map((f, index) => {
+              const Icon = f.icon;
+              const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
 
-                return (
-                  <div
-                    key={f.id}
-                    onClick={() => !isReorderMode && openFolder(f.id)}
-                    className={`flex items-center justify-between p-3.5 sm:p-4 rounded-[16px] transition-all duration-200 cursor-pointer group ${
-                      isReorderMode 
-                        ? 'bg-blue-500/10 ring-2 ring-blue-500 my-1' 
-                        : (isAdminDarkMode ? 'hover:bg-white/10 bg-white/[0.02]' : 'hover:bg-[#E5E5EA]/70 bg-slate-50/50')
-                    }`}
-                  >
-                    <div className="flex items-center gap-3.5 min-w-0">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[12px] bg-[#007AFF] text-white flex items-center justify-center shadow-md shrink-0">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="truncate">
-                        <h4 className="font-semibold text-[15px] tracking-tight truncate group-hover:text-[#007AFF] transition-colors">
-                          {f.label}
-                        </h4>
-                        <p className={`text-[12px] truncate ${iosMuted}`}>{f.desc}</p>
-                      </div>
+              return (
+                <div
+                  key={f.id}
+                  onClick={() => !isReorderMode && openFolder(f.id)}
+                  className={`flex items-center justify-between p-4 rounded-[24px] transition-all duration-200 cursor-pointer group border ${
+                    isReorderMode 
+                      ? 'bg-blue-500/10 ring-2 ring-blue-500' 
+                      : (isAdminDarkMode 
+                          ? 'bg-[#1C1C1E] border-white/10 hover:bg-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' 
+                          : 'bg-white border-black/5 hover:bg-slate-50 shadow-[0_4px_20px_rgba(0,0,0,0.04)]')
+                  }`}
+                >
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="w-11 h-11 rounded-[16px] bg-[#007AFF] text-white flex items-center justify-center shadow-md shrink-0">
+                      <Icon className="w-5 h-5" />
                     </div>
-
-                    <div className="flex items-center gap-3 shrink-0">
-                      {count !== null && (
-                        <span className="text-[11px] font-mono font-bold bg-[#007AFF]/20 text-[#007AFF] px-2.5 py-0.5 rounded-full">
-                          {count}
-                        </span>
-                      )}
-
-                      {isReorderMode ? (
-                        <div className="flex items-center gap-1 bg-black/10 p-1 rounded-[10px]">
-                          <button
-                            type="button"
-                            disabled={index === 0}
-                            onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
-                            className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={index === adminFolders.length - 1}
-                            onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
-                            className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <ChevronRight className={`w-4 h-4 ${iosMuted}`} />
-                      )}
+                    <div className="truncate">
+                      <h4 className="font-bold text-[15px] tracking-tight truncate group-hover:text-[#007AFF] transition-colors">
+                        {f.label}
+                      </h4>
+                      <p className={`text-[12px] truncate ${iosMuted}`}>{f.desc}</p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="flex items-center gap-2 shrink-0 pl-2">
+                    {count !== null && (
+                      <span className="text-[11px] font-mono font-bold bg-[#007AFF]/20 text-[#007AFF] px-2.5 py-0.5 rounded-full">
+                        {count}
+                      </span>
+                    )}
+
+                    {isReorderMode ? (
+                      <div className="flex items-center gap-1 bg-black/10 p-1 rounded-[10px]">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
+                          className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index === adminFolders.length - 1}
+                          onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
+                          className="p-1 rounded text-slate-500 hover:text-white disabled:opacity-20"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center text-slate-400 group-hover:text-[#007AFF] transition-colors">
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -1298,13 +1306,13 @@ export default function App() {
               <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Permanent Recovery Email.</p>
             </div>
 
-            <div className={`p-5 rounded-[18px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
                 <Fingerprint className="w-4 h-4 text-[#007AFF]" /> Hardware Fingerprint Scanner Integration
               </h4>
               <p className={`text-[13px] ${iosMuted}`}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
 
-              <div className="p-4 rounded-[16px] bg-blue-500/10 border border-blue-500/20 text-center space-y-3">
+              <div className="p-4 rounded-[18px] bg-blue-500/10 border border-blue-500/20 text-center space-y-3">
                 <div className="w-14 h-14 rounded-2xl bg-[#007AFF] text-white flex items-center justify-center mx-auto shadow-md">
                   <Fingerprint className={`w-7 h-7 ${isScanningFinger ? 'animate-pulse text-amber-300' : ''}`} />
                 </div>
@@ -1324,7 +1332,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleRegisterFingerprintScan}
-                      className="px-5 py-2.5 rounded-[12px] bg-[#007AFF] text-white font-bold text-[13px] shadow active:scale-95 transition"
+                      className="px-5 py-2.5 rounded-[14px] bg-[#007AFF] text-white font-bold text-[13px] shadow active:scale-95 transition"
                     >
                       {draft.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
                     </button>
@@ -1333,23 +1341,23 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                <div className={`p-3.5 rounded-[14px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                <div className={`p-3.5 rounded-[16px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
                   <span className="text-[13px] font-bold">Enable Touch ID / Biometrics</span>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, biometricEnabled: !draft.biometricEnabled })}
-                    className={`px-3 py-1.5 rounded-[10px] font-bold text-[12px] ${draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
                   >
                     {draft.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
 
-                <div className={`p-3.5 rounded-[14px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                <div className={`p-3.5 rounded-[16px] border flex items-center justify-between ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
                   <span className="text-[13px] font-bold">Enable Face ID / Passkey</span>
                   <button
                     type="button"
                     onClick={() => setDraft({ ...draft, faceIdEnabled: !draft.faceIdEnabled })}
-                    className={`px-3 py-1.5 rounded-[10px] font-bold text-[12px] ${draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
                   >
                     {draft.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
@@ -1357,7 +1365,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-[#007AFF]" /> Admin App Version & History
               </h4>
@@ -1365,10 +1373,10 @@ export default function App() {
 
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {ADMIN_APP_VERSIONS.map((ver, vIdx) => (
-                  <div key={vIdx} className={`p-3 rounded-[14px] border text-[13px] space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
+                  <div key={vIdx} className={`p-3.5 rounded-[16px] border text-[13px] space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}>
                     <div className="flex justify-between items-center">
                       <span className="font-bold font-mono text-[#007AFF]">{ver.version}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600">
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600">
                         {ver.status}
                       </span>
                     </div>
@@ -1379,7 +1387,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
                 <Mail className="w-4 h-4 text-amber-500" /> Permanent Recovery Email ID
               </h4>
@@ -1389,11 +1397,11 @@ export default function App() {
                 type="email"
                 value={draft.recoveryEmail || "aqiffarooqui@gmail.com"}
                 onChange={e => setDraft({ ...draft, recoveryEmail: e.target.value })}
-                className={`w-full p-3 rounded-[14px] font-mono text-[13px] font-bold text-[#007AFF] border ${iosInputBg}`}
+                className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-[#007AFF] border ${iosInputBg}`}
               />
             </div>
 
-            <form onSubmit={handlePasswordChange} className={`p-5 rounded-[18px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <form onSubmit={handlePasswordChange} className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
                 <Key className="w-4 h-4 text-[#007AFF]" /> Change Admin PIN Password
               </h4>
@@ -1407,7 +1415,7 @@ export default function App() {
                     placeholder="Enter current PIN"
                     value={oldPinInput}
                     onChange={e => setOldPinInput(e.target.value)}
-                    className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
                   />
                 </div>
 
@@ -1420,7 +1428,7 @@ export default function App() {
                       placeholder="Enter new PIN"
                       value={newPinInput}
                       onChange={e => setNewPinInput(e.target.value)}
-                      className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
                     />
                   </div>
                   <div>
@@ -1431,14 +1439,14 @@ export default function App() {
                       placeholder="Confirm new PIN"
                       value={confirmPinInput}
                       onChange={e => setConfirmPinInput(e.target.value)}
-                      className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-[#007AFF] text-white font-bold text-[14px] rounded-[14px] shadow-lg active:scale-95 transition"
+                  className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition"
                 >
                   Update Admin Password
                 </button>
@@ -1449,7 +1457,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'General Settings'}
               onClick={() => handleSaveSpecificCard('General Settings')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'General Settings' ? 'Saving...' : 'Save General & Security Settings Live'}</span>
@@ -1469,7 +1477,7 @@ export default function App() {
               </span>
             </div>
 
-            <div className={`p-4 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-4 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="relative">
                 <Search className={`absolute left-3.5 top-3.5 w-4 h-4 ${iosMuted}`} />
                 <input
@@ -1487,7 +1495,7 @@ export default function App() {
                   <select
                     value={bookingStatusFilter}
                     onChange={e => setBookingStatusFilter(e.target.value)}
-                    className={`w-full p-2.5 text-[13px] font-bold outline-none ${iosInputBg}`}
+                    className={`w-full p-3 text-[13px] font-bold outline-none ${iosInputBg}`}
                   >
                     <option value="all" className="text-black">🌟 All Statuses</option>
                     <option value="confirmed" className="text-black">✅ Confirmed / Accepted</option>
@@ -1503,13 +1511,13 @@ export default function App() {
                       type="date"
                       value={bookingDateFilter}
                       onChange={e => setBookingDateFilter(e.target.value)}
-                      className={`flex-1 p-2.5 text-[13px] outline-none ${iosInputBg}`}
+                      className={`flex-1 p-3 text-[13px] outline-none ${iosInputBg}`}
                     />
                     {bookingDateFilter && (
                       <button
                         type="button"
                         onClick={() => setBookingDateFilter('')}
-                        className="px-3 py-2 rounded-[12px] bg-slate-200 text-xs font-bold text-slate-700"
+                        className="px-3.5 py-2.5 rounded-[14px] bg-slate-200 text-xs font-bold text-slate-700"
                       >
                         Clear
                       </button>
@@ -1536,7 +1544,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmModal({ type: 'batch', message: `Are you sure you want to delete ${selectedBookings.length} selected bookings?` })}
-                    className="px-4 py-2 rounded-[12px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md active:scale-95 flex items-center gap-1.5 transition"
+                    className="px-4 py-2 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md active:scale-95 flex items-center gap-1.5 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete Selected ({selectedBookings.length})</span>
@@ -1556,7 +1564,7 @@ export default function App() {
                     : null;
 
                   return (
-                    <div key={b.id} className={`p-5 rounded-[22px] border space-y-3.5 transition-all ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'} ${isSelected ? 'ring-2 ring-[#007AFF]' : ''} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/60' : ''}`}>
+                    <div key={b.id} className={`p-5 rounded-[24px] border space-y-3.5 transition-all ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'} ${isSelected ? 'ring-2 ring-[#007AFF]' : ''} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/60' : ''}`}>
                       <div className="flex justify-between items-start">
                         <div className="flex items-start gap-2.5 min-w-0">
                           <input
@@ -1573,7 +1581,7 @@ export default function App() {
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-mono text-[12px] font-bold text-[#007AFF] bg-blue-500/10 px-2 py-0.5 rounded-[8px]">
+                              <span className="font-mono text-[12px] font-bold text-[#007AFF] bg-blue-500/10 px-2.5 py-0.5 rounded-[8px]">
                                 {b.bookingNumber || '#HF-PENDING'}
                               </span>
                               <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
@@ -1629,7 +1637,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handleAcceptBookingWhatsApp(b)}
-                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[12px] shadow-sm flex items-center justify-center gap-1.5 transition"
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[14px] shadow-sm flex items-center justify-center gap-1.5 transition"
                         >
                           <Send className="w-3.5 h-3.5" />
                           <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
@@ -1639,14 +1647,14 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'confirmed')}
-                            className="py-2 bg-blue-500/15 text-blue-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
+                            className="py-2.5 bg-blue-500/15 text-blue-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
                           >
                             <Check className="w-3 h-3" /> Accept
                           </button>
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'pending')}
-                            className="py-2 bg-amber-500/15 text-amber-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
+                            className="py-2.5 bg-amber-500/15 text-amber-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
                           >
                             <RotateCcw className="w-3 h-3" /> Pending
                           </button>
@@ -1656,7 +1664,7 @@ export default function App() {
                               setRejectModalData(b);
                               setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
                             }}
-                            className="py-2 bg-rose-500/15 text-rose-600 font-bold text-[11px] rounded-[10px] flex items-center justify-center gap-1"
+                            className="py-2.5 bg-rose-500/15 text-rose-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
                           >
                             <Ban className="w-3 h-3" /> Reject
                           </button>
@@ -1665,7 +1673,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className="w-full py-2 bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1.5 transition"
+                          className="w-full py-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1.5 transition"
                         >
                           <Download className="w-3.5 h-3.5" />
                           <span>Download Status Slip (.JPG)</span>
@@ -1698,7 +1706,7 @@ export default function App() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedbacksList.map(item => (
-                  <div key={item.id} className={`p-4.5 rounded-[18px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={item.id} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-1 text-amber-400">
@@ -1714,7 +1722,7 @@ export default function App() {
                       <button onClick={() => setDeleteConfirmModal({ type: 'single', isFeedback: true, id: item.id, message: `Are you sure you want to delete feedback from ${item.clientName}?` })} className="p-1 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                     </div>
 
-                    <p className={`text-[13px] leading-relaxed p-3 rounded-[14px] ${isAdminDarkMode ? 'bg-black/30 text-slate-300' : 'bg-white text-slate-800 shadow-sm'}`}>
+                    <p className={`text-[13px] leading-relaxed p-3.5 rounded-[16px] ${isAdminDarkMode ? 'bg-black/30 text-slate-300' : 'bg-white text-slate-800 shadow-sm'}`}>
                       "{item.message}"
                     </p>
 
@@ -1743,13 +1751,13 @@ export default function App() {
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2.5 rounded-[12px] bg-slate-200 text-[#007AFF]">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2.5 rounded-[14px] bg-slate-200 text-[#007AFF]">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <span className="font-bold text-[14px] font-mono min-w-[130px] text-center">
                   {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2.5 rounded-[12px] bg-slate-200 text-[#007AFF]">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2.5 rounded-[14px] bg-slate-200 text-[#007AFF]">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -1761,7 +1769,7 @@ export default function App() {
               ))}
 
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-[14px]" />
+                <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-[16px]" />
               ))}
 
               {Array.from({ length: totalDaysInMonth }).map((_, i) => {
@@ -1771,7 +1779,7 @@ export default function App() {
                   <div
                     key={`day_${day}`}
                     onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
-                    className={`h-16 sm:h-20 rounded-[14px] p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
+                    className={`h-16 sm:h-20 rounded-[16px] p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
                       status.hasBookings 
                         ? (status.isConfirmed 
                             ? 'bg-emerald-500/20 border-emerald-500/50 hover:scale-105 shadow-md' 
@@ -1794,7 +1802,7 @@ export default function App() {
             </div>
 
             {selectedCalendarDay && (
-              <div className={`p-4 rounded-[16px] border space-y-3 animate-fade-in ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className={`p-4 rounded-[18px] border space-y-3 animate-fade-in ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className="font-mono font-bold text-sm text-[#007AFF]">Date: {selectedCalendarDay.dateStr}</span>
@@ -1807,7 +1815,7 @@ export default function App() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedCalendarDay.list.map(b => (
-                    <div key={b.id} className={`p-3 rounded-[12px] border text-xs space-y-1 ${isAdminDarkMode ? 'bg-black/40 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                    <div key={b.id} className={`p-3 rounded-[14px] border text-xs space-y-1 ${isAdminDarkMode ? 'bg-black/40 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                       <div className="flex justify-between font-bold">
                         <span>{b.bookingNumber || ''} • {b.clientName}</span>
                         <span className="font-mono text-[#007AFF]">₹{b.totalAmount?.toLocaleString('en-IN')}</span>
@@ -1836,23 +1844,23 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleAddNewPackage}
-                  className="px-4 py-2 rounded-[12px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
+                  className="px-4 py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
                 >
                   <Plus className="w-4 h-4" /> Add Package
                 </button>
 
-                <div className={`inline-flex p-1.5 rounded-[16px] border gap-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                <div className={`inline-flex p-1.5 rounded-[18px] border gap-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                   <button
                     type="button"
                     onClick={() => setEditingKitTab('international')}
-                    className={`px-4 py-2 rounded-[12px] text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
+                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
                   >
                     👑 Luxury Kit
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingKitTab('drugstore')}
-                    className={`px-4 py-2 rounded-[12px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
+                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-[#007AFF] text-white shadow' : iosMuted}`}
                   >
                     ✨ HD Kit
                   </button>
@@ -1862,13 +1870,11 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {Object.keys(draft.kitText?.[editingKitTab] || {}).map(k => {
-                const kitData = draft.kitText[editingKitTab] || {};
-                const pkgText = kitData[k] || { name: k, desc: '' };
-                const imgData = draft.kitImages?.[editingKitTab] || {};
-                const pkgImg = imgData[k] || '';
+                const pkgText = draft.kitText[editingKitTab][k] || { name: k, desc: '' };
+                const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || '';
 
                 return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[22px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-[#007AFF] font-mono uppercase">Key: {k}</span>
                       <div className="flex items-center gap-2">
@@ -1903,9 +1909,9 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-2.5 rounded-[12px] text-xs font-mono ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
                         />
-                        <label className="block text-center py-2 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-[11px] font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
+                        <label className="block text-center py-2.5 rounded-[14px] bg-blue-500/15 text-[#007AFF] text-[11px] font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
                           Upload Photo (&lt;20MB)
                           <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
                         </label>
@@ -1928,7 +1934,7 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                          className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${iosInputBg}`}
                         />
                       </div>
                       <div>
@@ -1946,7 +1952,7 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
+                          className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
                         />
                       </div>
                     </div>
@@ -1959,7 +1965,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Package Master'}
               onClick={() => handleSaveSpecificCard('Package Master')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
@@ -1978,7 +1984,7 @@ export default function App() {
               </p>
             </div>
 
-            <div className={`p-5 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-5 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className={`w-3 h-3 rounded-full ${draft.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
@@ -1994,7 +2000,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setDraft({ ...draft, isAppDown: !draft.isAppDown })}
-                className={`px-5 py-3 rounded-[14px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
+                className={`px-5 py-3 rounded-[16px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
                   draft.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
                 }`}
               >
@@ -2007,7 +2013,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Maintenance Mode'}
               onClick={() => handleSaveSpecificCard('Maintenance Mode')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
@@ -2024,7 +2030,7 @@ export default function App() {
               <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure bottom-right floating offer pill text, code and activation status.</p>
             </div>
 
-            <div className={`p-5 rounded-[18px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex items-center justify-between">
                 <span className="font-bold text-xs">Enable Floating Promo Banner Widget</span>
                 <button
@@ -2036,7 +2042,7 @@ export default function App() {
                       enabled: !(draft.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={`px-3 py-1.5 rounded-[12px] font-bold text-xs flex items-center gap-1.5 ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                 >
                   {draft.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <span>{draft.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
@@ -2053,7 +2059,7 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
                     })}
-                    className={`w-full p-3 rounded-[12px] text-xs ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
                   />
                 </div>
                 <div>
@@ -2065,7 +2071,7 @@ export default function App() {
                       ...draft,
                       floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
                     })}
-                    className={`w-full p-3 rounded-[12px] text-xs font-mono font-bold text-[#007AFF] ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[14px] text-xs font-mono font-bold text-[#007AFF] ${iosInputBg}`}
                   />
                 </div>
               </div>
@@ -2079,7 +2085,7 @@ export default function App() {
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
                   })}
-                  className={`w-full p-3 rounded-[12px] text-xs ${iosInputBg}`}
+                  className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
                 />
               </div>
 
@@ -2092,7 +2098,7 @@ export default function App() {
                     ...draft,
                     floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
                   })}
-                  className={`w-full p-3 rounded-[12px] text-xs ${iosInputBg}`}
+                  className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
                 />
               </div>
             </div>
@@ -2101,7 +2107,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Floating Banner'}
               onClick={() => handleSaveSpecificCard('Floating Banner')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
@@ -2140,7 +2146,7 @@ export default function App() {
                     });
                   }
                 }}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
+                className="px-4 py-2.5 bg-[#007AFF] text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Coupon
               </button>
@@ -2150,7 +2156,7 @@ export default function App() {
               {Object.entries(draft.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
-                  <div key={code} className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={code} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
                         <span className="font-mono text-[#007AFF] font-bold text-[15px]">{code}</span>
@@ -2169,7 +2175,7 @@ export default function App() {
                               [code]: { ...c, enabled: !isCodeActive }
                             }
                           })}
-                          className={`px-3 py-1.5 rounded-[12px] font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                          className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                         >
                           {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                           <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
@@ -2179,14 +2185,13 @@ export default function App() {
                           setDeleteConfirmModal({
                             type: 'single',
                             message: `Are you sure you want to delete coupon "${code}"?`,
-                            isCustomAction: true,
                             onConfirm: () => {
                               const copy = { ...draft.validCoupons };
                               delete copy[code];
                               setDraft({ ...draft, validCoupons: copy });
                             }
                           });
-                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[10px]"><Trash2 className="w-4 h-4" /></button>
+                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
@@ -2202,7 +2207,7 @@ export default function App() {
                               [code]: { ...c, type: e.target.value }
                             }
                           })}
-                          className={`w-full p-2.5 rounded-[12px] text-xs font-bold ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
                         >
                           <option value="percent">% Percent Off</option>
                           <option value="flat">₹ Flat Discount</option>
@@ -2221,7 +2226,7 @@ export default function App() {
                               [code]: { ...c, value: Number(e.target.value) }
                             }
                           })}
-                          className={`w-full p-2.5 rounded-[12px] font-mono text-[#007AFF] text-xs font-bold ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] font-mono text-[#007AFF] text-xs font-bold ${iosInputBg}`}
                         />
                       </div>
 
@@ -2237,7 +2242,7 @@ export default function App() {
                               [code]: { ...c, expiryDate: e.target.value }
                             }
                           })}
-                          className={`w-full p-2.5 rounded-[12px] text-xs font-mono text-amber-500 ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] text-xs font-mono text-amber-500 ${iosInputBg}`}
                         />
                       </div>
                     </div>
@@ -2254,7 +2259,7 @@ export default function App() {
                             [code]: { ...c, label: e.target.value }
                           }
                         })}
-                        className={`w-full p-2.5 rounded-[12px] text-xs ${iosInputBg}`}
+                        className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
                       />
                     </div>
                   </div>
@@ -2266,7 +2271,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Coupons'}
               onClick={() => handleSaveSpecificCard('Coupons')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Coupons' ? 'Saving...' : 'Save Promo Coupons Live'}</span>
@@ -2294,7 +2299,7 @@ export default function App() {
                     ]
                   });
                 }}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
+                className="px-4 py-2.5 bg-[#007AFF] text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Card
               </button>
@@ -2302,10 +2307,18 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(draft.galleryPhotos || []).map((item, idx) => (
-                <div key={idx} className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={idx} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#007AFF] font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
-                    <button onClick={() => setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) })} className="text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => {
+                      setDeleteConfirmModal({
+                        type: 'single',
+                        message: `Are you sure you want to delete media item #${idx + 1}?`,
+                        onConfirm: () => {
+                          setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) });
+                        }
+                      });
+                    }} className="text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2.5">
@@ -2315,7 +2328,7 @@ export default function App() {
                         const copy = [...draft.galleryPhotos];
                         copy[idx] = { ...copy[idx], type: e.target.value };
                         setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={`w-full p-2.5 rounded-[12px] text-xs font-bold ${iosInputBg}`}>
+                      }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}>
                         <option value="video">🎥 Auto-play Video</option>
                         <option value="image">🖼️ Image / Animated GIF</option>
                       </select>
@@ -2326,7 +2339,7 @@ export default function App() {
                         const copy = [...draft.galleryPhotos];
                         copy[idx] = { ...copy[idx], sub: e.target.value };
                         setDraft({ ...draft, galleryPhotos: copy });
-                      }} className={`w-full p-2.5 rounded-[12px] text-xs ${iosInputBg}`} />
+                      }} className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`} />
                     </div>
                   </div>
 
@@ -2336,7 +2349,7 @@ export default function App() {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], title: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={`w-full p-2.5 rounded-[12px] text-xs font-bold ${iosInputBg}`} />
+                    }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
                   </div>
 
                   <div>
@@ -2345,10 +2358,10 @@ export default function App() {
                       const copy = [...draft.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
                       setDraft({ ...draft, galleryPhotos: copy });
-                    }} className={`w-full p-2.5 rounded-[12px] text-xs font-mono text-[#007AFF] ${iosInputBg}`} />
+                    }} className={`w-full p-3 rounded-[14px] text-xs font-mono text-[#007AFF] ${iosInputBg}`} />
                   </div>
 
-                  <label className="block text-center py-2.5 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition shadow-sm">
+                  <label className="block text-center py-3 rounded-[14px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition shadow-sm">
                     Upload Video / GIF / Image (&lt;20MB)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
@@ -2360,7 +2373,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Gallery Media'}
               onClick={() => handleSaveSpecificCard('Gallery Media')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
@@ -2391,7 +2404,7 @@ export default function App() {
               ].map(toggle => {
                 const isEnabled = draft.toggles?.[toggle.key] !== false;
                 return (
-                  <div key={toggle.key} className={`p-3.5 rounded-[16px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={toggle.key} className={`p-4 rounded-[18px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="space-y-0.5">
                       <h4 className="font-bold text-[13px]">{toggle.label}</h4>
                       <p className={`text-[11px] ${iosMuted}`}>{toggle.desc}</p>
@@ -2405,7 +2418,7 @@ export default function App() {
                           [toggle.key]: !isEnabled
                         }
                       })}
-                      className={`px-3.5 py-2 rounded-[14px] flex items-center gap-1 font-bold text-xs transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                      className={`px-4 py-2 rounded-[14px] flex items-center gap-1 font-bold text-xs transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                     >
                       {isEnabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                       <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
@@ -2419,7 +2432,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Master Toggles'}
               onClick={() => handleSaveSpecificCard('Master Toggles')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
@@ -2446,11 +2459,11 @@ export default function App() {
             ) : (
               <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                 {visitorLogs.map(log => (
-                  <div key={log.id} className={`p-3.5 rounded-[16px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[13px] ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={log.id} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[13px] ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-[#007AFF] font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
                       </div>
                       <p className={`text-[12px] truncate max-w-md ${iosMuted}`}>{log.userAgent}</p>
                     </div>
@@ -2477,12 +2490,12 @@ export default function App() {
                 updated[0] = e.target.value;
                 setDraft({...draft, announcements: updated});
               }}
-              className={`w-full p-4 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
+              className={`w-full p-4 rounded-[18px] text-[13px] font-mono ${iosInputBg}`}
             />
             <button
               type="button"
               onClick={() => handleSaveSpecificCard('Broadcast Studio')}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 flex items-center justify-center gap-2 transition"
+              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 flex items-center justify-center gap-2 transition"
             >
               <Send className="w-4 h-4" />
               <span>Save Broadcast Settings</span>
@@ -2502,7 +2515,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setDraft({ ...draft, announcements: [...(draft.announcements || []), "✨ New studio announcement line ✨"] })}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
+                className="px-4 py-2.5 bg-[#007AFF] text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Line
               </button>
@@ -2520,7 +2533,7 @@ export default function App() {
                       copy[idx] = e.target.value;
                       setDraft({ ...draft, announcements: copy });
                     }}
-                    className={`flex-1 p-3.5 rounded-[14px] text-[13px] ${iosInputBg}`}
+                    className={`flex-1 p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
                   />
                   <button
                     type="button"
@@ -2533,7 +2546,7 @@ export default function App() {
                         }
                       });
                     }}
-                    className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
+                    className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -2545,7 +2558,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Announcements'}
               onClick={() => handleSaveSpecificCard('Announcements')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements Live'}</span>
@@ -2577,7 +2590,7 @@ export default function App() {
                     });
                   }
                 }}
-                className="px-4 py-2 bg-[#007AFF] text-white font-bold rounded-[12px] text-xs flex items-center gap-1 active:scale-95 shadow"
+                className="px-4 py-2.5 bg-[#007AFF] text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Zone
               </button>
@@ -2585,7 +2598,7 @@ export default function App() {
 
             <div className="space-y-3">
               {Object.entries(draft.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={`p-4 rounded-[16px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={zKey} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex-1 w-full space-y-1">
                     <span className="text-[11px] font-mono text-[#007AFF] uppercase font-bold">Zone Key: {zKey}</span>
                     <input
@@ -2598,7 +2611,7 @@ export default function App() {
                           [zKey]: { ...zData, name: e.target.value }
                         }
                       })}
-                      className={`w-full p-3 rounded-[12px] text-[13px] font-semibold ${iosInputBg}`}
+                      className={`w-full p-3.5 rounded-[14px] text-[13px] font-semibold ${iosInputBg}`}
                     />
                   </div>
 
@@ -2614,7 +2627,7 @@ export default function App() {
                           [zKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
-                      className={`w-32 p-3 rounded-[12px] font-mono text-[#007AFF] font-bold text-[13px] ${iosInputBg}`}
+                      className={`w-32 p-3.5 rounded-[14px] font-mono text-[#007AFF] font-bold text-[13px] ${iosInputBg}`}
                     />
                     <button
                       type="button"
@@ -2642,7 +2655,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Travel Fees'}
               onClick={() => handleSaveSpecificCard('Travel Fees')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
@@ -2653,21 +2666,21 @@ export default function App() {
         {activeFolderId === 'prices' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
-              <h3 className="font-bold text-[16px] uppercase text-[#007AFF]">👑 International Luxury Vanity Kit (₹)</h3>
+              <h3 className="font-bold text-[16px] uppercase text-[#007AFF]">👑 International Luxury Vanity Kit & HD Kit Rates (₹)</h3>
               <button
                 type="button"
                 onClick={handleAddNewPackage}
-                className="px-3.5 py-1.5 rounded-[10px] bg-emerald-600 text-white text-xs font-bold flex items-center gap-1"
+                className="px-4 py-2.5 rounded-[14px] bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5 shadow"
               >
-                <Plus className="w-3.5 h-3.5" /> Add Package Rate
+                <Plus className="w-4 h-4" /> Add Package Rate
               </button>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Object.keys(draft.pricingByKit?.international || {}).map(k => (
-                <div key={k} className={`p-4 rounded-[16px] border space-y-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={k} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-mono font-bold uppercase text-[#007AFF]">{k.replace(/_/g, ' ')}</span>
+                    <span className="text-xs font-mono font-bold uppercase text-[#007AFF]">Key: {k}</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -2691,14 +2704,14 @@ export default function App() {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
                       <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>Luxury Rate (₹)</label>
-                      <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-[12px] font-mono text-[#007AFF] text-xs font-bold ${iosInputBg}`} />
+                      <input type="number" value={draft.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-[#007AFF] text-xs font-bold ${iosInputBg}`} />
                     </div>
                     <div>
                       <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>HD Rate (₹)</label>
-                      <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-2.5 rounded-[12px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
+                      <input type="number" value={draft.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
                     </div>
                   </div>
                 </div>
@@ -2709,7 +2722,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Package Rates'}
               onClick={() => handleSaveSpecificCard('Package Rates')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Package Rates' ? 'Saving...' : 'Save Package Rates Live'}</span>
@@ -2723,7 +2736,7 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Color Theme</label>
-                <select value={draft.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-[#007AFF] ${iosInputBg}`}>
+                <select value={draft.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold text-[#007AFF] ${iosInputBg}`}>
                   <option value="real_glass_lens">🔮 Real Glass Lens (Translucent Mirror)</option>
                   <option value="real_ios_glass">🍎 Real iOS Liquid Glass</option>
                   <option value="liquid_glass">💎 Liquid Glass iOS</option>
@@ -2739,7 +2752,7 @@ export default function App() {
 
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Font Family</label>
-                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-[#007AFF] ${iosInputBg}`}>
+                <select value={draft.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold text-[#007AFF] ${iosInputBg}`}>
                   <option value="sans">Plus Jakarta Sans</option>
                   <option value="outfit">Outfit (iOS Glass Minimal)</option>
                   <option value="serif">Playfair Display (Royal)</option>
@@ -2754,7 +2767,7 @@ export default function App() {
 
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Default Customer Mode</label>
-                <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
+                <select value={draft.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold ${iosInputBg}`}>
                   <option value="light">☀️ Light Mode</option>
                   <option value="dark">🌙 Dark Mode</option>
                 </select>
@@ -2765,7 +2778,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Theme & Styles'}
               onClick={() => handleSaveSpecificCard('Theme & Styles')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts Live'}</span>
@@ -2782,7 +2795,7 @@ export default function App() {
               <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure official studio title, upload custom logo & artist profile photo.</p>
             </div>
 
-            <div className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-4.5 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-bold text-[#007AFF] uppercase flex items-center gap-2">
                   <Crown className="w-4 h-4" /> 1. Official Studio Logo (Header & Splash)
@@ -2805,9 +2818,9 @@ export default function App() {
                     placeholder="Paste Logo Image URL"
                     value={draft.studioLogo || ''}
                     onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
-                    className={`w-full p-3 rounded-[14px] text-[13px] font-mono ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
-                  <label className="inline-block px-4 py-2 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
+                  <label className="inline-block px-4 py-2.5 rounded-[14px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
                     Upload & Compress Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
@@ -2815,7 +2828,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className={`p-4.5 rounded-[18px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-4.5 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-bold text-[#007AFF] uppercase flex items-center gap-2">
                   <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
@@ -2834,9 +2847,9 @@ export default function App() {
                     placeholder="Paste Profile Photo URL"
                     value={draft.profileImage || ''}
                     onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
-                    className={`w-full p-3 rounded-[14px] text-[13px] font-mono ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
-                  <label className="inline-block px-4 py-2 rounded-[12px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
+                  <label className="inline-block px-4 py-2.5 rounded-[14px] bg-blue-500/15 text-[#007AFF] text-xs font-bold cursor-pointer border border-blue-500/30 hover:bg-blue-500/25 transition">
                     Upload & Compress Profile Photo
                     <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
@@ -2847,19 +2860,19 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Display Title</label>
-                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`} />
+                <input type="text" value={draft.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Booking Contact Number</label>
-                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] font-mono text-[#007AFF] ${iosInputBg}`} />
+                <input type="text" value={draft.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-[#007AFF] ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Instagram Handle</label>
-                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
+                <input type="text" value={draft.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Artist Tagline / Subtitle</label>
-                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3 rounded-[14px] text-[13px] ${iosInputBg}`} />
+                <input type="text" value={draft.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
               </div>
             </div>
 
@@ -2867,7 +2880,7 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Studio Profile'}
               onClick={() => handleSaveSpecificCard('Studio Profile')}
-              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#007AFF] text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 transition flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile & Logo Live'}</span>
