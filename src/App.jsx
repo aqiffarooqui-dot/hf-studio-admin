@@ -27,9 +27,9 @@ const DEFAULT_CONFIG = {
   instagramHandle: "husna_farooqui_makeup",
   baseLocation: "Okhla / Jamia Nagar, New Delhi",
 
-  activeAppVersion: "v3.9.1",
+  activeAppVersion: "v4.0.0",
   appVersionsList: [
-    { version: "v3.9.1", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Instant theme application & rich guest booking breakdown on slips and queue." }
+    { version: "v4.0.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Ultimate production build with comprehensive booking breakdown, premium watermarked slips, and universal theme injection." }
   ],
 
   theme: {
@@ -631,7 +631,6 @@ export default function App() {
     }
   };
 
-  // Instant Theme Switcher without requiring explicit save click
   const handleInstantThemeChange = async (newThemeKey) => {
     const currentDraftSafe = draft || DEFAULT_CONFIG;
     const updated = {
@@ -813,145 +812,189 @@ export default function App() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    canvas.width = 1080;
-    canvas.height = 1760;
+    
+    // Premium High-Resolution Canvas Dimensions (1200 x 2000)
+    canvas.width = 1200;
+    canvas.height = 2000;
 
     const isRejected = b.status === 'rejected';
     const isConfirmed = b.status === 'confirmed';
 
     const drawAdminSlip = (logoImgObj) => {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 1080, 1760);
-      const bgGrad = ctx.createRadialGradient(540, 250, 40, 540, 780, 800);
-      bgGrad.addColorStop(0, '#ffffff');
-      bgGrad.addColorStop(1, '#fafafa');
+      // 1. Background Fill with Elegant Gradient
+      const bgGrad = ctx.createLinearGradient(0, 0, 1200, 2000);
+      bgGrad.addColorStop(0, '#0f172a');
+      bgGrad.addColorStop(0.5, '#1e1b4b');
+      bgGrad.addColorStop(1, '#09090b');
       ctx.fillStyle = bgGrad;
-      ctx.fillRect(20, 20, 1040, 1720);
+      ctx.fillRect(0, 0, 1200, 2000);
 
-      ctx.strokeStyle = '#007AFF';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(40, 40, 1000, 1680);
+      // 2. Gold / Accent Border Frame
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(40, 40, 1120, 1920);
 
+      ctx.strokeStyle = 'rgba(192, 132, 252, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(55, 55, 1090, 1890);
+
+      // 3. Watermark Logo / Crest Background
       if (logoImgObj) {
         ctx.save();
-        ctx.globalAlpha = 0.08;
-        ctx.drawImage(logoImgObj, 240, 580, 600, 600);
+        ctx.globalAlpha = 0.07;
+        ctx.drawImage(logoImgObj, 300, 700, 600, 600);
         ctx.restore();
       }
 
+      // 4. Header Branding / Logo
       if (logoImgObj) {
         ctx.save();
         ctx.beginPath();
-        ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
+        ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(logoImgObj, 95, 105, 90, 90);
+        ctx.drawImage(logoImgObj, 80, 80, 120, 120);
         ctx.restore();
 
-        ctx.strokeStyle = '#007AFF';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
+        ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
         ctx.stroke();
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#1e293b';
-        ctx.font = 'bold 36px serif';
-        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 210, 140);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 44px sans-serif';
+        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130);
 
-        ctx.fillStyle = '#007AFF';
-        ctx.font = '600 18px sans-serif';
-        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 210, 170);
+        ctx.fillStyle = '#c084fc';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175);
       } else {
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#1e293b';
-        ctx.font = 'bold 42px serif';
-        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 540, 140);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 50px sans-serif';
+        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 135);
 
-        ctx.fillStyle = '#007AFF';
-        ctx.font = '600 20px sans-serif';
-        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 540, 175);
+        ctx.fillStyle = '#c084fc';
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 175);
       }
 
-      ctx.strokeStyle = 'rgba(0, 122, 255, 0.3)';
-      ctx.lineWidth = 1;
+      // Divider Line
+      ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(80, 220);
-      ctx.lineTo(1000, 220);
+      ctx.moveTo(90, 230);
+      ctx.lineTo(1110, 230);
       ctx.stroke();
 
+      // Status Badge Banner
+      ctx.fillStyle = isRejected ? 'rgba(225, 29, 72, 0.2)' : (isConfirmed ? 'rgba(5, 150, 105, 0.2)' : 'rgba(217, 119, 6, 0.2)');
+      ctx.fillRect(90, 260, 1020, 70);
+      ctx.strokeStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#d97706');
+      ctx.lineWidth = 2;
+      ctx.strokeRect(90, 260, 1020, 70);
+
       ctx.textAlign = 'center';
-      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
-      ctx.font = 'bold 24px sans-serif';
+      ctx.fillStyle = isRejected ? '#fb7185' : (isConfirmed ? '#34d399' : '#fbbf24');
+      ctx.font = 'bold 26px sans-serif';
       ctx.fillText(
-        isRejected ? 'BOOKING STATUS: DECLINED / REJECTED' : (isConfirmed ? 'OFFICIAL CONFIRMED APPOINTMENT SLIP' : 'PENDING BOOKING REQUEST SLIP'), 
-        540, 275
+        isRejected ? '❌ APPOINTMENT DECLINED / REJECTED' : (isConfirmed ? '✅ OFFICIAL CONFIRMED APPOINTMENT SLIP' : '⏳ PENDING BOOKING REQUEST SLIP'), 
+        600, 305
       );
 
+      // 5. Booking Rows Data with Full Pricing & Discount Breakdown
       const rows = [
         { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
         { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
         { label: 'CONTACT NUMBER', val: b.clientPhone || 'Not Provided' },
         { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
-        { label: 'MAIN LOOK TIER', val: b.kitType || 'Luxury Vanity' },
-        { label: 'MAIN LOOK PACKAGE', val: b.packageName || 'Bridal Makeup' },
-        { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (Fee: ₹${b.zoneFee || 350})` },
-        { label: 'EXACT ADDRESS', val: b.venueAddress || 'To be confirmed' }
+        { label: 'MAIN VANITY TIER', val: b.kitType || 'Luxury Vanity' },
+        { label: 'SELECTED PACKAGE', val: b.packageName || 'Bridal Makeup' },
+        { label: 'BASE PACKAGE PRICE', val: `₹${b.basePackagePrice?.toLocaleString('en-IN') || 0}` },
+        { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (+₹${b.zoneFee || 350})` },
+        { label: 'EXACT VENUE ADDRESS', val: b.venueAddress || 'To be confirmed' },
+        { label: 'APPLIED PROMO COUPON', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0})` : 'None Applied' }
       ];
 
-      let startY = 340;
+      let startY = 375;
       rows.forEach((row, idx) => {
-        ctx.fillStyle = idx === 0 ? '#f0f9ff' : (idx % 2 === 0 ? '#f8fafc' : '#ffffff');
-        ctx.fillRect(80, startY - 26, 920, 56);
+        ctx.fillStyle = idx % 2 === 0 ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.02)';
+        ctx.fillRect(90, startY, 1020, 60);
+
         ctx.textAlign = 'left';
-        ctx.fillStyle = idx === 0 ? '#0284c7' : '#64748b';
-        ctx.font = idx === 0 ? 'bold 19px monospace' : 'bold 18px sans-serif';
-        ctx.fillText(row.label, 100, startY + 9);
-        ctx.fillStyle = idx === 0 ? '#0369a1' : '#0f172a';
-        ctx.font = idx === 0 ? 'bold 21px monospace' : 'bold 20px sans-serif';
-        ctx.fillText(row.val, 380, startY + 9);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(row.label, 120, startY + 37);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = idx === 0 ? '#c084fc' : '#ffffff';
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText(row.val, 1080, startY + 37);
+
         startY += 64;
       });
 
+      // 6. Extra Family Guests Section if any
       if (b.extraGuestsList && b.extraGuestsList.length > 0) {
         startY += 10;
-        ctx.fillStyle = '#fdf4ff';
-        ctx.fillRect(80, startY - 26, 920, 48);
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.15)';
+        ctx.fillRect(90, startY, 1020, 55);
 
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#9333ea';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 100, startY + 6);
+        ctx.fillStyle = '#d8b4fe';
+        ctx.font = 'bold 20px sans-serif';
+        ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 120, startY + 34);
 
         ctx.textAlign = 'right';
-        ctx.font = 'bold 20px monospace';
-        ctx.fillText(`+₹${b.extraGuestsCost?.toLocaleString('en-IN') || 0}`, 980, startY + 6);
-        startY += 54;
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText(`+₹${b.extraGuestsCost?.toLocaleString('en-IN') || 0}`, 1080, startY + 34);
+        startY += 62;
 
         b.extraGuestsList.forEach((g, gIdx) => {
           const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(80, startY - 20, 920, 40);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+          ctx.fillRect(90, startY, 1020, 48);
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = '#475569';
-          ctx.font = '16px sans-serif';
-          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${g.packageKey || 'Party Makeup'}`, 120, startY + 6);
-          startY += 44;
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '18px sans-serif';
+          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${g.packageKey || 'Party Makeup'}`, 140, startY + 31);
+          startY += 52;
         });
       }
 
-      ctx.fillStyle = '#64748b';
-      ctx.font = '17px sans-serif';
-      ctx.fillText(`Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${currentDraftSafe.instagramHandle}`, 540, 1670);
+      // 7. Total Final Amount Box
+      startY += 15;
+      ctx.fillStyle = 'rgba(192, 132, 252, 0.2)';
+      ctx.fillRect(90, startY, 1020, 110);
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(90, startY, 1020, 110);
 
-      ctx.fillStyle = '#007AFF';
-      ctx.font = 'italic 16px sans-serif';
-      ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 540, 1700);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = 'bold 22px sans-serif';
+      ctx.fillText('FINAL LOCKED TOTAL AMOUNT', 600, startY + 38);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 46px serif';
+      ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN') || 0}`, 600, startY + 90);
+
+      // Footer
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#64748b';
+      ctx.font = '18px sans-serif';
+      ctx.fillText(`Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${currentDraftSafe.instagramHandle}`, 600, 1910);
+
+      ctx.fillStyle = '#c084fc';
+      ctx.font = 'italic 18px sans-serif';
+      ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 1945);
 
       const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
       const downloadLink = document.createElement('a');
-      downloadLink.download = `${isRejected ? 'Declined' : 'Confirmed'}_Slip_${b.bookingNumber || b.clientName}.jpg`;
+      downloadLink.download = `Premium_Booking_Slip_${b.bookingNumber || b.clientName}.jpg`;
       downloadLink.href = jpgUrl;
       downloadLink.click();
     };
@@ -1093,10 +1136,10 @@ export default function App() {
   const adminThemeStyle = THEME_STYLES[activeAdminThemeKey] || THEME_STYLES.admin_aurora;
   const currentFontFamily = FONT_MAP[currentDraftSafe.theme?.fontFamily] || FONT_MAP.sans;
 
-  const iosBg = isAdminDarkMode ? adminThemeStyle.bg : "bg-[#f4f7fe] text-[#1C1C1E]";
-  const iosGroupCard = isAdminDarkMode ? adminThemeStyle.cardBg : "bg-white border border-slate-200 shadow-md";
-  const iosInputBg = isAdminDarkMode ? "bg-white/10 text-white border border-white/20 rounded-[16px]" : "bg-white text-[#1C1C1E] border border-black/10 rounded-[16px] shadow-sm";
-  const iosMuted = isAdminDarkMode ? "text-[#a1a1aa]" : "text-[#71717a]";
+  const iosBg = adminThemeStyle.bg;
+  const iosGroupCard = adminThemeStyle.cardBg;
+  const iosInputBg = "bg-white/10 text-white border border-white/20 rounded-[16px]";
+  const iosMuted = "text-[#a1a1aa]";
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
 
@@ -1129,7 +1172,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.9.1 Production Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.9.2 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1258,7 +1301,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 {currentDraftSafe.studioName || 'H&F Studio Admin'}
               </h1>
-              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v3.9.1 Pro Suite</p>
+              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v3.9.2 Pro Suite</p>
             </div>
           </div>
 
@@ -1355,9 +1398,7 @@ export default function App() {
                   className={`p-5 rounded-[28px] transition-all duration-300 cursor-pointer group border flex flex-col justify-between space-y-4 hover:-translate-y-1.5 hover:shadow-[0_15px_40px_rgba(168,85,247,0.2)] ${
                     isReorderMode 
                       ? 'bg-purple-500/15 ring-2 ring-purple-500 animate-pulse' 
-                      : (isAdminDarkMode 
-                          ? 'bg-[#18181b]/95 border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.5)]' 
-                          : 'bg-white border-purple-500/15 shadow-[0_8px_30px_rgba(0,0,0,0.06)]')
+                      : iosGroupCard
                   }`}
                 >
                   <div className="flex items-start justify-between">
@@ -2024,7 +2065,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 5. LIVE BOOKINGS QUEUE (With rich guest breakdown & kit/package details) */}
+        {/* 5. LIVE BOOKINGS QUEUE */}
         {activeFolderId === 'bookings' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
@@ -2182,6 +2223,7 @@ export default function App() {
                         <div className="flex justify-between"><span className={iosMuted}>Event Date:</span><strong className={`${adminThemeStyle.accentText} font-mono`}>{b.eventDate}</strong></div>
                         <div className="flex justify-between"><span className={iosMuted}>Main Package:</span><span className="font-medium">{b.packageName}</span></div>
                         <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Base Price:</span><span className="font-mono">₹{b.basePackagePrice?.toLocaleString('en-IN') || 0}</span></div>
                         
                         {/* Rich Guest Breakdown */}
                         <div className="pt-1 pb-1 border-t border-dashed border-slate-500/30">
@@ -2200,14 +2242,16 @@ export default function App() {
                           )}
                         </div>
 
-                        <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName} (+₹{b.zoneFee || 350})</span></div>
                         <div className="flex justify-between"><span className={iosMuted}>Address:</span><span className="truncate max-w-[180px]">{b.venueAddress}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Promo Coupon:</span><span className="font-mono text-emerald-400">{b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0})` : 'None'}</span></div>
+                        
                         {b.rejectionReason && (
                           <div className="p-2.5 rounded-[10px] bg-rose-500/15 text-rose-700 text-[11px]">
                             <strong>Rejection Note:</strong> {b.rejectionReason}
                           </div>
                         )}
-                        <div className="flex justify-between pt-1 font-bold"><span>Total Amount:</span><span className={`${adminThemeStyle.accentText} font-mono`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span></div>
+                        <div className="flex justify-between pt-1 font-bold text-sm"><span>Total Amount:</span><span className={`${adminThemeStyle.accentText} font-mono`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span></div>
                       </div>
 
                       <div className="space-y-2 pt-1">
@@ -3165,7 +3209,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 17. THEMES & TYPOGRAPHY (Instant Theme Apply Included) */}
+        {/* 17. THEMES & TYPOGRAPHY */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <h3 className={`font-bold text-[16px] uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
@@ -3304,7 +3348,7 @@ export default function App() {
                 <span className={`text-[11px] font-mono ${iosMuted}`}>Avatar Card</span>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex flex-content items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-purple-500/40 shrink-0 shadow">
                   <img src={currentDraftSafe.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
