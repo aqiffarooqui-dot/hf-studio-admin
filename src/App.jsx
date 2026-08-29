@@ -220,7 +220,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.6.3", date: "August 29, 2026", status: "Active Live Production", changes: "Added null-safety checks to prevent white/blank screen crashes on initial render." }
+  { version: "v3.6.4", date: "August 29, 2026", status: "Active Live Production", changes: "Full robust null-checks added across draft states, guest discount controllers, and package management." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -424,7 +424,8 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (pinInput === ((draft && draft.adminPin) || "8760")) {
+    const correctPin = (draft && draft.adminPin) || "8760";
+    if (pinInput === correctPin) {
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
     } else {
@@ -527,7 +528,7 @@ export default function App() {
       const secureHash = `SECURE_FP_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
       
       const updatedDraft = {
-        ...draft,
+        ...(draft || DEFAULT_CONFIG),
         biometricEnabled: true,
         registeredFingerprintHash: secureHash
       };
@@ -570,8 +571,9 @@ export default function App() {
     }
 
     try {
-      setDraft(prev => ({ ...prev, adminPin: newPinInput }));
-      const cleanData = JSON.parse(JSON.stringify({ ...draft, adminPin: newPinInput }));
+      const updated = { ...(draft || DEFAULT_CONFIG), adminPin: newPinInput };
+      setDraft(updated);
+      const cleanData = JSON.parse(JSON.stringify(updated));
       await updateLiveConfig(cleanData);
       setPopupToast({ title: "Password Updated", desc: "Admin PIN password successfully changed and synced." });
       setOldPinInput('');
@@ -586,7 +588,7 @@ export default function App() {
     setSavingSection(sectionName);
     try {
       const payload = {
-        ...draft,
+        ...(draft || DEFAULT_CONFIG),
         adminFoldersOrder: adminFolders.map(f => f.id)
       };
       const cleanData = JSON.parse(JSON.stringify(payload));
@@ -684,16 +686,17 @@ export default function App() {
           await deleteDoc(doc(db, "feedbacks", deleteConfirmModal.id));
         } else if (deleteConfirmModal.isPackage) {
           const { kit, pkgKey } = deleteConfirmModal;
-          const updatedKitText = { ...(draft?.kitText || {}) };
-          const updatedKitImages = { ...(draft?.kitImages || {}) };
-          const updatedPricing = { ...(draft?.pricingByKit || {}) };
+          const currentDraft = draft || DEFAULT_CONFIG;
+          const updatedKitText = { ...(currentDraft.kitText || {}) };
+          const updatedKitImages = { ...(currentDraft.kitImages || {}) };
+          const updatedPricing = { ...(currentDraft.pricingByKit || {}) };
           
           if (updatedKitText[kit]) delete updatedKitText[kit][pkgKey];
           if (updatedKitImages[kit]) delete updatedKitImages[kit][pkgKey];
           if (updatedPricing[kit]) delete updatedPricing[kit][pkgKey];
           
           setDraft({
-            ...draft,
+            ...currentDraft,
             kitText: updatedKitText,
             kitImages: updatedKitImages,
             pricingByKit: updatedPricing
@@ -729,9 +732,10 @@ export default function App() {
     const titleName = prompt("Enter Package Display Name (e.g. Deluxe Glamour Makeup):", "Deluxe Makeup");
     if (!titleName) return;
 
-    const updatedKitText = { ...(draft?.kitText || {}) };
-    const updatedKitImages = { ...(draft?.kitImages || {}) };
-    const updatedPricing = { ...(draft?.pricingByKit || {}) };
+    const currentDraft = draft || DEFAULT_CONFIG;
+    const updatedKitText = { ...(currentDraft.kitText || {}) };
+    const updatedKitImages = { ...(currentDraft.kitImages || {}) };
+    const updatedPricing = { ...(currentDraft.pricingByKit || {}) };
 
     ['international', 'drugstore'].forEach(kit => {
       if (!updatedKitText[kit]) updatedKitText[kit] = {};
@@ -745,7 +749,7 @@ export default function App() {
     });
 
     setDraft({
-      ...draft,
+      ...currentDraft,
       kitText: updatedKitText,
       kitImages: updatedKitImages,
       pricingByKit: updatedPricing
@@ -845,14 +849,15 @@ export default function App() {
           finalUrl = await compressImageFile(file, 900, 0.85);
         }
 
-        const copy = [...(draft?.galleryPhotos || [])];
+        const currentDraft = draft || DEFAULT_CONFIG;
+        const copy = [...(currentDraft.galleryPhotos || [])];
         copy[index] = {
           title: copy[index]?.title || "Signature Transformation",
           sub: copy[index]?.sub || "HD Artistry",
           url: finalUrl,
           type: isVid ? 'video' : 'image'
         };
-        setDraft({ ...draft, galleryPhotos: copy });
+        setDraft({ ...currentDraft, galleryPhotos: copy });
         setPopupToast({ title: "Media Loaded", desc: "Media uploaded successfully! Click save below." });
       } catch (err) {
         alert("Upload error: " + err.message);
@@ -865,12 +870,13 @@ export default function App() {
     if (file) {
       try {
         const compressedBase64 = await compressImageFile(file, 800, 0.85);
+        const currentDraft = draft || DEFAULT_CONFIG;
         setDraft({
-          ...draft,
+          ...currentDraft,
           kitImages: {
-            ...(draft?.kitImages || {}),
+            ...(currentDraft.kitImages || {}),
             [kit]: {
-              ...(draft?.kitImages?.[kit] || {}),
+              ...(currentDraft.kitImages?.[kit] || {}),
               [pkgKey]: compressedBase64
             }
           }
@@ -887,7 +893,8 @@ export default function App() {
     if (file) {
       try {
         const compressedBase64 = await compressImageFile(file, 500, 0.85);
-        setDraft({ ...draft, profileImage: compressedBase64, profilePhotoType: 'image' });
+        const currentDraft = draft || DEFAULT_CONFIG;
+        setDraft({ ...currentDraft, profileImage: compressedBase64, profilePhotoType: 'image' });
         setPopupToast({ title: "Profile Loaded", desc: "Profile picture loaded successfully." });
       } catch (err) {
         alert("Error loading photo: " + err.message);
@@ -900,7 +907,8 @@ export default function App() {
     if (file) {
       try {
         const compressedBase64 = await compressImageFile(file, 400, 0.85);
-        setDraft({ ...draft, studioLogo: compressedBase64 });
+        const currentDraft = draft || DEFAULT_CONFIG;
+        setDraft({ ...currentDraft, studioLogo: compressedBase64 });
         setPopupToast({ title: "Logo Loaded", desc: "Studio logo loaded successfully." });
       } catch (err) {
         alert("Error loading logo: " + err.message);
@@ -944,9 +952,10 @@ export default function App() {
   const nextConfirmedBooking = bookingsList.find(b => b.status === 'confirmed');
   const pendingBookingsCount = bookingsList.filter(b => b.status === 'pending').length;
 
-  const activeAdminThemeKey = (draft && draft.adminTheme && draft.adminTheme.colorTheme) || 'real_glass_lens';
+  const currentDraftSafe = draft || DEFAULT_CONFIG;
+  const activeAdminThemeKey = (currentDraftSafe.adminTheme && currentDraftSafe.adminTheme.colorTheme) || 'real_glass_lens';
   const adminThemeStyle = THEME_STYLES[activeAdminThemeKey] || THEME_STYLES.real_glass_lens;
-  const currentFontFamily = FONT_MAP[(draft && draft.theme && draft.theme.fontFamily)] || FONT_MAP.sans;
+  const currentFontFamily = FONT_MAP[currentDraftSafe.theme?.fontFamily] || FONT_MAP.sans;
 
   const iosBg = isAdminDarkMode ? "bg-[#090a0f] text-[#F2F2F7]" : "bg-[#f4f7fe] text-[#1C1C1E]";
   const iosGroupCard = adminThemeStyle.cardBg;
@@ -966,7 +975,7 @@ export default function App() {
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
             <h2 className="text-[22px] font-bold tracking-tight">Recover Password</h2>
-            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{(draft && draft.recoveryEmail) || "aqiffarooqui@gmail.com"}</strong>.</p>
+            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
               <div className="p-3.5 rounded-[16px] bg-emerald-500/20 text-emerald-300 text-[13px] font-semibold border border-emerald-500/30">
@@ -984,7 +993,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.6.1 Production Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.6.4 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1100,9 +1109,9 @@ export default function App() {
       <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
-            {draft?.studioLogo ? (
+            {currentDraftSafe.studioLogo ? (
               <div className="w-10 h-10 rounded-[14px] bg-white/20 p-1 overflow-hidden shadow-sm shrink-0 border border-purple-500/30">
-                <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
+                <img src={currentDraftSafe.studioLogo} alt="Logo" className="w-full h-full object-contain" />
               </div>
             ) : (
               <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-purple-500 to-pink-500 text-white flex items-center justify-center shadow-md shrink-0">
@@ -1114,7 +1123,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 H&F Studio Admin
               </h1>
-              <p className={`text-[11px] font-mono text-purple-400`}>v3.6.1 Pro Suite</p>
+              <p className={`text-[11px] font-mono text-purple-400`}>v3.6.4 Pro Suite</p>
             </div>
           </div>
 
@@ -1324,14 +1333,14 @@ export default function App() {
                 ) : (
                   <div className="space-y-2">
                     <p className={`text-[12px] ${iosMuted}`}>
-                      {draft?.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
+                      {currentDraftSafe.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
                     </p>
                     <button
                       type="button"
                       onClick={handleRegisterFingerprintScan}
                       className="px-5 py-2.5 rounded-[14px] bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[13px] shadow active:scale-95 transition"
                     >
-                      {draft?.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
+                      {currentDraftSafe.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
                     </button>
                   </div>
                 )}
@@ -1342,10 +1351,10 @@ export default function App() {
                   <span className="text-[13px] font-bold">Enable Touch ID / Biometrics</span>
                   <button
                     type="button"
-                    onClick={() => setDraft({ ...draft, biometricEnabled: !draft.biometricEnabled })}
-                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft?.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                    onClick={() => setDraft({ ...currentDraftSafe, biometricEnabled: !currentDraftSafe.biometricEnabled })}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${currentDraftSafe.biometricEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
                   >
-                    {draft?.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
+                    {currentDraftSafe.biometricEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
 
@@ -1353,10 +1362,10 @@ export default function App() {
                   <span className="text-[13px] font-bold">Enable Face ID / Passkey</span>
                   <button
                     type="button"
-                    onClick={() => setDraft({ ...draft, faceIdEnabled: !draft.faceIdEnabled })}
-                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${draft?.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
+                    onClick={() => setDraft({ ...currentDraftSafe, faceIdEnabled: !currentDraftSafe.faceIdEnabled })}
+                    className={`px-3.5 py-1.5 rounded-[12px] font-bold text-[12px] ${currentDraftSafe.faceIdEnabled ? 'bg-emerald-500/20 text-emerald-600 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-600 border border-rose-500/40'}`}
                   >
-                    {draft?.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
+                    {currentDraftSafe.faceIdEnabled ? 'ACTIVE' : 'DISABLED'}
                   </button>
                 </div>
               </div>
@@ -1392,8 +1401,8 @@ export default function App() {
               
               <input
                 type="email"
-                value={draft?.recoveryEmail || "aqiffarooqui@gmail.com"}
-                onChange={e => setDraft({ ...draft, recoveryEmail: e.target.value })}
+                value={currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com"}
+                onChange={e => setDraft({ ...currentDraftSafe, recoveryEmail: e.target.value })}
                 className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold text-purple-400 border ${iosInputBg}`}
               />
             </div>
@@ -1866,9 +1875,9 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {Object.keys(draft?.kitText?.[editingKitTab] || {}).map(k => {
-                const pkgText = draft.kitText[editingKitTab][k] || { name: k, desc: '' };
-                const pkgImg = draft.kitImages?.[editingKitTab]?.[k] || '';
+              {Object.keys(currentDraftSafe.kitText?.[editingKitTab] || {}).map(k => {
+                const pkgText = currentDraftSafe.kitText[editingKitTab][k] || { name: k, desc: '' };
+                const pkgImg = currentDraftSafe.kitImages?.[editingKitTab]?.[k] || '';
 
                 return (
                   <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
@@ -1897,11 +1906,11 @@ export default function App() {
                           placeholder="Image URL"
                           value={pkgImg || ''}
                           onChange={e => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             kitImages: {
-                              ...draft.kitImages,
+                              ...(currentDraftSafe.kitImages || {}),
                               [editingKitTab]: {
-                                ...(draft.kitImages?.[editingKitTab] || {}),
+                                ...(currentDraftSafe.kitImages?.[editingKitTab] || {}),
                                 [k]: e.target.value
                               }
                             }
@@ -1922,11 +1931,11 @@ export default function App() {
                           type="text"
                           value={pkgText.name || ''}
                           onChange={e => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             kitText: {
-                              ...(draft.kitText || {}),
+                              ...(currentDraftSafe.kitText || {}),
                               [editingKitTab]: {
-                                ...(draft.kitText?.[editingKitTab] || {}),
+                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
                                 [k]: { ...pkgText, name: e.target.value }
                               }
                             }
@@ -1940,11 +1949,11 @@ export default function App() {
                           rows={2}
                           value={pkgText.desc || ''}
                           onChange={e => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             kitText: {
-                              ...(draft.kitText || {}),
+                              ...(currentDraftSafe.kitText || {}),
                               [editingKitTab]: {
-                                ...(draft.kitText?.[editingKitTab] || {}),
+                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
                                 [k]: { ...pkgText, desc: e.target.value }
                               }
                             }
@@ -1985,16 +1994,16 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setDraft({
-                    ...draft,
+                    ...currentDraftSafe,
                     guestDiscount: {
-                      ...(draft.guestDiscount || {}),
-                      enabled: !(draft.guestDiscount?.enabled !== false)
+                      ...(currentDraftSafe.guestDiscount || {}),
+                      enabled: !(currentDraftSafe.guestDiscount?.enabled !== false)
                     }
                   })}
-                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft?.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                 >
-                  {draft?.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{draft?.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                  {currentDraftSafe?.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{currentDraftSafe?.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
                 </button>
               </div>
 
@@ -2002,11 +2011,11 @@ export default function App() {
                 <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Discount Percentage (%)</label>
                 <input
                   type="number"
-                  value={draft?.guestDiscount?.discountPercent ?? 15}
+                  value={currentDraftSafe?.guestDiscount?.discountPercent ?? 15}
                   onChange={e => setDraft({
-                    ...draft,
+                    ...currentDraftSafe,
                     guestDiscount: {
-                      ...(draft.guestDiscount || {}),
+                      ...(currentDraftSafe.guestDiscount || {}),
                       discountPercent: Number(e.target.value)
                     }
                   })}
@@ -2041,11 +2050,11 @@ export default function App() {
             <div className={`p-5 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${draft?.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
+                  <span className={`w-3 h-3 rounded-full ${currentDraftSafe.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
                   <h4 className="font-bold text-sm">App Down / Maintenance Mode</h4>
                 </div>
                 <p className={`text-xs max-w-lg leading-relaxed ${iosMuted}`}>
-                  {draft?.isAppDown 
+                  {currentDraftSafe.isAppDown 
                     ? "🔴 ON: Customer App is locked. Visitors see a polite maintenance banner stating system upgrades are in progress."
                     : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
                 </p>
@@ -2053,13 +2062,13 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setDraft({ ...draft, isAppDown: !draft.isAppDown })}
+                onClick={() => setDraft({ ...currentDraftSafe, isAppDown: !currentDraftSafe.isAppDown })}
                 className={`px-5 py-3 rounded-[16px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
-                  draft?.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
+                  currentDraftSafe.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
                 }`}
               >
-                {draft?.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                <span>{draft?.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
+                {currentDraftSafe.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                <span>{currentDraftSafe.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
               </button>
             </div>
 
@@ -2090,16 +2099,16 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setDraft({
-                    ...draft,
+                    ...currentDraftSafe,
                     floatingBanner: {
-                      ...(draft.floatingBanner || {}),
-                      enabled: !(draft.floatingBanner?.enabled !== false)
+                      ...(currentDraftSafe.floatingBanner || {}),
+                      enabled: !(currentDraftSafe.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${draft?.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
                 >
-                  {draft?.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{draft?.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
+                  {currentDraftSafe?.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{currentDraftSafe?.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
                 </button>
               </div>
 
@@ -2108,10 +2117,10 @@ export default function App() {
                   <label className={`block text-[10px] mb-1 ${iosMuted}`}>Badge Tag</label>
                   <input
                     type="text"
-                    value={draft?.floatingBanner?.tag || ''}
+                    value={currentDraftSafe?.floatingBanner?.tag || ''}
                     onChange={e => setDraft({
-                      ...draft,
-                      floatingBanner: { ...(draft.floatingBanner || {}), tag: e.target.value }
+                      ...currentDraftSafe,
+                      floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), tag: e.target.value }
                     })}
                     className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
                   />
@@ -2120,10 +2129,10 @@ export default function App() {
                   <label className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Code</label>
                   <input
                     type="text"
-                    value={draft?.floatingBanner?.code || ''}
+                    value={currentDraftSafe?.floatingBanner?.code || ''}
                     onChange={e => setDraft({
-                      ...draft,
-                      floatingBanner: { ...(draft.floatingBanner || {}), code: e.target.value.toUpperCase() }
+                      ...currentDraftSafe,
+                      floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), code: e.target.value.toUpperCase() }
                     })}
                     className={`w-full p-3.5 rounded-[14px] text-xs font-mono font-bold text-purple-400 ${iosInputBg}`}
                   />
@@ -2134,10 +2143,10 @@ export default function App() {
                 <label className={`block text-[10px] mb-1 ${iosMuted}`}>Banner Title</label>
                 <input
                   type="text"
-                  value={draft?.floatingBanner?.title || ''}
+                  value={currentDraftSafe?.floatingBanner?.title || ''}
                   onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), title: e.target.value }
+                    ...currentDraftSafe,
+                    floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), title: e.target.value }
                   })}
                   className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
                 />
@@ -2147,10 +2156,10 @@ export default function App() {
                 <label className={`block text-[10px] mb-1 ${iosMuted}`}>Action Button Text</label>
                 <input
                   type="text"
-                  value={draft?.floatingBanner?.actionText || ''}
+                  value={currentDraftSafe?.floatingBanner?.actionText || ''}
                   onChange={e => setDraft({
-                    ...draft,
-                    floatingBanner: { ...(draft.floatingBanner || {}), actionText: e.target.value }
+                    ...currentDraftSafe,
+                    floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), actionText: e.target.value }
                   })}
                   className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
                 />
@@ -2185,9 +2194,9 @@ export default function App() {
                   if (code) {
                     const clean = code.toUpperCase().trim();
                     setDraft({
-                      ...draft,
+                      ...currentDraftSafe,
                       validCoupons: {
-                        ...draft.validCoupons,
+                        ...(currentDraftSafe.validCoupons || {}),
                         [clean]: {
                           type: "percent",
                           value: 10,
@@ -2207,7 +2216,7 @@ export default function App() {
             </div>
 
             <div className="space-y-4">
-              {Object.entries(draft?.validCoupons || {}).map(([code, c]) => {
+              {Object.entries(currentDraftSafe?.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
                   <div key={code} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
@@ -2223,9 +2232,9 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             validCoupons: {
-                              ...draft.validCoupons,
+                              ...currentDraftSafe.validCoupons,
                               [code]: { ...c, enabled: !isCodeActive }
                             }
                           })}
@@ -2240,9 +2249,9 @@ export default function App() {
                             type: 'single',
                             message: `Are you sure you want to delete coupon "${code}"?`,
                             onConfirm: () => {
-                              const copy = { ...draft.validCoupons };
+                              const copy = { ...(currentDraftSafe.validCoupons || {}) };
                               delete copy[code];
-                              setDraft({ ...draft, validCoupons: copy });
+                              setDraft({ ...currentDraftSafe, validCoupons: copy });
                             }
                           });
                         }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
@@ -2255,9 +2264,9 @@ export default function App() {
                         <select
                           value={c.type || 'percent'}
                           onChange={e => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             validCoupons: {
-                              ...draft.validCoupons,
+                              ...currentDraftSafe.validCoupons,
                               [code]: { ...c, type: e.target.value }
                             }
                           })}
@@ -2274,9 +2283,9 @@ export default function App() {
                           type="number"
                           value={c.value || 0}
                           onChange={e => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             validCoupons: {
-                              ...draft.validCoupons,
+                              ...currentDraftSafe.validCoupons,
                               [code]: { ...c, value: Number(e.target.value) }
                             }
                           })}
@@ -2290,9 +2299,9 @@ export default function App() {
                           type="datetime-local"
                           value={c.expiryDate || ''}
                           onChange={e => setDraft({
-                            ...draft,
+                            ...currentDraftSafe,
                             validCoupons: {
-                              ...draft.validCoupons,
+                              ...currentDraftSafe.validCoupons,
                               [code]: { ...c, expiryDate: e.target.value }
                             }
                           })}
@@ -2307,9 +2316,9 @@ export default function App() {
                         type="text"
                         value={c.label || ''}
                         onChange={e => setDraft({
-                          ...draft,
+                          ...currentDraftSafe,
                           validCoupons: {
-                            ...draft.validCoupons,
+                            ...currentDraftSafe.validCoupons,
                             [code]: { ...c, label: e.target.value }
                           }
                         })}
@@ -2346,9 +2355,9 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   setDraft({
-                    ...draft,
+                    ...currentDraftSafe,
                     galleryPhotos: [
-                      ...(draft.galleryPhotos || []),
+                      ...(currentDraftSafe.galleryPhotos || []),
                       { type: "video", title: "New Glam Transformation", sub: "16HR HD Finish", url: "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-applying-makeup-41419-large.mp4" }
                     ]
                   });
@@ -2360,7 +2369,7 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {(draft?.galleryPhotos || []).map((item, idx) => (
+              {(currentDraftSafe?.galleryPhotos || []).map((item, idx) => (
                 <div key={idx} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-purple-400 font-mono">Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
@@ -2369,7 +2378,7 @@ export default function App() {
                         type: 'single',
                         message: `Are you sure you want to delete media item #${idx + 1}?`,
                         onConfirm: () => {
-                          setDraft({ ...draft, galleryPhotos: draft.galleryPhotos.filter((_, i) => i !== idx) });
+                          setDraft({ ...currentDraftSafe, galleryPhotos: currentDraftSafe.galleryPhotos.filter((_, i) => i !== idx) });
                         }
                       });
                     }} className="text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
@@ -2379,9 +2388,9 @@ export default function App() {
                     <div>
                       <label className={`block text-[10px] mb-1 ${iosMuted}`}>Type</label>
                       <select value={item.type || 'video'} onChange={e => {
-                        const copy = [...draft.galleryPhotos];
+                        const copy = [...currentDraftSafe.galleryPhotos];
                         copy[idx] = { ...copy[idx], type: e.target.value };
-                        setDraft({ ...draft, galleryPhotos: copy });
+                        setDraft({ ...currentDraftSafe, galleryPhotos: copy });
                       }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}>
                         <option value="video">🎥 Auto-play Video</option>
                         <option value="image">🖼️ Image / Animated GIF</option>
@@ -2390,9 +2399,9 @@ export default function App() {
                     <div>
                       <label className={`block text-[10px] mb-1 ${iosMuted}`}>Subtitle</label>
                       <input type="text" value={item.sub || ''} onChange={e => {
-                        const copy = [...draft.galleryPhotos];
+                        const copy = [...currentDraftSafe.galleryPhotos];
                         copy[idx] = { ...copy[idx], sub: e.target.value };
-                        setDraft({ ...draft, galleryPhotos: copy });
+                        setDraft({ ...currentDraftSafe, galleryPhotos: copy });
                       }} className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`} />
                     </div>
                   </div>
@@ -2400,18 +2409,18 @@ export default function App() {
                   <div>
                     <label className={`block text-[10px] mb-1 ${iosMuted}`}>Title</label>
                     <input type="text" value={item.title || ''} onChange={e => {
-                      const copy = [...draft.galleryPhotos];
+                      const copy = [...currentDraftSafe.galleryPhotos];
                       copy[idx] = { ...copy[idx], title: e.target.value };
-                      setDraft({ ...draft, galleryPhotos: copy });
+                      setDraft({ ...currentDraftSafe, galleryPhotos: copy });
                     }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
                   </div>
 
                   <div>
                     <label className={`block text-[10px] mb-1 ${iosMuted}`}>Direct URL (Video, GIF, or Image link)</label>
                     <input type="text" value={item.url || ''} onChange={e => {
-                      const copy = [...draft.galleryPhotos];
+                      const copy = [...currentDraftSafe.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
-                      setDraft({ ...draft, galleryPhotos: copy });
+                      setDraft({ ...currentDraftSafe, galleryPhotos: copy });
                     }} className={`w-full p-3 rounded-[14px] text-xs font-mono text-purple-400 ${iosInputBg}`} />
                   </div>
 
@@ -2456,7 +2465,7 @@ export default function App() {
                 { key: 'enableBrands', label: 'Vanity Brands Kit Tab', desc: 'Show/hide authentic cosmetics brand list' },
                 { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
               ].map(toggle => {
-                const isEnabled = draft?.toggles?.[toggle.key] !== false;
+                const isEnabled = currentDraftSafe?.toggles?.[toggle.key] !== false;
                 return (
                   <div key={toggle.key} className={`p-4 rounded-[18px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="space-y-0.5">
@@ -2466,9 +2475,9 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setDraft({
-                        ...draft,
+                        ...currentDraftSafe,
                         toggles: {
-                          ...(draft.toggles || {}),
+                          ...(currentDraftSafe.toggles || {}),
                           [toggle.key]: !isEnabled
                         }
                       })}
@@ -2517,7 +2526,7 @@ export default function App() {
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-purple-400 font-mono">Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
                       </div>
                       <p className={`text-[12px] truncate max-w-md ${iosMuted}`}>{log.userAgent}</p>
                     </div>
@@ -2538,11 +2547,11 @@ export default function App() {
             </h3>
             <textarea
               rows={6}
-              value={draft?.announcements?.[0] || ""}
+              value={currentDraftSafe?.announcements?.[0] || ""}
               onChange={e => {
-                const updated = [...(draft.announcements || [])];
+                const updated = [...(currentDraftSafe.announcements || [])];
                 updated[0] = e.target.value;
-                setDraft({...draft, announcements: updated});
+                setDraft({...currentDraftSafe, announcements: updated});
               }}
               className={`w-full p-4 rounded-[18px] text-[13px] font-mono ${iosInputBg}`}
             />
@@ -2568,7 +2577,7 @@ export default function App() {
               </div>
               <button
                 type="button"
-                onClick={() => setDraft({ ...draft, announcements: [...(draft.announcements || []), "✨ New studio announcement line ✨"] })}
+                onClick={() => setDraft({ ...currentDraftSafe, announcements: [...(currentDraftSafe.announcements || []), "✨ New studio announcement line ✨"] })}
                 className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Line
@@ -2576,16 +2585,16 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-              {(draft?.announcements || []).map((line, idx) => (
+              {(currentDraftSafe?.announcements || []).map((line, idx) => (
                 <div key={idx} className="flex gap-2.5 items-center">
                   <span className="text-[13px] font-mono font-bold text-purple-400 w-6">#{idx + 1}</span>
                   <input
                     type="text"
                     value={line}
                     onChange={(e) => {
-                      const copy = [...draft.announcements];
+                      const copy = [...currentDraftSafe.announcements];
                       copy[idx] = e.target.value;
-                      setDraft({ ...draft, announcements: copy });
+                      setDraft({ ...currentDraftSafe, announcements: copy });
                     }}
                     className={`flex-1 p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
                   />
@@ -2596,7 +2605,7 @@ export default function App() {
                         type: 'single',
                         message: `Are you sure you want to delete announcement line #${idx + 1}?`,
                         onConfirm: () => {
-                          setDraft({ ...draft, announcements: draft.announcements.filter((_, i) => i !== idx) });
+                          setDraft({ ...currentDraftSafe, announcements: currentDraftSafe.announcements.filter((_, i) => i !== idx) });
                         }
                       });
                     }}
@@ -2636,9 +2645,9 @@ export default function App() {
                   if (keyName) {
                     const cleanKey = keyName.toLowerCase().replace(/[^a-z0-9_]/g, '');
                     setDraft({
-                      ...draft,
+                      ...currentDraftSafe,
                       convenienceZones: {
-                        ...draft.convenienceZones,
+                        ...(currentDraftSafe.convenienceZones || {}),
                         [cleanKey]: { name: "New Location Zone", fee: 500 }
                       }
                     });
@@ -2651,7 +2660,7 @@ export default function App() {
             </div>
 
             <div className="space-y-3">
-              {Object.entries(draft?.convenienceZones || {}).map(([zKey, zData]) => (
+              {Object.entries(currentDraftSafe?.convenienceZones || {}).map(([zKey, zData]) => (
                 <div key={zKey} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex-1 w-full space-y-1">
                     <span className="text-[11px] font-mono text-purple-400 uppercase font-bold">Zone Key: {zKey}</span>
@@ -2659,9 +2668,9 @@ export default function App() {
                       type="text"
                       value={zData.name}
                       onChange={(e) => setDraft({
-                        ...draft,
+                        ...currentDraftSafe,
                         convenienceZones: {
-                          ...draft.convenienceZones,
+                          ...currentDraftSafe.convenienceZones,
                           [zKey]: { ...zData, name: e.target.value }
                         }
                       })}
@@ -2675,9 +2684,9 @@ export default function App() {
                       type="number"
                       value={zData.fee}
                       onChange={(e) => setDraft({
-                        ...draft,
+                        ...currentDraftSafe,
                         convenienceZones: {
-                          ...draft.convenienceZones,
+                          ...currentDraftSafe.convenienceZones,
                           [zKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
@@ -2690,9 +2699,9 @@ export default function App() {
                           type: 'single',
                           message: `Are you sure you want to delete zone "${zData.name}"?`,
                           onConfirm: () => {
-                            const copy = { ...draft.convenienceZones };
+                            const copy = { ...(currentDraftSafe.convenienceZones || {}) };
                             delete copy[zKey];
-                            setDraft({ ...draft, convenienceZones: copy });
+                            setDraft({ ...currentDraftSafe, convenienceZones: copy });
                           }
                         });
                       }}
@@ -2731,7 +2740,7 @@ export default function App() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Object.keys(draft?.pricingByKit?.international || {}).map(k => (
+              {Object.keys(currentDraftSafe?.pricingByKit?.international || {}).map(k => (
                 <div key={k} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-mono font-bold uppercase text-purple-400">Key: {k}</span>
@@ -2742,12 +2751,12 @@ export default function App() {
                           type: 'single',
                           message: `Are you sure you want to delete rate for "${k}"?`,
                           onConfirm: () => {
-                            const updatedInt = { ...draft.pricingByKit.international };
-                            const updatedDrug = { ...draft.pricingByKit.drugstore };
+                            const updatedInt = { ...(currentDraftSafe.pricingByKit?.international || {}) };
+                            const updatedDrug = { ...(currentDraftSafe.pricingByKit?.drugstore || {}) };
                             delete updatedInt[k];
                             delete updatedDrug[k];
                             setDraft({
-                              ...draft,
+                              ...currentDraftSafe,
                               pricingByKit: { international: updatedInt, drugstore: updatedDrug }
                             });
                           }
@@ -2761,11 +2770,11 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
                       <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>Luxury Rate (₹)</label>
-                      <input type="number" value={draft?.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, international: { ...draft.pricingByKit.international, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-purple-400 text-xs font-bold ${iosInputBg}`} />
+                      <input type="number" value={currentDraftSafe?.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...currentDraftSafe, pricingByKit: { ...(currentDraftSafe.pricingByKit || {}), international: { ...(currentDraftSafe.pricingByKit?.international || {}), [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-purple-400 text-xs font-bold ${iosInputBg}`} />
                     </div>
                     <div>
                       <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>HD Rate (₹)</label>
-                      <input type="number" value={draft?.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...draft, pricingByKit: { ...draft.pricingByKit, drugstore: { ...draft.pricingByKit.drugstore, [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
+                      <input type="number" value={currentDraftSafe?.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...currentDraftSafe, pricingByKit: { ...(currentDraftSafe.pricingByKit || {}), drugstore: { ...(currentDraftSafe.pricingByKit?.drugstore || {}), [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
                     </div>
                   </div>
                 </div>
@@ -2799,7 +2808,7 @@ export default function App() {
                 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Color Theme</label>
-                  <select value={draft?.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
+                  <select value={currentDraftSafe?.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
                     <option value="real_glass_lens">🔮 Real Glass Lens (Translucent Mirror)</option>
                     <option value="real_ios_glass">🍎 Real iOS Liquid Glass</option>
                     <option value="liquid_glass">💎 Liquid Glass iOS</option>
@@ -2815,7 +2824,7 @@ export default function App() {
 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Font Family</label>
-                  <select value={draft?.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
+                  <select value={currentDraftSafe?.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
                     <option value="sans">Plus Jakarta Sans</option>
                     <option value="outfit">Outfit (iOS Glass Minimal)</option>
                     <option value="serif">Playfair Display (Royal)</option>
@@ -2837,7 +2846,7 @@ export default function App() {
                 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Admin Aura Theme</label>
-                  <select value={draft?.adminTheme?.colorTheme || 'admin_aurora'} onChange={e => setDraft({ ...draft, adminTheme: { ...draft.adminTheme, colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
+                  <select value={currentDraftSafe?.adminTheme?.colorTheme || 'admin_aurora'} onChange={e => setDraft({ ...currentDraftSafe, adminTheme: { ...(currentDraftSafe.adminTheme || {}), colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold text-purple-400 ${iosInputBg}`}>
                     <option value="admin_aurora">✨ Admin Aurora (Purple Neon Glow)</option>
                     <option value="sunset_glow">🌅 Sunset Amber Glow</option>
                     <option value="cyber_matrix">⚡ Cyber Matrix Emerald</option>
@@ -2847,7 +2856,7 @@ export default function App() {
 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Default Customer Mode</label>
-                  <select value={draft?.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...draft, theme: { ...draft.theme, defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
+                  <select value={currentDraftSafe?.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
                     <option value="light">☀️ Light Mode</option>
                     <option value="dark">🌙 Dark Mode</option>
                   </select>
@@ -2886,8 +2895,8 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow border">
-                  {draft?.studioLogo ? (
-                    <img src={draft.studioLogo} alt="Logo" className="w-full h-full object-contain" />
+                  {currentDraftSafe.studioLogo ? (
+                    <img src={currentDraftSafe.studioLogo} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
                     <Crown className="w-7 h-7 text-slate-400" />
                   )}
@@ -2897,8 +2906,8 @@ export default function App() {
                   <input
                     type="text"
                     placeholder="Paste Logo Image URL"
-                    value={draft?.studioLogo || ''}
-                    onChange={e => setDraft({ ...draft, studioLogo: e.target.value })}
+                    value={currentDraftSafe.studioLogo || ''}
+                    onChange={e => setDraft({ ...currentDraftSafe, studioLogo: e.target.value })}
                     className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
                   <label className="inline-block px-4 py-2.5 rounded-[14px] bg-purple-500/15 text-purple-400 text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition">
@@ -2919,15 +2928,15 @@ export default function App() {
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-purple-500/40 shrink-0 shadow">
-                  <img src={draft?.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={currentDraftSafe.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex-1 w-full space-y-2">
                   <input
                     type="text"
                     placeholder="Paste Profile Photo URL"
-                    value={draft?.profileImage || ''}
-                    onChange={e => setDraft({ ...draft, profileImage: e.target.value })}
+                    value={currentDraftSafe.profileImage || ''}
+                    onChange={e => setDraft({ ...currentDraftSafe, profileImage: e.target.value })}
                     className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
                   <label className="inline-block px-4 py-2.5 rounded-[14px] bg-purple-500/15 text-purple-400 text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition">
@@ -2941,19 +2950,19 @@ export default function App() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Display Title</label>
-                <input type="text" value={draft?.studioName || ''} onChange={e => setDraft({ ...draft, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
+                <input type="text" value={currentDraftSafe.studioName || ''} onChange={e => setDraft({ ...currentDraftSafe, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Booking Contact Number</label>
-                <input type="text" value={draft?.whatsappNumber || ''} onChange={e => setDraft({ ...draft, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-purple-400 ${iosInputBg}`} />
+                <input type="text" value={currentDraftSafe.whatsappNumber || ''} onChange={e => setDraft({ ...currentDraftSafe, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-purple-400 ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Instagram Handle</label>
-                <input type="text" value={draft?.instagramHandle || ''} onChange={e => setDraft({ ...draft, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
+                <input type="text" value={currentDraftSafe.instagramHandle || ''} onChange={e => setDraft({ ...currentDraftSafe, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Artist Tagline / Subtitle</label>
-                <input type="text" value={draft?.artistTagline || ''} onChange={e => setDraft({ ...draft, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
+                <input type="text" value={currentDraftSafe.artistTagline || ''} onChange={e => setDraft({ ...currentDraftSafe, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
               </div>
             </div>
 
