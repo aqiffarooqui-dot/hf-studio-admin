@@ -27,10 +27,9 @@ const DEFAULT_CONFIG = {
   instagramHandle: "husna_farooqui_makeup",
   baseLocation: "Okhla / Jamia Nagar, New Delhi",
 
-  activeAppVersion: "v3.9.0",
+  activeAppVersion: "v3.9.1",
   appVersionsList: [
-    { version: "v3.9.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Stable build with dynamic Vanity Brands, details modal & safe error boundaries." },
-    { version: "v3.8.0", label: "Production v3.8 (Fallback)", releaseDate: "August 29, 2026", status: "archived", notes: "Packages & Rates unified master manager build." }
+    { version: "v3.9.1", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Instant theme application & rich guest booking breakdown on slips and queue." }
   ],
 
   theme: {
@@ -172,12 +171,6 @@ const DEFAULT_CONFIG = {
 };
 
 const THEME_STYLES = {
-  real_glass_lens: {
-    bg: "bg-[#090a0f] text-[#F2F2F7]",
-    cardBg: "bg-gradient-to-br from-white/10 via-sky-500/10 to-indigo-500/10 backdrop-blur-[24px] border border-white/20 shadow-[0_12px_40px_rgba(0,122,255,0.15)]",
-    btnPrimary: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-[0_10px_25px_rgba(0,122,255,0.3)] rounded-[18px]",
-    accentText: "text-blue-400"
-  },
   admin_aurora: {
     bg: "bg-[#090a0f] text-[#F2F2F7]",
     cardBg: "bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-blue-500/15 backdrop-blur-[28px] border border-purple-500/30 shadow-[0_12px_40px_rgba(168,85,247,0.2)]",
@@ -195,6 +188,12 @@ const THEME_STYLES = {
     cardBg: "bg-gradient-to-br from-emerald-500/15 via-cyan-500/20 to-blue-500/15 backdrop-blur-[28px] border border-cyan-500/35 shadow-[0_12px_40px_rgba(6,182,212,0.2)]",
     btnPrimary: "bg-gradient-to-r from-emerald-500 to-cyan-600 text-neutral-950 font-bold shadow-[0_10px_25px_rgba(6,182,212,0.35)] rounded-[18px]",
     accentText: "text-cyan-400"
+  },
+  real_glass_lens: {
+    bg: "bg-[#090a0f] text-[#F2F2F7]",
+    cardBg: "bg-gradient-to-br from-white/10 via-sky-500/10 to-indigo-500/10 backdrop-blur-[24px] border border-white/20 shadow-[0_12px_40px_rgba(0,122,255,0.15)]",
+    btnPrimary: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-[0_10px_25px_rgba(0,122,255,0.3)] rounded-[18px]",
+    accentText: "text-blue-400"
   }
 };
 
@@ -242,7 +241,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.9.1", date: "August 30, 2026", status: "Active Live Production", changes: "Fixed Admin App dynamic theme application, merged extra guest discounts under promo coupons with timer, integrated App version switcher & clean bottom reorder." }
+  { version: "v3.9.2", date: "August 30, 2026", status: "Active Live Production", changes: "Instant theme application without save, rich guest breakdown on booking cards and downloaded JPG slips with watermark logo." }
 ];
 
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
@@ -278,7 +277,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('hf_admin_auth') === 'true';
   });
-  const [isAdminDarkMode, setIsAdminDarkMode] = useState(false);
+  const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState('');
@@ -632,6 +631,25 @@ export default function App() {
     }
   };
 
+  // Instant Theme Switcher without requiring explicit save click
+  const handleInstantThemeChange = async (newThemeKey) => {
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const updated = {
+      ...currentDraftSafe,
+      adminTheme: {
+        ...(currentDraftSafe.adminTheme || {}),
+        colorTheme: newThemeKey
+      }
+    };
+    setDraft(updated);
+    try {
+      await updateLiveConfig(JSON.parse(JSON.stringify(updated)));
+      setPopupToast({ title: "Theme Applied Instantly", desc: `Admin console theme switched to ${newThemeKey}.` });
+    } catch (err) {
+      console.warn("Theme instant sync notice:", err);
+    }
+  };
+
   const handleAcceptBookingWhatsApp = async (b) => {
     setPopupToast({ title: "Dispatching Slip", desc: `Sending final confirmation slip to ${b.clientName}...` });
     try {
@@ -814,6 +832,54 @@ export default function App() {
       ctx.lineWidth = 4;
       ctx.strokeRect(40, 40, 1000, 1680);
 
+      if (logoImgObj) {
+        ctx.save();
+        ctx.globalAlpha = 0.08;
+        ctx.drawImage(logoImgObj, 240, 580, 600, 600);
+        ctx.restore();
+      }
+
+      if (logoImgObj) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(logoImgObj, 95, 105, 90, 90);
+        ctx.restore();
+
+        ctx.strokeStyle = '#007AFF';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(140, 150, 45, 0, Math.PI * 2, true);
+        ctx.stroke();
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 36px serif';
+        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 210, 140);
+
+        ctx.fillStyle = '#007AFF';
+        ctx.font = '600 18px sans-serif';
+        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 210, 170);
+      } else {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 42px serif';
+        ctx.fillText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 540, 140);
+
+        ctx.fillStyle = '#007AFF';
+        ctx.font = '600 20px sans-serif';
+        ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 540, 175);
+      }
+
+      ctx.strokeStyle = 'rgba(0, 122, 255, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(80, 220);
+      ctx.lineTo(1000, 220);
+      ctx.stroke();
+
       ctx.textAlign = 'center';
       ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#0f172a');
       ctx.font = 'bold 24px sans-serif';
@@ -847,6 +913,42 @@ export default function App() {
         startY += 64;
       });
 
+      if (b.extraGuestsList && b.extraGuestsList.length > 0) {
+        startY += 10;
+        ctx.fillStyle = '#fdf4ff';
+        ctx.fillRect(80, startY - 26, 920, 48);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#9333ea';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 100, startY + 6);
+
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText(`+₹${b.extraGuestsCost?.toLocaleString('en-IN') || 0}`, 980, startY + 6);
+        startY += 54;
+
+        b.extraGuestsList.forEach((g, gIdx) => {
+          const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(80, startY - 20, 920, 40);
+
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#475569';
+          ctx.font = '16px sans-serif';
+          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}): ${g.packageKey || 'Party Makeup'}`, 120, startY + 6);
+          startY += 44;
+        });
+      }
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '17px sans-serif';
+      ctx.fillText(`Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${currentDraftSafe.instagramHandle}`, 540, 1670);
+
+      ctx.fillStyle = '#007AFF';
+      ctx.font = 'italic 16px sans-serif';
+      ctx.fillText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 540, 1700);
+
       const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
       const downloadLink = document.createElement('a');
       downloadLink.download = `${isRejected ? 'Declined' : 'Confirmed'}_Slip_${b.bookingNumber || b.clientName}.jpg`;
@@ -854,7 +956,6 @@ export default function App() {
       downloadLink.click();
     };
 
-    const currentDraftSafe = draft || DEFAULT_CONFIG;
     const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
     const logoImg = new Image();
     logoImg.crossOrigin = "anonymous";
@@ -1139,7 +1240,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Header without Reorder button */}
+      {/* Header */}
       <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
@@ -1306,7 +1407,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 1. UNIFIED PACKAGE & RATE MANAGER SECTION */}
+        {/* 1. PACKAGES & RATES MANAGER */}
         {activeFolderId === 'packages_master' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1514,7 +1615,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 2. VANITY BRANDS MANAGER SECTION */}
+        {/* 2. VANITY BRANDS MANAGER */}
         {activeFolderId === 'brands_master' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1628,7 +1729,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 3. APP VERSION CONTROLLER & ROLLBACK SECTION */}
+        {/* 3. APP VERSION & ROLLBACK MANAGER */}
         {activeFolderId === 'versions_master' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1637,17 +1738,17 @@ export default function App() {
                   <GitBranch className="w-5 h-5" /> Live App Version Controller & Safe Rollback
                 </h3>
                 <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Control active deployed version across devices. Promote staging releases to Live or execute instant 1-click fallback rollback.
+                  Control active deployed version of Main App across client devices. Promote staging releases to Live or execute instant fallback rollback.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => {
-                  const ver = prompt("Enter Version Tag (e.g. v3.9.1):");
+                  const ver = prompt("Enter Main App Version Tag (e.g. v3.9.1):");
                   if (!ver) return;
-                  const label = prompt("Enter Version Title/Label:", "New Production Release");
-                  const notes = prompt("Enter Release Notes:", "Performance improvements and UI updates.");
+                  const label = prompt("Enter Version Title/Label:", "New Main App Build");
+                  const notes = prompt("Enter Release Notes:", "Bug fixes & new features.");
                   
                   const updatedList = [
                     { version: ver.trim(), label: label || 'Release Build', releaseDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), status: "staged", notes: notes || '' },
@@ -1658,11 +1759,11 @@ export default function App() {
                     ...currentDraftSafe,
                     appVersionsList: updatedList
                   });
-                  setPopupToast({ title: "Version Staged", desc: `Version ${ver} registered. Click 'Make Live' to deploy.` });
+                  setPopupToast({ title: "Version Staged", desc: `Main App version ${ver} registered. Click 'Make Live' to deploy.` });
                 }}
                 className={`px-4 py-2.5 rounded-[14px] ${adminThemeStyle.btnPrimary} text-white text-xs font-bold flex items-center gap-1.5 shadow shrink-0`}
               >
-                <Plus className="w-4 h-4" /> Register New Release
+                <Plus className="w-4 h-4" /> Register New Build
               </button>
             </div>
 
@@ -1670,7 +1771,7 @@ export default function App() {
               <div className="flex items-center gap-2.5">
                 <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0" />
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-500">Currently Active Live Build:</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-500">Currently Active Live Main App Version:</span>
                   <h4 className={`text-[17px] font-mono font-bold ${adminThemeStyle.accentText}`}>{currentDraftSafe.activeAppVersion || 'v3.9.0'}</h4>
                 </div>
               </div>
@@ -1687,7 +1788,7 @@ export default function App() {
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <span className={`font-mono font-bold text-[16px] ${adminThemeStyle.accentText}`}>{verItem.version}</span>
                           <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${isCurrentLive ? 'bg-emerald-500 text-neutral-950 shadow' : 'bg-slate-200 text-slate-700'}`}>
-                            {isCurrentLive ? '🟢 LIVE PRODUCTION' : (verItem.status === 'staged' ? '🟡 STAGED FOR RELEASE' : '⚪ ARCHIVED / FALLBACK')}
+                            {isCurrentLive ? '🟢 LIVE PRODUCTION' : (verItem.status === 'staged' ? '🟡 STAGED' : '⚪ ARCHIVED / ROLLBACK')}
                           </span>
                           <span className={`text-[11px] font-mono ${iosMuted}`}>Released: {verItem.releaseDate}</span>
                         </div>
@@ -1703,11 +1804,11 @@ export default function App() {
                                 ...currentDraftSafe,
                                 activeAppVersion: verItem.version
                               });
-                              setPopupToast({ title: "Switched Active Version", desc: `Switched live app target to ${verItem.version}. Remember to click Save below.` });
+                              setPopupToast({ title: "Rollback Triggered", desc: `Main App target switched to ${verItem.version}. Click Save below to finalize.` });
                             }}
                             className="px-4 py-2 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow flex items-center gap-1.5 transition active:scale-95"
                           >
-                            <Check className="w-3.5 h-3.5" /> Make Live / Rollback
+                            <Check className="w-3.5 h-3.5" /> Rollback / Make Live
                           </button>
                         )}
                         
@@ -1717,7 +1818,7 @@ export default function App() {
                           onClick={() => {
                             setDeleteConfirmModal({
                               type: 'single',
-                              message: `Are you sure you want to remove release ${verItem.version} from deployment history?`,
+                              message: `Are you sure you want to remove release ${verItem.version}?`,
                               onConfirm: () => {
                                 const list = (currentDraftSafe.appVersionsList || []).filter((_, i) => i !== vIdx);
                                 setDraft({ ...currentDraftSafe, appVersionsList: list });
@@ -1725,7 +1826,7 @@ export default function App() {
                             });
                           }}
                           className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px] disabled:opacity-20"
-                          title="Delete Release Record"
+                          title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1749,7 +1850,7 @@ export default function App() {
               className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'App Versions' ? 'Saving...' : 'Save Version & Deployment Settings Live'}</span>
+              <span>{savingSection === 'App Versions' ? 'Saving...' : 'Save Main App Version Rollback Live'}</span>
             </button>
           </div>
         )}
@@ -1923,7 +2024,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 5. LIVE BOOKINGS QUEUE */}
+        {/* 5. LIVE BOOKINGS QUEUE (With rich guest breakdown & kit/package details) */}
         {activeFolderId === 'bookings' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
@@ -2077,11 +2178,28 @@ export default function App() {
                         </div>
                       )}
 
-                      <div className={`text-[13px] space-y-1 border-t border-b py-2.5 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+                      <div className={`text-[13px] space-y-1.5 border-t border-b py-2.5 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
                         <div className="flex justify-between"><span className={iosMuted}>Event Date:</span><strong className={`${adminThemeStyle.accentText} font-mono`}>{b.eventDate}</strong></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Package:</span><span className="font-medium">{b.packageName}</span></div>
+                        <div className="flex justify-between"><span className={iosMuted}>Main Package:</span><span className="font-medium">{b.packageName}</span></div>
                         <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Extra Guests:</span><span className="font-medium">{b.extraGuestsCount || 0} Guest(s) (+₹{b.extraGuestsCost || 0})</span></div>
+                        
+                        {/* Rich Guest Breakdown */}
+                        <div className="pt-1 pb-1 border-t border-dashed border-slate-500/30">
+                          <span className={`block text-[11px] font-bold ${adminThemeStyle.accentText}`}>Extra Family Guests ({b.extraGuestsCount || 0}):</span>
+                          {b.extraGuestsList && b.extraGuestsList.length > 0 ? (
+                            <div className="mt-1 space-y-1 pl-2">
+                              {b.extraGuestsList.map((g, gIdx) => (
+                                <div key={gIdx} className="text-[11px] flex justify-between">
+                                  <span className={iosMuted}>• Guest #{gIdx + 1} ({g.kit === 'international' ? 'Luxury' : 'HD'}):</span>
+                                  <span className="font-mono font-medium">{g.packageKey || 'Party Makeup'}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className={`text-[11px] ${iosMuted} pl-2`}>None</span>
+                          )}
+                        </div>
+
                         <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName}</span></div>
                         <div className="flex justify-between"><span className={iosMuted}>Address:</span><span className="truncate max-w-[180px]">{b.venueAddress}</span></div>
                         {b.rejectionReason && (
@@ -2576,7 +2694,7 @@ export default function App() {
               </button>
             </div>
 
-            {/* Extra Guest Group Discount Card (Moved inside Promo & Offers as requested) */}
+            {/* Extra Guest Group Discount Card */}
             <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -3047,7 +3165,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 17. THEMES & TYPOGRAPHY */}
+        {/* 17. THEMES & TYPOGRAPHY (Instant Theme Apply Included) */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <h3 className={`font-bold text-[16px] uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
@@ -3095,13 +3213,17 @@ export default function App() {
 
               <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                 <h4 className={`font-bold text-[14px] flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
-                  <Shield className="w-4 h-4" /> Admin Console Theme Settings
+                  <Shield className="w-4 h-4" /> Admin Console Theme Settings (Instant Apply)
                 </h4>
-                <p className={`text-[12px] ${iosMuted}`}>Customize the colorful vibe of this management dashboard.</p>
+                <p className={`text-[12px] ${iosMuted}`}>Instantly switch and apply console vibe.</p>
                 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Admin Aura Theme</label>
-                  <select value={currentDraftSafe?.adminTheme?.colorTheme || 'admin_aurora'} onChange={e => setDraft({ ...currentDraftSafe, adminTheme: { ...(currentDraftSafe.adminTheme || {}), colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}>
+                  <select 
+                    value={activeAdminThemeKey} 
+                    onChange={e => handleInstantThemeChange(e.target.value)} 
+                    className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}
+                  >
                     <option value="admin_aurora">✨ Admin Aurora (Purple Neon Glow)</option>
                     <option value="sunset_glow">🌅 Sunset Amber Glow</option>
                     <option value="cyber_matrix">⚡ Cyber Matrix Emerald</option>
