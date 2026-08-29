@@ -200,10 +200,10 @@ const PRE_ADDED_REJECTION_REASONS = [
 
 const INITIAL_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
+  { id: 'packages_master', label: 'Packages & Rates Manager', icon: Layers, desc: 'Manage package photos, names, rates and full details', countKey: null },
   { id: 'general', label: 'General & Security Settings', icon: Settings, desc: 'Biometric, Face ID, Fingerprint Scan Registration & Recovery' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, desc: 'Color-coded monthly schedule matrix' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
-  { id: 'packages_master', label: 'Package Management (Images & Titles)', icon: Layers, desc: 'Manage package photos, names and descriptions per kit' },
   { id: 'guest_discount_folder', label: 'Extra Guest Offer Controller', icon: Gift, desc: 'Manage family/group discount tiers & percentage' },
   { id: 'gallery', label: 'Transformations & Media', icon: Film, desc: 'Upload client video reels, GIFs & photos' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, desc: 'Politely lock customer app during upgrades' },
@@ -214,13 +214,12 @@ const INITIAL_FOLDERS = [
   { id: 'promotions', label: 'WhatsApp Broadcast Studio', icon: Megaphone, desc: 'Send bulk promo alerts via Baileys gateway' },
   { id: 'announcements', label: 'Top Announcements Ticker', icon: Volume2, desc: 'Configure top rotating ticker announcements' },
   { id: 'convenience', label: 'Travel Fees & Zones', icon: Car, desc: 'Edit venue travel charges per area' },
-  { id: 'prices', label: 'Package Rates Manager', icon: Percent, desc: 'Adjust rates for Luxury vs HD kit looks' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, desc: 'Aesthetic skins, fonts & mode defaults' },
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.6.5", date: "August 29, 2026", status: "Active Live Production", changes: "Guaranteed defensive fallback rendering for all config items to eliminate blank white screen issues." }
+  { version: "v3.7.0", date: "August 29, 2026", status: "Active Live Production", changes: "Unified Package Management and Rate Manager into a single master section with complete aspect editing including detail modal attributes." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -759,7 +758,7 @@ export default function App() {
       kitImages: updatedKitImages,
       pricingByKit: updatedPricing
     });
-    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully!` });
+    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
   };
 
   const handleGenerateSlipJpgOnDemand = (b) => {
@@ -999,7 +998,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.6.4 Production Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.7.0 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1129,7 +1128,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 H&F Studio Admin
               </h1>
-              <p className={`text-[11px] font-mono text-purple-400`}>v3.6.4 Pro Suite</p>
+              <p className={`text-[11px] font-mono text-purple-400`}>v3.7.0 Pro Suite</p>
             </div>
           </div>
 
@@ -1236,13 +1235,6 @@ export default function App() {
           )}
         </div>
 
-        {actionStatus && (
-          <div className="p-3.5 rounded-[16px] bg-purple-500/15 border border-purple-500/30 font-bold text-[13px] text-center text-purple-400 shadow-lg animate-fade-in flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 animate-spin" />
-            <span>{actionStatus}</span>
-          </div>
-        )}
-
         {/* Colorful Floating Animated Cards & iOS Pill Layout Grid */}
         {!activeFolderId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1306,6 +1298,173 @@ export default function App() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* UNIFIED PACKAGE & RATE MANAGER SECTION */}
+        {activeFolderId === 'packages_master' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-[18px] text-purple-400 flex items-center gap-2">
+                  <Layers className="w-5 h-5" /> Packages & Rates Master Manager
+                </h3>
+                <p className={`text-[13px] ${iosMuted} mt-0.5`}>
+                  Manage full aspect attributes: package display names, descriptions, images, and kit rates all in one place. Changes instantly sync to the client app cards.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddNewPackage}
+                  className="px-4 py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
+                >
+                  <Plus className="w-4 h-4" /> Add New Package
+                </button>
+
+                <div className={`inline-flex p-1.5 rounded-[18px] border gap-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingKitTab('international')}
+                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow' : iosMuted}`}
+                  >
+                    👑 Luxury Kit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingKitTab('drugstore')}
+                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow' : iosMuted}`}
+                  >
+                    ✨ HD Kit
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.keys(currentDraftSafe.kitText?.[editingKitTab] || {}).map(k => {
+                const pkgText = currentDraftSafe.kitText[editingKitTab][k] || { name: k, desc: '' };
+                const pkgImg = currentDraftSafe.kitImages?.[editingKitTab]?.[k] || '';
+                const pkgPrice = currentDraftSafe.pricingByKit?.[editingKitTab]?.[k] || 0;
+
+                return (
+                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-purple-400 font-mono uppercase">Key: {k}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase font-bold">{editingKitTab}</span>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteConfirmModal({ type: 'single', isPackage: true, kit: editingKitTab, pkgKey: k, message: `Are you sure you want to delete package "${pkgText.name}"?` })}
+                          className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"
+                          title="Delete Package"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-20 h-20 rounded-[16px] overflow-hidden bg-neutral-200 border shrink-0 shadow">
+                        <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1 w-full space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Image URL"
+                          value={pkgImg || ''}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            kitImages: {
+                              ...(currentDraftSafe.kitImages || {}),
+                              [editingKitTab]: {
+                                ...(currentDraftSafe.kitImages?.[editingKitTab] || {}),
+                                [k]: e.target.value
+                              }
+                            }
+                          })}
+                          className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
+                        />
+                        <label className="block text-center py-2.5 rounded-[14px] bg-purple-500/15 text-purple-400 text-[11px] font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition">
+                          Upload Photo (&lt;20MB)
+                          <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-3 border-t border-slate-500/20">
+                      <div>
+                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Package Display Name</span>
+                        <input
+                          type="text"
+                          value={pkgText.name || ''}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            kitText: {
+                              ...(currentDraftSafe.kitText || {}),
+                              [editingKitTab]: {
+                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
+                                [k]: { ...pkgText, name: e.target.value }
+                              }
+                            }
+                          })}
+                          className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${iosInputBg}`}
+                        />
+                      </div>
+
+                      <div>
+                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Price Rate (₹)</span>
+                        <input
+                          type="number"
+                          value={pkgPrice}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            pricingByKit: {
+                              ...(currentDraftSafe.pricingByKit || {}),
+                              [editingKitTab]: {
+                                ...(currentDraftSafe.pricingByKit?.[editingKitTab] || {}),
+                                [k]: Number(e.target.value)
+                              }
+                            }
+                          })}
+                          className={`w-full p-3.5 rounded-[16px] font-mono text-purple-400 font-bold text-xs ${iosInputBg}`}
+                        />
+                      </div>
+
+                      <div>
+                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description (Card & Details Modal)</span>
+                        <textarea
+                          rows={3}
+                          value={pkgText.desc || ''}
+                          onChange={e => setDraft({
+                            ...currentDraftSafe,
+                            kitText: {
+                              ...(currentDraftSafe.kitText || {}),
+                              [editingKitTab]: {
+                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
+                                [k]: { ...pkgText, desc: e.target.value }
+                              }
+                            }
+                          })}
+                          className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Packages & Rates Master'}
+              onClick={() => handleSaveSpecificCard('Packages & Rates Master')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Packages & Rates Master' ? 'Saving...' : 'Save Packages & Rates Master Live'}</span>
+            </button>
           </div>
         )}
 
@@ -1839,149 +1998,6 @@ export default function App() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {activeFolderId === 'packages_master' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-bold text-[16px] text-purple-400 flex items-center gap-2">
-                  <Layers className="w-5 h-5" /> Package Management (Images, Titles & Descriptions)
-                </h3>
-                <p className={`text-[13px] ${iosMuted} mt-0.5`}>Manage custom look photos, package display names and descriptions per kit type.</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleAddNewPackage}
-                  className="px-4 py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
-                >
-                  <Plus className="w-4 h-4" /> Add Package
-                </button>
-
-                <div className={`inline-flex p-1.5 rounded-[18px] border gap-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
-                  <button
-                    type="button"
-                    onClick={() => setEditingKitTab('international')}
-                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'international' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow' : iosMuted}`}
-                  >
-                    👑 Luxury Kit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingKitTab('drugstore')}
-                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow' : iosMuted}`}
-                  >
-                    ✨ HD Kit
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {Object.keys(currentDraftSafe.kitText?.[editingKitTab] || {}).map(k => {
-                const pkgText = currentDraftSafe.kitText[editingKitTab][k] || { name: k, desc: '' };
-                const pkgImg = currentDraftSafe.kitImages?.[editingKitTab]?.[k] || '';
-
-                return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-purple-400 font-mono uppercase">Key: {k}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase font-bold">{editingKitTab}</span>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteConfirmModal({ type: 'single', isPackage: true, kit: editingKitTab, pkgKey: k, message: `Are you sure you want to delete package "${pkgText.name}"?` })}
-                          className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                          title="Delete Package"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3.5">
-                      <div className="w-20 h-20 rounded-[16px] overflow-hidden bg-neutral-200 border shrink-0 shadow">
-                        <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Image URL"
-                          value={pkgImg || ''}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            kitImages: {
-                              ...(currentDraftSafe.kitImages || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.kitImages?.[editingKitTab] || {}),
-                                [k]: e.target.value
-                              }
-                            }
-                          })}
-                          className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
-                        />
-                        <label className="block text-center py-2.5 rounded-[14px] bg-purple-500/15 text-purple-400 text-[11px] font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition">
-                          Upload Photo (&lt;20MB)
-                          <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 pt-3 border-t border-slate-500/20">
-                      <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Package Display Name</span>
-                        <input
-                          type="text"
-                          value={pkgText.name || ''}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            kitText: {
-                              ...(currentDraftSafe.kitText || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                [k]: { ...pkgText, name: e.target.value }
-                              }
-                            }
-                          })}
-                          className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${iosInputBg}`}
-                        />
-                      </div>
-                      <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description</span>
-                        <textarea
-                          rows={2}
-                          value={pkgText.desc || ''}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            kitText: {
-                              ...(currentDraftSafe.kitText || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                [k]: { ...pkgText, desc: e.target.value }
-                              }
-                            }
-                          })}
-                          className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Package Master'}
-              onClick={() => handleSaveSpecificCard('Package Master')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Package Master' ? 'Saving...' : 'Save Package Images & Titles Live'}</span>
-            </button>
           </div>
         )}
 
@@ -2728,73 +2744,6 @@ export default function App() {
             >
               <Save className="w-4 h-4" />
               <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
-            </button>
-          </div>
-        )}
-
-        {activeFolderId === 'prices' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-3">
-              <h3 className="font-bold text-[16px] uppercase text-purple-400">👑 International Luxury Vanity Kit & HD Kit Rates (₹)</h3>
-              <button
-                type="button"
-                onClick={handleAddNewPackage}
-                className="px-4 py-2.5 rounded-[14px] bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold flex items-center gap-1.5 shadow"
-              >
-                <Plus className="w-4 h-4" /> Add Package Rate
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {Object.keys(currentDraftSafe?.pricingByKit?.international || {}).map(k => (
-                <div key={k} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-mono font-bold uppercase text-purple-400">Key: {k}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDeleteConfirmModal({
-                          type: 'single',
-                          message: `Are you sure you want to delete rate for "${k}"?`,
-                          onConfirm: () => {
-                            const updatedInt = { ...(currentDraftSafe.pricingByKit?.international || {}) };
-                            const updatedDrug = { ...(currentDraftSafe.pricingByKit?.drugstore || {}) };
-                            delete updatedInt[k];
-                            delete updatedDrug[k];
-                            setDraft({
-                              ...currentDraftSafe,
-                              pricingByKit: { international: updatedInt, drugstore: updatedDrug }
-                            });
-                          }
-                        });
-                      }}
-                      className="p-1 text-rose-500 hover:bg-rose-500/10 rounded"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>Luxury Rate (₹)</label>
-                      <input type="number" value={currentDraftSafe?.pricingByKit?.international?.[k] || 0} onChange={e => setDraft({ ...currentDraftSafe, pricingByKit: { ...(currentDraftSafe.pricingByKit || {}), international: { ...(currentDraftSafe.pricingByKit?.international || {}), [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-purple-400 text-xs font-bold ${iosInputBg}`} />
-                    </div>
-                    <div>
-                      <label className={`block text-[10px] mb-1 font-bold ${iosMuted}`}>HD Rate (₹)</label>
-                      <input type="number" value={currentDraftSafe?.pricingByKit?.drugstore?.[k] || 0} onChange={e => setDraft({ ...currentDraftSafe, pricingByKit: { ...(currentDraftSafe.pricingByKit || {}), drugstore: { ...(currentDraftSafe.pricingByKit?.drugstore || {}), [k]: Number(e.target.value) } } })} className={`w-full p-3 rounded-[14px] font-mono text-rose-500 text-xs font-bold ${iosInputBg}`} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              disabled={savingSection === 'Package Rates'}
-              onClick={() => handleSaveSpecificCard('Package Rates')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Package Rates' ? 'Saving...' : 'Save Package Rates Live'}</span>
             </button>
           </div>
         )}
