@@ -68,20 +68,20 @@ const DEFAULT_CONFIG = {
 
   kitText: {
     international: {
-      simple_party: { num: 1, name: "Simple Party Makeup (Luxury)", desc: "Natural dewy skin glow with Dior & NARS, soft contour & luxury hair styling." },
-      hd_party: { num: 2, name: "HD Party Makeup (Luxury)", desc: "High-definition camera ready base with Charlotte Tilbury & Huda, designer hair styling." },
-      super_hd_party: { num: 3, name: "Super HD Glam Party (Luxury)", desc: "Flawless poreless glass skin, 3D luxury lashes, statement eye look & hair artistry." },
-      cocktail_glam: { num: 4, name: "Cocktail / Reception Glam (Luxury)", desc: "Red-carpet celebrity glam, smokey or shimmer eye art, luxury extensions & styling." },
-      engagement_bride: { num: 5, name: "Engagement / Sagan Bride (Luxury)", desc: "Radiant luxury bridal base, sculpted features, premium lash drama, draping & hair styling." },
-      royal_bridal: { num: 6, name: "Royal Asian Bridal (Luxury)", desc: "Signature bridal artistry, 16HR waterproof HD finish with Estee Lauder & MAC, master draping & styling." }
+      simple_party: { num: 1, name: "Simple Party Makeup (Luxury)", desc: "Natural dewy skin glow with Dior & NARS, soft contour & luxury hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      hd_party: { num: 2, name: "HD Party Makeup (Luxury)", desc: "High-definition camera ready base with Charlotte Tilbury & Huda, designer hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      super_hd_party: { num: 3, name: "Super HD Glam Party (Luxury)", desc: "Flawless poreless glass skin, 3D luxury lashes, statement eye look & hair artistry.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      cocktail_glam: { num: 4, name: "Cocktail / Reception Glam (Luxury)", desc: "Red-carpet celebrity glam, smokey or shimmer eye art, luxury extensions & styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      engagement_bride: { num: 5, name: "Engagement / Sagan Bride (Luxury)", desc: "Radiant luxury bridal base, sculpted features, premium lash drama, draping & hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      royal_bridal: { num: 6, name: "Royal Asian Bridal (Luxury)", desc: "Signature bridal artistry, 16HR waterproof HD finish with Estee Lauder & MAC, master draping & styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" }
     },
     drugstore: {
-      simple_party: { num: 1, name: "Simple Party Makeup (HD Classic)", desc: "Clean everyday fresh look, light foundation base & classic hair styling." },
-      hd_party: { num: 2, name: "HD Party Makeup (HD Classic)", desc: "High-definition camera ready base with PAC/Milani, customized eye look & hair styling." },
-      super_hd_party: { num: 3, name: "Super HD Glam Party (HD Classic)", desc: "Long-wear HD base, dramatic eye shimmer, 3D lashes & elegant hair styling." },
-      cocktail_glam: { num: 4, name: "Cocktail / Reception Glam (HD Classic)", desc: "Even toned radiant glam, bold lip contour, full party hair styling." },
-      engagement_bride: { num: 5, name: "Engagement / Sagan Bride (HD Classic)", desc: "HD bridal glow, durable base, customized lash placement, dupatta draping." },
-      royal_bridal: { num: 6, name: "Royal Asian Bridal (HD Classic)", desc: "Complete Asian bridal makeover, smudge-proof HD base, jewelry setting & bridal draping." }
+      simple_party: { num: 1, name: "Simple Party Makeup (HD Classic)", desc: "Clean everyday fresh look, light foundation base & classic hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      hd_party: { num: 2, name: "HD Party Makeup (HD Classic)", desc: "High-definition camera ready base with PAC/Milani, customized eye look & hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      super_hd_party: { num: 3, name: "Super HD Glam Party (HD Classic)", desc: "Long-wear HD base, dramatic eye shimmer, 3D lashes & elegant hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      cocktail_glam: { num: 4, name: "Cocktail / Reception Glam (HD Classic)", desc: "Even toned radiant glam, bold lip contour, full party hair styling.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      engagement_bride: { num: 5, name: "Engagement / Sagan Bride (HD Classic)", desc: "HD bridal glow, durable base, customized lash placement, dupatta draping.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" },
+      royal_bridal: { num: 6, name: "Royal Asian Bridal (HD Classic)", desc: "Complete Asian bridal makeover, smudge-proof HD base, jewelry setting & bridal draping.", skinFinish: "16-Hour Water Resistant HD Glass", includes: "Full Makeup + Hair Styling + Draping" }
     }
   },
 
@@ -219,7 +219,7 @@ const INITIAL_FOLDERS = [
 ];
 
 const ADMIN_APP_VERSIONS = [
-  { version: "v3.7.0", date: "August 29, 2026", status: "Active Live Production", changes: "Unified Package Management and Rate Manager into a single master section with complete aspect editing including detail modal attributes." }
+  { version: "v3.7.1", date: "August 29, 2026", status: "Active Live Production", changes: "Added Extra Details (Skin Finish & Includes) modal editing capability to Packages & Rates Master section." }
 ];
 
 const partyPackages = ['simple_party', 'hd_party', 'super_hd_party', 'cocktail_glam'];
@@ -743,7 +743,13 @@ export default function App() {
 
     ['international', 'drugstore'].forEach(kit => {
       if (!updatedKitText[kit]) updatedKitText[kit] = {};
-      updatedKitText[kit][cleanKey] = { num: Object.keys(updatedKitText[kit]).length + 1, name: titleName, desc: "Professional signature look with premium cosmetics and styling." };
+      updatedKitText[kit][cleanKey] = { 
+        num: Object.keys(updatedKitText[kit]).length + 1, 
+        name: titleName, 
+        desc: "Professional signature look with premium cosmetics and styling.",
+        skinFinish: "16-Hour Water Resistant HD Glass",
+        includes: "Full Makeup + Hair Styling + Draping"
+      };
 
       if (!updatedKitImages[kit]) updatedKitImages[kit] = {};
       updatedKitImages[kit][cleanKey] = "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&auto=format&fit=crop&q=80";
@@ -998,7 +1004,7 @@ export default function App() {
             </div>
             <div>
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.7.0 Production Suite</p>
+              <p className={`text-[13px] ${iosMuted} mt-1`}>v3.7.1 Production Suite</p>
             </div>
             <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
             
@@ -1128,7 +1134,7 @@ export default function App() {
               <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
                 H&F Studio Admin
               </h1>
-              <p className={`text-[11px] font-mono text-purple-400`}>v3.7.0 Pro Suite</p>
+              <p className={`text-[11px] font-mono text-purple-400`}>v3.7.1 Pro Suite</p>
             </div>
           </div>
 
@@ -1310,7 +1316,7 @@ export default function App() {
                   <Layers className="w-5 h-5" /> Packages & Rates Master Manager
                 </h3>
                 <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Manage full aspect attributes: package display names, descriptions, images, and kit rates all in one place. Changes instantly sync to the client app cards.
+                  Manage full aspect attributes: package display names, descriptions, extra modal details, images, and kit rates all in one place. Changes instantly sync to the client app cards.
                 </p>
               </div>
 
@@ -1433,9 +1439,9 @@ export default function App() {
                       </div>
 
                       <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description (Card & Details Modal)</span>
+                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description (Card Display)</span>
                         <textarea
-                          rows={3}
+                          rows={2}
                           value={pkgText.desc || ''}
                           onChange={e => setDraft({
                             ...currentDraftSafe,
@@ -1449,6 +1455,47 @@ export default function App() {
                           })}
                           className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
                         />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <div>
+                          <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Skin Finish (Modal Detail)</span>
+                          <input
+                            type="text"
+                            placeholder="e.g. 16-Hour HD Glass"
+                            value={pkgText.skinFinish || ''}
+                            onChange={e => setDraft({
+                              ...currentDraftSafe,
+                              kitText: {
+                                ...(currentDraftSafe.kitText || {}),
+                                [editingKitTab]: {
+                                  ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
+                                  [k]: { ...pkgText, skinFinish: e.target.value }
+                                }
+                              }
+                            })}
+                            className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
+                          />
+                        </div>
+                        <div>
+                          <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Includes (Modal Detail)</span>
+                          <input
+                            type="text"
+                            placeholder="e.g. Full Makeup + Styling"
+                            value={pkgText.includes || ''}
+                            onChange={e => setDraft({
+                              ...currentDraftSafe,
+                              kitText: {
+                                ...(currentDraftSafe.kitText || {}),
+                                [editingKitTab]: {
+                                  ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
+                                  [k]: { ...pkgText, includes: e.target.value }
+                                }
+                              }
+                            })}
+                            className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
