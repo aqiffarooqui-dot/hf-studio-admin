@@ -280,6 +280,21 @@ const INITIAL_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, category: 'BRANDING', desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
+// Deep sanitizer utility to clean undefined/null/malformed values before saving to Firestore
+const sanitizeForFirestore = (obj) => {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeForFirestore).filter(item => item !== undefined);
+  
+  const cleaned = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = sanitizeForFirestore(value);
+    }
+  }
+  return cleaned;
+};
+
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -403,7 +418,6 @@ export default function App() {
 
   const canvasRef = useRef(null);
 
-  // Helper Upload Functions
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -443,7 +457,7 @@ export default function App() {
           }
         }
       }));
-      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Click Save to apply.` });
+      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Click 'Save Packages & Rates Master Live' to apply.` });
     } catch (err) {
       alert("Error uploading image: " + err.message);
     }
@@ -474,7 +488,6 @@ export default function App() {
     }
   };
 
-  // Calendar Helpers
   const year = calendarDate.getFullYear();
   const month = calendarDate.getMonth();
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -743,7 +756,7 @@ export default function App() {
       setDraft(updatedDraft);
 
       try {
-        await updateLiveConfig(JSON.parse(JSON.stringify(updatedDraft)));
+        await updateLiveConfig(sanitizeForFirestore(updatedDraft));
       } catch (e) {
         console.warn("Cloud sync warning for fingerprint:", e);
       }
@@ -783,8 +796,7 @@ export default function App() {
     try {
       const updated = { ...currentDraftSafe, adminPin: newPinInput };
       setDraft(updated);
-      const cleanData = JSON.parse(JSON.stringify(updated));
-      await updateLiveConfig(cleanData);
+      await updateLiveConfig(sanitizeForFirestore(updated));
       setPopupToast({ title: "Password Updated", desc: "Admin PIN password successfully changed and synced." });
       setOldPinInput('');
       setNewPinInput('');
@@ -794,6 +806,7 @@ export default function App() {
     }
   };
 
+  // Robust save function that cleanly sanitizes the entire Firestore payload
   const handleSaveSpecificCard = async (sectionName) => {
     setSavingSection(sectionName);
     try {
@@ -802,13 +815,16 @@ export default function App() {
         ...currentDraftSafe,
         adminFoldersOrder: adminFolders.map(f => f.id)
       };
-      const cleanData = JSON.parse(JSON.stringify(payload));
+      
+      const cleanData = sanitizeForFirestore(payload);
       await updateLiveConfig(cleanData);
+      
       setPopupToast({
         title: "Changes Saved Successfully!",
         desc: `"${sectionName}" has been updated and synced live to customer app.`
       });
     } catch (err) {
+      console.error(`Error saving ${sectionName}:`, err);
       alert(`Error saving ${sectionName}: ${err.message}`);
     } finally {
       setSavingSection('');
@@ -826,7 +842,7 @@ export default function App() {
     };
     setDraft(updated);
     try {
-      await updateLiveConfig(JSON.parse(JSON.stringify(updated)));
+      await updateLiveConfig(sanitizeForFirestore(updated));
       setPopupToast({ title: "Theme Applied Instantly", desc: `Admin console theme switched to ${newThemeKey}.` });
     } catch (err) {
       console.warn("Theme instant sync notice:", err);
@@ -914,7 +930,7 @@ export default function App() {
     const updated = [...currentReasons, { code: cleanCode, label, message }];
 
     setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    updateLiveConfig({ ...currentDraftSafe, rejectionReasons: updated }).catch(console.warn);
+    updateLiveConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
     setPopupToast({ title: "Reason Added", desc: `New rejection reason ${cleanCode} added successfully!` });
   };
 
@@ -927,7 +943,7 @@ export default function App() {
     }
     const updated = currentReasons.filter(r => r.code !== codeToRemove);
     setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    updateLiveConfig({ ...currentDraftSafe, rejectionReasons: updated }).catch(console.warn);
+    updateLiveConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
 
     if (selectedReasonCode === codeToRemove && updated.length > 0) {
       setSelectedReasonCode(updated[0].code);
@@ -958,12 +974,14 @@ export default function App() {
           if (updatedKitImages[kit]) delete updatedKitImages[kit][pkgKey];
           if (updatedPricing[kit]) delete updatedPricing[kit][pkgKey];
           
-          setDraft({
+          const newDraft = {
             ...currentDraftSafe,
             kitText: updatedKitText,
             kitImages: updatedKitImages,
             pricingByKit: updatedPricing
-          });
+          };
+          setDraft(newDraft);
+          await updateLiveConfig(sanitizeForFirestore(newDraft));
         }
         setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
       } else if (deleteConfirmModal.type === 'batch') {
@@ -1017,16 +1035,16 @@ export default function App() {
       updatedPricing[kit][cleanKey] = kit === 'international' ? 5000 : 3000;
     });
 
-    setDraft({
+    const newDraft = {
       ...currentDraftSafe,
       kitText: updatedKitText,
       kitImages: updatedKitImages,
       pricingByKit: updatedPricing
-    });
-    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
+    };
+    setDraft(newDraft);
+    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added! Click 'Save Packages & Rates Master Live' to apply.` });
   };
 
-  // Instant Download Slip with full dynamic auto-wrapping and clean layout
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1078,7 +1096,6 @@ export default function App() {
       return y + rowHeight + (options.gap ?? 7);
     };
 
-    // Dynamic Multi-line Row for long addresses/text
     const drawDynamicRow = (label, value, y, options = {}) => {
       ctx.font = `bold ${options.valueSize || 18}px sans-serif`;
       const maxWidth = options.maxWidth || 500;
@@ -1184,7 +1201,6 @@ export default function App() {
       y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
 
-      // Clean Structured Address Block on Downloadable Slip
       y += 10;
       y = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', y, '#38bdf8');
       y = drawRow('Address Type:', `[ ${addr.addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
@@ -1194,7 +1210,6 @@ export default function App() {
       y = drawRow('Town / City & State:', addr.townCityState, y, { labelSize: 18 });
       y = drawRow('Postal PIN Code:', addr.pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
 
-      // Rejection details rendered on slip
       if (hasRejectionNote) {
         y += 12;
         y = drawSectionTitle('⚠️ APPOINTMENT REJECTION & CANCELLATION DETAILS', y, '#f43f5e');
@@ -1287,7 +1302,6 @@ export default function App() {
       drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || ''} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle || '')}`, 600, footerY, 17, 'normal', '#64748b', 'center');
       drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 34, 18, 'italic', isRejected ? '#f43f5e' : '#c084fc', 'center');
 
-      // Instant download trigger
       try {
         canvas.toBlob((blob) => {
           if (!blob) {
@@ -1468,7 +1482,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Rejection Modal with Multiple Reason Selector */}
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
           <div className={`max-w-lg w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
@@ -1534,7 +1547,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Manage Reasons List Modal */}
       {showManageReasonsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[24px] animate-fade-in">
           <div className={`max-w-xl w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
@@ -1595,7 +1607,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Header */}
       <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
@@ -1625,7 +1636,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Live Status Banner */}
         <div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-black/5 shadow-sm text-slate-700'}`}>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
@@ -1696,7 +1706,6 @@ export default function App() {
           )}
         </div>
 
-        {/* App-Like Icon / Card Grid for Main Screen */}
         {!activeFolderId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {adminFolders.map((f, index) => {
@@ -1840,16 +1849,19 @@ export default function App() {
                           type="text"
                           placeholder="Image URL"
                           value={pkgImg || ''}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            kitImages: {
-                              ...(currentDraftSafe.kitImages || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.kitImages?.[editingKitTab] || {}),
-                                [k]: e.target.value
+                          onChange={e => {
+                            const val = e.target.value;
+                            setDraft(prev => ({
+                              ...prev,
+                              kitImages: {
+                                ...(prev.kitImages || {}),
+                                [editingKitTab]: {
+                                  ...(prev.kitImages?.[editingKitTab] || {}),
+                                  [k]: val
+                                }
                               }
-                            }
-                          })}
+                            }));
+                          }}
                           className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
                         />
                         <label className={`block text-center py-2.5 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-[11px] font-bold cursor-pointer hover:opacity-80 transition`}>
@@ -1865,16 +1877,19 @@ export default function App() {
                         <input
                           type="text"
                           value={pkgText.name || ''}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            kitText: {
-                              ...(currentDraftSafe.kitText || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                [k]: { ...pkgText, name: e.target.value }
+                          onChange={e => {
+                            const val = e.target.value;
+                            setDraft(prev => ({
+                              ...prev,
+                              kitText: {
+                                ...(prev.kitText || {}),
+                                [editingKitTab]: {
+                                  ...(prev.kitText?.[editingKitTab] || {}),
+                                  [k]: { ...pkgText, name: val }
+                                }
                               }
-                            }
-                          })}
+                            }));
+                          }}
                           className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${iosInputBg}`}
                         />
                       </div>
@@ -1884,16 +1899,19 @@ export default function App() {
                         <input
                           type="number"
                           value={pkgPrice}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            pricingByKit: {
-                              ...(currentDraftSafe.pricingByKit || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.pricingByKit?.[editingKitTab] || {}),
-                                [k]: Number(e.target.value)
+                          onChange={e => {
+                            const numVal = Number(e.target.value);
+                            setDraft(prev => ({
+                              ...prev,
+                              pricingByKit: {
+                                ...(prev.pricingByKit || {}),
+                                [editingKitTab]: {
+                                  ...(prev.pricingByKit?.[editingKitTab] || {}),
+                                  [k]: isNaN(numVal) ? 0 : numVal
+                                }
                               }
-                            }
-                          })}
+                            }));
+                          }}
                           className={`w-full p-3.5 rounded-[16px] font-mono ${adminThemeStyle.accentText} font-bold text-xs ${iosInputBg}`}
                         />
                       </div>
@@ -1903,16 +1921,19 @@ export default function App() {
                         <textarea
                           rows={2}
                           value={pkgText.desc || ''}
-                          onChange={e => setDraft({
-                            ...currentDraftSafe,
-                            kitText: {
-                              ...(currentDraftSafe.kitText || {}),
-                              [editingKitTab]: {
-                                ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                [k]: { ...pkgText, desc: e.target.value }
+                          onChange={e => {
+                            const val = e.target.value;
+                            setDraft(prev => ({
+                              ...prev,
+                              kitText: {
+                                ...(prev.kitText || {}),
+                                [editingKitTab]: {
+                                  ...(prev.kitText?.[editingKitTab] || {}),
+                                  [k]: { ...pkgText, desc: val }
+                                }
                               }
-                            }
-                          })}
+                            }));
+                          }}
                           className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
                         />
                       </div>
@@ -1924,16 +1945,19 @@ export default function App() {
                             type="text"
                             placeholder="e.g. 16-Hour HD Glass"
                             value={pkgText.skinFinish || ''}
-                            onChange={e => setDraft({
-                              ...currentDraftSafe,
-                              kitText: {
-                                ...(currentDraftSafe.kitText || {}),
-                                [editingKitTab]: {
-                                  ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                  [k]: { ...pkgText, skinFinish: e.target.value }
+                            onChange={e => {
+                              const val = e.target.value;
+                              setDraft(prev => ({
+                                ...prev,
+                                kitText: {
+                                  ...(prev.kitText || {}),
+                                  [editingKitTab]: {
+                                    ...(prev.kitText?.[editingKitTab] || {}),
+                                    [k]: { ...pkgText, skinFinish: val }
+                                  }
                                 }
-                              }
-                            })}
+                              }));
+                            }}
                             className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
                           />
                         </div>
@@ -1943,16 +1967,19 @@ export default function App() {
                             type="text"
                             placeholder="e.g. Full Makeup + Styling"
                             value={pkgText.includes || ''}
-                            onChange={e => setDraft({
-                              ...currentDraftSafe,
-                              kitText: {
-                                ...(currentDraftSafe.kitText || {}),
-                                [editingKitTab]: {
-                                  ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                  [k]: { ...pkgText, includes: e.target.value }
+                            onChange={e => {
+                              const val = e.target.value;
+                              setDraft(prev => ({
+                                ...prev,
+                                kitText: {
+                                  ...(prev.kitText || {}),
+                                  [editingKitTab]: {
+                                    ...(prev.kitText?.[editingKitTab] || {}),
+                                    [k]: { ...pkgText, includes: val }
+                                  }
                                 }
-                              }
-                            })}
+                              }));
+                            }}
                             className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
                           />
                         </div>
@@ -2603,7 +2630,6 @@ export default function App() {
                                 <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
                               </div>
 
-                              {/* Clean 6-Field Structured Address Card without 123456 prefixes */}
                               <div className={`p-4 rounded-[20px] border space-y-2.5 mt-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100/70 border-slate-200'}`}>
                                 <div className="flex items-center justify-between">
                                   <span className={`text-[12px] font-bold flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
@@ -2702,7 +2728,6 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Instant direct download button */}
                         <button
                           type="button"
                           onClick={() => handleGenerateSlipJpgOnDemand(b)}
@@ -3622,7 +3647,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 17. THEMES & TYPOGRAPHY - Dropdown visibility fixed with dark option styling */}
+        {/* 17. THEMES & TYPOGRAPHY */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <h3 className={`font-bold text-[16px] uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
