@@ -800,6 +800,8 @@ export default function App() {
   };
 
   const handleGenerateSlipJpgOnDemand = (b) => {
+    setPopupToast({ title: 'Generating Slip...', desc: `Preparing the ${b.status || 'pending'} status slip for ${b.clientName || 'this booking'}.` });
+
     const canvas = canvasRef.current;
     if (!canvas) {
       alert('Unable to prepare the booking slip. Please try again.');
@@ -977,47 +979,91 @@ export default function App() {
       drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || ''} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle || '')}`, 600, footerY, 17, 'normal', '#64748b', 'center');
       drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 34, 18, 'italic', '#c084fc', 'center');
 
-      // Robust download: use Blob + a temporary anchor and append it to the DOM.
+      // Robust download: use Blob + a temporary anchor, with a guaranteed
+      // "open in new tab" fallback for mobile WebViews / in-app browsers
+      // (Instagram/WhatsApp/Telegram in-app browsers and many wrapped
+      // Android WebView "apps" silently ignore the <a download> attribute,
+      // so the click() appears to do nothing even though the slip WAS
+      // generated correctly).
+      const fileName = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+
+      const openInNewTabFallback = (url) => {
+        const win = window.open(url, '_blank');
+        if (!win) {
+          // Popup blocked — last resort: navigate current tab to the image.
+          window.location.href = url;
+        }
+      };
+
       try {
         canvas.toBlob((blob) => {
           if (!blob) {
+            setPopupToast({ title: 'Slip Generation Failed', desc: 'Could not create the slip image. Please try again.' });
             alert('Booking slip could not be generated. Please try again.');
             return;
           }
+
+          // Slip is confirmed generated at this point.
+          setPopupToast({ title: 'Slip Generated', desc: `Preparing "${fileName}" for download...` });
+
           const url = URL.createObjectURL(blob);
           const downloadLink = document.createElement('a');
           downloadLink.href = url;
-          downloadLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+          downloadLink.download = fileName;
+          downloadLink.rel = 'noopener';
+          downloadLink.target = '_blank';
           downloadLink.style.display = 'none';
           document.body.appendChild(downloadLink);
           downloadLink.click();
+
+          // Many embedded WebViews (Android "wrapped app" browsers, Instagram/
+          // WhatsApp in-app browsers) accept the click() but never actually
+          // save the file to Downloads — they neither error nor download.
+          // So we ALSO open it in a new tab as a guaranteed-working fallback;
+          // the user can long-press → "Save image" from there if the direct
+          // download didn't trigger.
+          openInNewTabFallback(url);
+
           setTimeout(() => {
             document.body.removeChild(downloadLink);
             URL.revokeObjectURL(url);
-          }, 1000);
+          }, 4000);
         }, 'image/jpeg', 0.95);
       } catch (err) {
         console.error('Booking slip download failed:', err);
         try {
           const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
-          const fallbackLink = document.createElement('a');
-          fallbackLink.href = jpgUrl;
-          fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
-          document.body.appendChild(fallbackLink);
-          fallbackLink.click();
-          fallbackLink.remove();
+          setPopupToast({ title: 'Slip Generated', desc: 'Direct download blocked — opening in a new tab instead.' });
+          openInNewTabFallback(jpgUrl);
         } catch (fallbackErr) {
+          console.error('Booking slip fallback failed:', fallbackErr);
           alert('Booking slip download failed. Please try again or use Chrome/Edge.');
         }
       }
     };
 
     const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
-    const logoImg = new Image();
-    logoImg.crossOrigin = 'anonymous';
-    logoImg.onload = () => drawAdminSlip(logoImg);
-    logoImg.onerror = () => drawAdminSlip(null);
-    logoImg.src = logoUrlToLoad;
+    if (!logoUrlToLoad) {
+      drawAdminSlip(null);
+    } else {
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+      // Safety net: if neither onload nor onerror fires (e.g. a stalled
+      // network request or a broken/no-CORS image host), don't leave the
+      // admin stuck forever — draw the slip anyway so the download still
+      // happens without the logo.
+      const logoTimeout = setTimeout(() => {
+        console.warn('Slip logo load timed out, generating slip without it.');
+        drawAdminSlip(null);
+      }, 6000);
+      const clearAndDraw = (fn) => (...args) => { clearTimeout(logoTimeout); fn(...args); };
+      logoImg.onload = clearAndDraw(() => drawAdminSlip(logoImg));
+      logoImg.onerror = clearAndDraw(() => {
+        console.warn('Slip logo failed to load, generating slip without it:', logoUrlToLoad);
+        drawAdminSlip(null);
+      });
+      logoImg.src = logoUrlToLoad;
+    }
   };
 
   const filteredBookingsList = bookingsList.filter(b => {
