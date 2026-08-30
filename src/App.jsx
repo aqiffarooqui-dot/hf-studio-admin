@@ -7,7 +7,8 @@ import {
   ListFilter, Car, Volume2, Activity, SlidersHorizontal, CheckCircle2, 
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
-  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone
+  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
+  Home, Building2, Navigation, Compass
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -309,6 +310,27 @@ const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
 const getCleanInstagramHandle = (handle) => {
   if (!handle) return '';
   return handle.replace('@', '').trim();
+};
+
+const formatStructuredAddress = (b) => {
+  const parts = [];
+  const house = b.flatHouseNo || b.houseNo || b.flatNo;
+  const street = b.streetLocality || b.street || b.locality || b.area;
+  const landmark = b.landmark;
+  const city = b.city || b.town;
+  const state = b.state || b.region;
+  const pin = b.pincode || b.pinCode || b.postalCode;
+
+  if (house) parts.push(house);
+  if (street) parts.push(street);
+  if (landmark) parts.push(`Near ${landmark}`);
+  if (city && state) parts.push(`${city}, ${state}`);
+  else if (city) parts.push(city);
+  else if (state) parts.push(state);
+  if (pin) parts.push(`PIN: ${pin}`);
+
+  if (parts.length > 0) return parts.join(', ');
+  return b.venueAddress || 'To be confirmed';
 };
 
 const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
@@ -793,6 +815,9 @@ export default function App() {
   const handleAcceptBookingWhatsApp = async (b) => {
     setPopupToast({ title: "Dispatching Slip", desc: `Sending final confirmation slip to ${b.clientName}...` });
     try {
+      const fullAddrStr = formatStructuredAddress(b);
+      const addrTypeStr = b.addressType ? ` (${b.addressType.toUpperCase()})` : '';
+      
       const confirmSlipMessage = 
         `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n` +
         `Dear *${b.clientName}*,\n` +
@@ -803,7 +828,8 @@ export default function App() {
         `💎 *Vanity Tier:* ${b.kitType}\n` +
         `👥 *Extra Family Guests:* ${b.extraGuestsCount || 0} Person(s)\n` +
         `📍 *Venue Location:* ${b.zoneName}\n` +
-        `🏠 *Exact Address:* ${b.venueAddress}\n` +
+        `🏠 *Exact Venue Address:* ${fullAddrStr}${addrTypeStr}\n` +
+        `📮 *Postal PIN Code:* ${b.pincode || b.pinCode || b.postalCode || 'Not Provided'}\n` +
         `💰 *Total Amount:* ₹${b.totalAmount?.toLocaleString('en-IN')}\n\n` +
         `_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n` +
         `Our artist team will coordinate final timings with you prior to the date.`;
@@ -977,17 +1003,13 @@ export default function App() {
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
   };
 
-  // Instant Download Slip without any popup modal/toast with dynamic multi-line address rendering
+  // Instant Download Slip with full e-commerce structured address hierarchy
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
-    if (!canvas) {
-      return;
-    }
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      return;
-    }
+    if (!ctx) return;
 
     const currentDraftSafe = draft || DEFAULT_CONFIG;
     const mainPackagePrice = Number(b.basePackagePrice || 0);
@@ -1009,37 +1031,19 @@ export default function App() {
     const mainPackage = b.packageName || 'Bridal Makeup';
     const hasRejectionNote = b.status === 'rejected' || !!b.rejectionReason;
 
-    // Calculate dynamic address lines
-    const fullVenueAddress = b.venueAddress || 'To be confirmed';
-    const addressWords = fullVenueAddress.split(' ');
-    let addressLines = [];
-    let curLine = '';
-    
-    // Test measurement for address lines
-    ctx.font = 'bold 18px sans-serif';
-    for (let i = 0; i < addressWords.length; i++) {
-      const testLine = curLine + addressWords[i] + ' ';
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > 560 && i > 0) {
-        addressLines.push(curLine.trim());
-        curLine = addressWords[i] + ' ';
-      } else {
-        curLine = testLine;
-      }
-    }
-    if (curLine.trim()) {
-      addressLines.push(curLine.trim());
-    }
-    if (addressLines.length === 0) addressLines = [fullVenueAddress];
+    // Structured fields extraction
+    const flatHouse = b.flatHouseNo || b.houseNo || b.flatNo || '';
+    const streetLocality = b.streetLocality || b.street || b.locality || b.area || b.venueAddress || 'To be confirmed';
+    const landmark = b.landmark || '';
+    const cityState = (b.city || b.state) ? `${b.city || ''}${b.city && b.state ? ', ' : ''}${b.state || ''}` : '';
+    const pincode = b.pincode || b.pinCode || b.postalCode || 'Not Provided';
+    const addressType = (b.addressType || 'Home').toUpperCase();
 
-    const addressBlockHeight = Math.max(58, 32 + (addressLines.length * 26));
-
-    const baseHeight = 2550;
+    const baseHeight = 2750;
     const guestRowsHeight = guestList.length * 82;
     const rejectionExtraHeight = hasRejectionNote ? 260 : 0;
-    const addressExtraHeight = Math.max(0, addressBlockHeight - 58);
     canvas.width = 1200;
-    canvas.height = Math.max(baseHeight, 1920 + guestRowsHeight + rejectionExtraHeight + addressExtraHeight);
+    canvas.height = Math.max(baseHeight, 2150 + guestRowsHeight + rejectionExtraHeight);
 
     const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
       ctx.textAlign = align;
@@ -1058,7 +1062,7 @@ export default function App() {
     };
 
     const drawSectionTitle = (title, y, accent = '#c084fc') => {
-      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.14)' : (accent === '#f43f5e' ? 'rgba(244,63,94,0.18)' : 'rgba(14,165,233,0.14)');
+      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.14)' : (accent === '#f43f5e' ? 'rgba(244,63,94,0.18)' : (accent === '#38bdf8' ? 'rgba(56,189,248,0.14)' : 'rgba(14,165,233,0.14)'));
       ctx.fillRect(90, y, 1020, 62);
       drawText(title, 120, y + 39, 21, 'bold', accent);
       return y + 72;
@@ -1128,16 +1132,23 @@ export default function App() {
       y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
 
-      // Multi-line full address row on slip
-      ctx.fillStyle = 'rgba(255,255,255,0.035)';
-      ctx.fillRect(90, y, 1020, addressBlockHeight);
-      drawText('EXACT VENUE ADDRESS', 120, y + 36, 19, 'bold', '#94a3b8');
-      addressLines.forEach((line, lIdx) => {
-        drawText(line, 1080, y + 36 + (lIdx * 26), 18, 'bold', '#ffffff', 'right');
-      });
-      y += addressBlockHeight + 7;
+      // Dedicated E-Commerce Structured Address Section on Slip
+      y += 10;
+      y = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', y, '#38bdf8');
+      y = drawRow('• Address Type:', `[ ${addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
+      if (flatHouse) {
+        y = drawRow('• Flat / House / Building:', flatHouse, y, { labelSize: 18 });
+      }
+      y = drawRow('• Street / Sector / Locality:', streetLocality, y, { labelSize: 18 });
+      if (landmark) {
+        y = drawRow('• Landmark (Nearby):', landmark, y, { labelSize: 18 });
+      }
+      if (cityState) {
+        y = drawRow('• Town / City & State:', cityState, y, { labelSize: 18 });
+      }
+      y = drawRow('• Postal PIN Code:', pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
 
-      // Rejection details rendered directly on downloaded slip screen
+      // Rejection details rendered on slip
       if (hasRejectionNote) {
         y += 12;
         y = drawSectionTitle('⚠️ APPOINTMENT REJECTION & CANCELLATION DETAILS', y, '#f43f5e');
@@ -1280,7 +1291,10 @@ export default function App() {
     const nameMatch = !searchLower || (b.clientName && b.clientName.toLowerCase().includes(searchLower));
     const phoneMatch = !searchLower || (b.clientPhone && b.clientPhone.toLowerCase().includes(searchLower));
     const bNumMatch = !searchLower || (b.bookingNumber && b.bookingNumber.toLowerCase().includes(searchLower));
-    const queryMatch = !searchLower || nameMatch || phoneMatch || bNumMatch;
+    const pinMatch = !searchLower || ((b.pincode || b.pinCode || b.postalCode) && String(b.pincode || b.pinCode || b.postalCode).toLowerCase().includes(searchLower));
+    const cityMatch = !searchLower || (b.city && b.city.toLowerCase().includes(searchLower));
+    const streetMatch = !searchLower || ((b.streetLocality || b.venueAddress) && (b.streetLocality || b.venueAddress).toLowerCase().includes(searchLower));
+    const queryMatch = !searchLower || nameMatch || phoneMatch || bNumMatch || pinMatch || cityMatch || streetMatch;
 
     return statusMatch && dateMatch && queryMatch;
   });
@@ -2327,7 +2341,7 @@ export default function App() {
                 <Search className={`absolute left-3.5 top-3.5 w-4 h-4 ${iosMuted}`} />
                 <input
                   type="text"
-                  placeholder="Search by client name, phone number, or booking #..."
+                  placeholder="Search by client name, phone, PIN, city, or area..."
                   value={bookingSearchQuery}
                   onChange={e => setBookingSearchQuery(e.target.value)}
                   className={`w-full pl-10 pr-4 py-3 text-[13px] outline-none ${iosInputBg}`}
@@ -2479,6 +2493,14 @@ export default function App() {
                           const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
                           const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
 
+                          const houseNo = b.flatHouseNo || b.houseNo || b.flatNo;
+                          const street = b.streetLocality || b.street || b.locality || b.area;
+                          const landmark = b.landmark;
+                          const city = b.city || b.town;
+                          const state = b.state || b.region;
+                          const pin = b.pincode || b.pinCode || b.postalCode;
+                          const addrType = b.addressType || 'Home';
+
                           return (
                             <>
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-sky-500/10 border-sky-500/20' : 'bg-sky-50 border-sky-200'}`}>
@@ -2541,12 +2563,46 @@ export default function App() {
                                 <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
                               </div>
 
-                              <div className="flex justify-between gap-3 pt-1"><span className={`${iosMuted} shrink-0`}>Venue Location:</span><span className="font-medium text-right">{b.zoneName || 'Not Provided'}</span></div>
-                              
-                              {/* Full multi-line address display in booking card */}
-                              <div className="flex flex-col sm:flex-row justify-between gap-1 pt-1">
-                                <span className={`${iosMuted} shrink-0`}>Exact Address:</span>
-                                <span className="font-medium text-left sm:text-right break-words text-white/95 leading-relaxed pl-0 sm:pl-4">{b.venueAddress || 'Not Provided'}</span>
+                              {/* Structured E-Commerce Address Box in Admin Card */}
+                              <div className={`p-3.5 rounded-[18px] border space-y-2 mt-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100/70 border-slate-200'}`}>
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-[12px] font-bold flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
+                                    <MapPin className="w-3.5 h-3.5" /> Structured Destination Address
+                                  </span>
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 uppercase flex items-center gap-1">
+                                    {addrType.toLowerCase() === 'work' ? <Building2 className="w-3 h-3" /> : <Home className="w-3 h-3" />}
+                                    {addrType}
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1 text-[12px]">
+                                  {houseNo && (
+                                    <div className="flex justify-between gap-2">
+                                      <span className={iosMuted}>Flat / House:</span>
+                                      <span className="font-semibold text-right">{houseNo}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between gap-2">
+                                    <span className={iosMuted}>Street / Area:</span>
+                                    <span className="font-semibold text-right break-words max-w-[230px]">{street || b.venueAddress || 'Not Provided'}</span>
+                                  </div>
+                                  {landmark && (
+                                    <div className="flex justify-between gap-2">
+                                      <span className={iosMuted}>Landmark:</span>
+                                      <span className="font-semibold text-right">{landmark}</span>
+                                    </div>
+                                  )}
+                                  {(city || state) && (
+                                    <div className="flex justify-between gap-2">
+                                      <span className={iosMuted}>City / State:</span>
+                                      <span className="font-semibold text-right">{city || ''}{city && state ? ', ' : ''}{state || ''}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between gap-2 pt-1 border-t border-white/10">
+                                    <span className={`font-bold ${iosMuted}`}>PIN Code:</span>
+                                    <span className={`font-mono font-bold text-right ${adminThemeStyle.accentText}`}>{pin || 'Not Provided'}</span>
+                                  </div>
+                                </div>
                               </div>
                             </>
                           );
@@ -2762,7 +2818,7 @@ export default function App() {
                         <span className={`font-mono ${adminThemeStyle.accentText}`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span>
                       </div>
                       <p className={iosMuted}>Look: {b.packageName} ({b.kitType})</p>
-                      <p className={`text-[11px] ${iosMuted} break-words leading-relaxed`}>📍 {b.venueAddress}</p>
+                      <p className={`text-[11px] ${iosMuted} break-words leading-relaxed`}>📍 {formatStructuredAddress(b)}</p>
                     </div>
                   ))}
                 </div>
