@@ -312,7 +312,6 @@ const getCleanInstagramHandle = (handle) => {
   return handle.replace('@', '').trim();
 };
 
-// Robust Parser to extract all 6 Shopping-App Address Fields from both structured objects and raw string inputs
 const parseBookingAddressDetails = (b) => {
   const flatHouse = (b.flatHouseNo || b.houseNo || b.flatNo || b.buildingName || '').trim();
   let streetLocality = (b.streetLocality || b.street || b.locality || b.area || b.venueAddress || b.address || '').trim();
@@ -322,7 +321,6 @@ const parseBookingAddressDetails = (b) => {
   let pincode = (b.pincode || b.pinCode || b.postalCode || b.zipCode || '').trim();
   const addressType = (b.addressType || b.venueType || 'Home').trim();
 
-  // If city/state/pin were not saved separately, auto-extract from zoneName or address string
   if (!pincode) {
     const pinMatch = streetLocality.match(/\b\d{6}\b/);
     if (pinMatch) {
@@ -849,11 +847,11 @@ export default function App() {
         `💎 *Vanity Tier:* ${b.kitType}\n` +
         `👥 *Extra Family Guests:* ${b.extraGuestsCount || 0} Person(s)\n` +
         `📍 *Venue Zone:* ${b.zoneName}\n` +
-        `🏠 *Flat/Building:* ${addr.flatHouse}\n` +
-        `🛣️ *Street/Locality:* ${addr.streetLocality}\n` +
+        `🏠 *Flat / House / Building:* ${addr.flatHouse}\n` +
+        `🛣️ *Street / Sector / Locality:* ${addr.streetLocality}\n` +
         `🚩 *Landmark:* ${addr.landmark}\n` +
-        `🌆 *City & State:* ${addr.townCityState}\n` +
-        `📮 *PIN Code:* ${addr.pincode}\n` +
+        `🌆 *Town / City & State:* ${addr.townCityState}\n` +
+        `📮 *Postal PIN Code:* ${addr.pincode}\n` +
         `🏷️ *Address Type:* ${addr.addressType}\n` +
         `💰 *Total Amount:* ₹${b.totalAmount?.toLocaleString('en-IN')}\n\n` +
         `_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n` +
@@ -1028,7 +1026,7 @@ export default function App() {
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
   };
 
-  // Instant Download Slip displaying all 6 E-Commerce Address Fields clearly
+  // Instant Download Slip with full dynamic auto-wrapping and clean layout
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1058,11 +1056,11 @@ export default function App() {
 
     const addr = parseBookingAddressDetails(b);
 
-    const baseHeight = 2950;
+    const baseHeight = 3100;
     const guestRowsHeight = guestList.length * 82;
     const rejectionExtraHeight = hasRejectionNote ? 260 : 0;
     canvas.width = 1200;
-    canvas.height = Math.max(baseHeight, 2350 + guestRowsHeight + rejectionExtraHeight);
+    canvas.height = Math.max(baseHeight, 2400 + guestRowsHeight + rejectionExtraHeight);
 
     const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
       ctx.textAlign = align;
@@ -1077,6 +1075,41 @@ export default function App() {
       ctx.fillRect(90, y, 1020, rowHeight);
       drawText(label, 120, y + 36, options.labelSize || 19, 'bold', options.labelColor || '#94a3b8');
       drawText(value, 1080, y + 36, options.valueSize || 20, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
+      return y + rowHeight + (options.gap ?? 7);
+    };
+
+    // Dynamic Multi-line Row for long addresses/text
+    const drawDynamicRow = (label, value, y, options = {}) => {
+      ctx.font = `bold ${options.valueSize || 18}px sans-serif`;
+      const maxWidth = options.maxWidth || 500;
+      const words = String(value || '').split(' ');
+      let lines = [];
+      let curLine = '';
+
+      for (let i = 0; i < words.length; i++) {
+        const testLine = curLine + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > maxWidth && i > 0) {
+          lines.push(curLine.trim());
+          curLine = words[i] + ' ';
+        } else {
+          curLine = testLine;
+        }
+      }
+      if (curLine.trim()) lines.push(curLine.trim());
+      if (lines.length === 0) lines = [String(value || '')];
+
+      const lineHeight = 24;
+      const rowHeight = Math.max(58, 24 + (lines.length * lineHeight));
+      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+      ctx.fillRect(90, y, 1020, rowHeight);
+
+      drawText(label, 120, y + 36, options.labelSize || 19, 'bold', options.labelColor || '#94a3b8');
+
+      lines.forEach((line, lIdx) => {
+        drawText(line, 1080, y + 36 + (lIdx * lineHeight), options.valueSize || 18, 'bold', options.valueColor || '#ffffff', 'right');
+      });
+
       return y + rowHeight + (options.gap ?? 7);
     };
 
@@ -1151,15 +1184,15 @@ export default function App() {
       y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
 
-      // Dedicated 6 Shopping App Address Fields Block on Downloadable Slip
+      // Clean Structured Address Block on Downloadable Slip
       y += 10;
       y = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', y, '#38bdf8');
-      y = drawRow('1. Address Type (Home/Work):', `[ ${addr.addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
-      y = drawRow('2. Flat / House No., Building Name:', addr.flatHouse, y, { labelSize: 18 });
-      y = drawRow('3. Street, Sector, Area, Locality:', addr.streetLocality, y, { labelSize: 18 });
-      y = drawRow('4. Landmark (Optional):', addr.landmark, y, { labelSize: 18 });
-      y = drawRow('5. Town / City & State:', addr.townCityState, y, { labelSize: 18 });
-      y = drawRow('6. Postal PIN Code:', addr.pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
+      y = drawRow('Address Type:', `[ ${addr.addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
+      y = drawDynamicRow('Flat / House No., Building:', addr.flatHouse, y, { labelSize: 18 });
+      y = drawDynamicRow('Street, Sector, Locality:', addr.streetLocality, y, { labelSize: 18 });
+      y = drawDynamicRow('Landmark:', addr.landmark, y, { labelSize: 18 });
+      y = drawRow('Town / City & State:', addr.townCityState, y, { labelSize: 18 });
+      y = drawRow('Postal PIN Code:', addr.pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
 
       // Rejection details rendered on slip
       if (hasRejectionNote) {
@@ -1476,7 +1509,7 @@ export default function App() {
                 className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold font-mono ${iosInputBg}`}
               >
                 {rejectionReasonsList.map((reason) => (
-                  <option key={reason.code} value={reason.code} className="text-black font-sans">
+                  <option key={reason.code} value={reason.code} className="bg-[#18181b] text-white py-2">
                     {reason.code} • {reason.label}
                   </option>
                 ))}
@@ -1613,10 +1646,10 @@ export default function App() {
               onChange={e => setScreenZoom(Number(e.target.value))}
               className="bg-transparent text-xs font-bold outline-none cursor-pointer"
             >
-              <option value={80} className="text-black">80%</option>
-              <option value={100} className="text-black">100%</option>
-              <option value={115} className="text-black">115%</option>
-              <option value={130} className="text-black">130%</option>
+              <option value={80} className="bg-[#18181b] text-white">80%</option>
+              <option value={100} className="bg-[#18181b] text-white">100%</option>
+              <option value={115} className="bg-[#18181b] text-white">115%</option>
+              <option value={130} className="bg-[#18181b] text-white">130%</option>
             </select>
           </div>
 
@@ -2369,10 +2402,10 @@ export default function App() {
                     onChange={e => setBookingStatusFilter(e.target.value)}
                     className={`w-full p-3 text-[13px] font-bold outline-none ${iosInputBg}`}
                   >
-                    <option value="all" className="text-black">🌟 All Statuses</option>
-                    <option value="confirmed" className="text-black">✅ Confirmed / Accepted</option>
-                    <option value="pending" className="text-black">⏳ Pending Review</option>
-                    <option value="rejected" className="text-black">❌ Cancelled / Rejected</option>
+                    <option value="all" className="bg-[#18181b] text-white">🌟 All Statuses</option>
+                    <option value="confirmed" className="bg-[#18181b] text-white">✅ Confirmed / Accepted</option>
+                    <option value="pending" className="bg-[#18181b] text-white">⏳ Pending Review</option>
+                    <option value="rejected" className="bg-[#18181b] text-white">❌ Cancelled / Rejected</option>
                   </select>
                 </div>
 
@@ -2570,7 +2603,7 @@ export default function App() {
                                 <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
                               </div>
 
-                              {/* Comprehensive 6-Field E-Commerce Address Card */}
+                              {/* Clean 6-Field Structured Address Card without 123456 prefixes */}
                               <div className={`p-4 rounded-[20px] border space-y-2.5 mt-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100/70 border-slate-200'}`}>
                                 <div className="flex items-center justify-between">
                                   <span className={`text-[12px] font-bold flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
@@ -2584,27 +2617,27 @@ export default function App() {
 
                                 <div className="space-y-1.5 text-[12px] pt-1">
                                   <div className="flex justify-between gap-2">
-                                    <span className={iosMuted}>1. Flat / House, Building:</span>
+                                    <span className={iosMuted}>Flat / House, Building:</span>
                                     <span className="font-semibold text-right text-white/90">{addr.flatHouse}</span>
                                   </div>
                                   <div className="flex justify-between gap-2">
-                                    <span className={iosMuted}>2. Street / Sector / Locality:</span>
+                                    <span className={iosMuted}>Street / Sector / Locality:</span>
                                     <span className="font-semibold text-right text-white/90 break-words max-w-[240px]">{addr.streetLocality}</span>
                                   </div>
                                   <div className="flex justify-between gap-2">
-                                    <span className={iosMuted}>3. Landmark (Optional):</span>
+                                    <span className={iosMuted}>Landmark:</span>
                                     <span className="font-semibold text-right text-white/90">{addr.landmark}</span>
                                   </div>
                                   <div className="flex justify-between gap-2">
-                                    <span className={iosMuted}>4. Town / City & State:</span>
+                                    <span className={iosMuted}>Town / City & State:</span>
                                     <span className="font-semibold text-right text-white/90">{addr.townCityState}</span>
                                   </div>
                                   <div className="flex justify-between gap-2 pt-1 border-t border-white/10">
-                                    <span className={`font-bold ${iosMuted}`}>5. Postal PIN Code:</span>
+                                    <span className={`font-bold ${iosMuted}`}>Postal PIN Code:</span>
                                     <span className={`font-mono font-bold text-right ${adminThemeStyle.accentText}`}>{addr.pincode}</span>
                                   </div>
                                   <div className="flex justify-between gap-2">
-                                    <span className={iosMuted}>6. Venue Zone Tier:</span>
+                                    <span className={iosMuted}>Venue Zone Tier:</span>
                                     <span className="font-medium text-right text-sky-400">{b.zoneName || 'Standard Zone'}</span>
                                   </div>
                                 </div>
@@ -2885,8 +2918,8 @@ export default function App() {
                         copy[idx] = { ...copy[idx], type: e.target.value };
                         setDraft({ ...currentDraftSafe, galleryPhotos: copy });
                       }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}>
-                        <option value="video">🎥 Auto-play Video</option>
-                        <option value="image">🖼️ Image / Animated GIF</option>
+                        <option value="video" className="bg-[#18181b] text-white">🎥 Auto-play Video</option>
+                        <option value="image" className="bg-[#18181b] text-white">🖼️ Image / Animated GIF</option>
                       </select>
                     </div>
                     <div>
@@ -3232,8 +3265,8 @@ export default function App() {
                           })}
                           className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
                         >
-                          <option value="percent">% Percent Off</option>
-                          <option value="flat">₹ Flat Discount</option>
+                          <option value="percent" className="bg-[#18181b] text-white">% Percent Off</option>
+                          <option value="flat" className="bg-[#18181b] text-white">₹ Flat Discount</option>
                         </select>
                       </div>
 
@@ -3589,7 +3622,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 17. THEMES & TYPOGRAPHY */}
+        {/* 17. THEMES & TYPOGRAPHY - Dropdown visibility fixed with dark option styling */}
         {activeFolderId === 'theme' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <h3 className={`font-bold text-[16px] uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
@@ -3605,32 +3638,40 @@ export default function App() {
                 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Color Theme</label>
-                  <select value={currentDraftSafe?.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}>
-                    <option value="real_glass_lens">🔮 Real Glass Lens (Translucent Mirror)</option>
-                    <option value="real_ios_glass">🍎 Real iOS Liquid Glass</option>
-                    <option value="liquid_glass">💎 Liquid Glass iOS</option>
-                    <option value="one_ui_9">✨ Samsung One UI 9</option>
-                    <option value="gold_rose">👑 Royal Gold Rose</option>
-                    <option value="champagne">🥂 Champagne Gold</option>
-                    <option value="emerald">💚 Emerald Luxe</option>
-                    <option value="violet">🔮 Midnight Orchid Violet</option>
-                    <option value="ruby">❤️ Ruby Velvet</option>
-                    <option value="sapphire">💙 Sapphire Royal</option>
+                  <select 
+                    value={currentDraftSafe?.theme?.colorTheme || 'real_glass_lens'} 
+                    onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), colorTheme: e.target.value } })} 
+                    className={`w-full p-3.5 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg} focus:outline-none`}
+                  >
+                    <option value="real_glass_lens" className="bg-[#18181b] text-white py-2">🔮 Real Glass Lens (Translucent Mirror)</option>
+                    <option value="real_ios_glass" className="bg-[#18181b] text-white py-2">🍎 Real iOS Liquid Glass</option>
+                    <option value="liquid_glass" className="bg-[#18181b] text-white py-2">💎 Liquid Glass iOS</option>
+                    <option value="one_ui_9" className="bg-[#18181b] text-white py-2">✨ Samsung One UI 9</option>
+                    <option value="gold_rose" className="bg-[#18181b] text-white py-2">👑 Royal Gold Rose</option>
+                    <option value="champagne" className="bg-[#18181b] text-white py-2">🥂 Champagne Gold</option>
+                    <option value="emerald" className="bg-[#18181b] text-white py-2">💚 Emerald Luxe</option>
+                    <option value="violet" className="bg-[#18181b] text-white py-2">🔮 Midnight Orchid Violet</option>
+                    <option value="ruby" className="bg-[#18181b] text-white py-2">❤️ Ruby Velvet</option>
+                    <option value="sapphire" className="bg-[#18181b] text-white py-2">💙 Sapphire Royal</option>
                   </select>
                 </div>
 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Font Family</label>
-                  <select value={currentDraftSafe?.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}>
-                    <option value="sans">Plus Jakarta Sans</option>
-                    <option value="outfit">Outfit (iOS Glass Minimal)</option>
-                    <option value="serif">Playfair Display (Royal)</option>
-                    <option value="cormorant">Cormorant Garamond</option>
-                    <option value="cinzel">Cinzel</option>
-                    <option value="montserrat">Montserrat</option>
-                    <option value="inter">Inter</option>
-                    <option value="poppins">Poppins</option>
-                    <option value="roboto">Roboto</option>
+                  <select 
+                    value={currentDraftSafe?.theme?.fontFamily || 'sans'} 
+                    onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), fontFamily: e.target.value } })} 
+                    className={`w-full p-3.5 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg} focus:outline-none`}
+                  >
+                    <option value="sans" className="bg-[#18181b] text-white py-2">Plus Jakarta Sans</option>
+                    <option value="outfit" className="bg-[#18181b] text-white py-2">Outfit (iOS Glass Minimal)</option>
+                    <option value="serif" className="bg-[#18181b] text-white py-2">Playfair Display (Royal)</option>
+                    <option value="cormorant" className="bg-[#18181b] text-white py-2">Cormorant Garamond</option>
+                    <option value="cinzel" className="bg-[#18181b] text-white py-2">Cinzel</option>
+                    <option value="montserrat" className="bg-[#18181b] text-white py-2">Montserrat</option>
+                    <option value="inter" className="bg-[#18181b] text-white py-2">Inter</option>
+                    <option value="poppins" className="bg-[#18181b] text-white py-2">Poppins</option>
+                    <option value="roboto" className="bg-[#18181b] text-white py-2">Roboto</option>
                   </select>
                 </div>
               </div>
@@ -3646,20 +3687,24 @@ export default function App() {
                   <select 
                     value={activeAdminThemeKey} 
                     onChange={e => handleInstantThemeChange(e.target.value)} 
-                    className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg} focus:outline-none`}
                   >
-                    <option value="admin_aurora">✨ Admin Aurora (Purple Neon Glow)</option>
-                    <option value="sunset_glow">🌅 Sunset Amber Glow</option>
-                    <option value="cyber_matrix">⚡ Cyber Matrix Emerald</option>
-                    <option value="real_glass_lens">🔮 Crystal Glass Lens</option>
+                    <option value="admin_aurora" className="bg-[#18181b] text-white py-2">✨ Admin Aurora (Purple Neon Glow)</option>
+                    <option value="sunset_glow" className="bg-[#18181b] text-white py-2">🌅 Sunset Amber Glow</option>
+                    <option value="cyber_matrix" className="bg-[#18181b] text-white py-2">⚡ Cyber Matrix Emerald</option>
+                    <option value="real_glass_lens" className="bg-[#18181b] text-white py-2">🔮 Crystal Glass Lens</option>
                   </select>
                 </div>
 
                 <div>
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Default Customer Mode</label>
-                  <select value={currentDraftSafe?.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
-                    <option value="light">☀️ Light Mode</option>
-                    <option value="dark">🌙 Dark Mode</option>
+                  <select 
+                    value={currentDraftSafe?.theme?.defaultMode || 'light'} 
+                    onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), defaultMode: e.target.value } })} 
+                    className={`w-full p-3.5 rounded-[14px] text-[13px] font-bold text-white ${iosInputBg} focus:outline-none`}
+                  >
+                    <option value="light" className="bg-[#18181b] text-white py-2">☀️ Light Mode</option>
+                    <option value="dark" className="bg-[#18181b] text-white py-2">🌙 Dark Mode</option>
                   </select>
                 </div>
               </div>
