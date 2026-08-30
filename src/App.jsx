@@ -243,10 +243,6 @@ const INITIAL_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
-const ADMIN_APP_VERSIONS = [
-  { version: "v4.2.0", date: "August 30, 2026", status: "Active Live Production", changes: "Integrated Telegram API Bot Token & Chat ID fields in General Settings with live config persistence." }
-];
-
 const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -272,6 +268,11 @@ const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
     };
     reader.onerror = (error) => reject(error);
   });
+};
+
+const getCleanInstagramHandle = (handle) => {
+  if (!handle) return '';
+  return handle.replace('@', '').trim();
 };
 
 const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
@@ -320,6 +321,102 @@ export default function App() {
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
   const canvasRef = useRef(null);
+
+  // Helper Upload Functions
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file, 400, 0.9);
+      setDraft(prev => ({ ...prev, studioLogo: compressed }));
+      setPopupToast({ title: "Logo Ready", desc: "Studio Logo uploaded and compressed. Save to persist." });
+    } catch (err) {
+      alert("Error compressing logo image: " + err.message);
+    }
+  };
+
+  const handleProfileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file, 400, 0.9);
+      setDraft(prev => ({ ...prev, profileImage: compressed }));
+      setPopupToast({ title: "Profile Image Ready", desc: "Artist profile photo compressed. Save to persist." });
+    } catch (err) {
+      alert("Error compressing profile image: " + err.message);
+    }
+  };
+
+  const handlePackageImageUpload = async (e, kit, pkgKey) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImageFile(file, 800, 0.85);
+      setDraft(prev => ({
+        ...prev,
+        kitImages: {
+          ...(prev.kitImages || {}),
+          [kit]: {
+            ...(prev.kitImages?.[kit] || {}),
+            [pkgKey]: compressed
+          }
+        }
+      }));
+      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Click Save to apply.` });
+    } catch (err) {
+      alert("Error uploading image: " + err.message);
+    }
+  };
+
+  const handleMediaUpload = async (e, idx) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      if (file.type.startsWith('image/')) {
+        const compressed = await compressImageFile(file, 900, 0.85);
+        const copy = [...(draft.galleryPhotos || [])];
+        copy[idx] = { ...copy[idx], url: compressed, type: 'image' };
+        setDraft(prev => ({ ...prev, galleryPhotos: copy }));
+        setPopupToast({ title: "Image Uploaded", desc: "Photo uploaded to transformations gallery." });
+      } else {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const copy = [...(draft.galleryPhotos || [])];
+          copy[idx] = { ...copy[idx], url: event.target.result, type: 'video' };
+          setDraft(prev => ({ ...prev, galleryPhotos: copy }));
+          setPopupToast({ title: "Video Uploaded", desc: "Video data loaded to gallery card." });
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      alert("Media upload error: " + err.message);
+    }
+  };
+
+  // Calendar Helpers
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const getDayBookingStatus = (day) => {
+    const mStr = String(month + 1).padStart(2, '0');
+    const dStr = String(day).padStart(2, '0');
+    const fullDateStr = `${year}-${mStr}-${dStr}`;
+
+    const matchingBookings = bookingsList.filter(b => b.eventDate === fullDateStr);
+    const hasBookings = matchingBookings.length > 0;
+    const isConfirmed = matchingBookings.some(b => b.status === 'confirmed');
+
+    return {
+      hasBookings,
+      isConfirmed,
+      count: matchingBookings.length,
+      dateStr: fullDateStr,
+      list: matchingBookings
+    };
+  };
 
   useEffect(() => {
     if (popupToast) {
@@ -800,8 +897,6 @@ export default function App() {
   };
 
   const handleGenerateSlipJpgOnDemand = (b) => {
-    setPopupToast({ title: 'Generating Slip...', desc: `Preparing the ${b.status || 'pending'} status slip for ${b.clientName || 'this booking'}.` });
-
     const canvas = canvasRef.current;
     if (!canvas) {
       alert('Unable to prepare the booking slip. Please try again.');
@@ -833,7 +928,6 @@ export default function App() {
     const mainVanity = b.kitType || 'Luxury Vanity';
     const mainPackage = b.packageName || 'Bridal Makeup';
 
-    // Use a taller canvas so every guest/package/discount row can fit without clipping.
     const baseHeight = 2550;
     const guestRowsHeight = guestList.length * 82;
     canvas.width = 1200;
@@ -878,25 +972,27 @@ export default function App() {
       ctx.strokeRect(55, 55, 1090, canvas.height - 110);
 
       if (logoImgObj) {
-        ctx.save();
-        ctx.globalAlpha = 0.07;
-        ctx.drawImage(logoImgObj, 300, 900, 600, 600);
-        ctx.restore();
-      }
+        try {
+          ctx.save();
+          ctx.globalAlpha = 0.07;
+          ctx.drawImage(logoImgObj, 300, 900, 600, 600);
+          ctx.restore();
 
-      if (logoImgObj) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
-        ctx.closePath();
-        ctx.clip();
-        ctx.drawImage(logoImgObj, 80, 80, 120, 120);
-        ctx.restore();
-        ctx.strokeStyle = '#c084fc';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
-        ctx.stroke();
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(logoImgObj, 80, 80, 120, 120);
+          ctx.restore();
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
+          ctx.stroke();
+        } catch (e) {
+          console.warn("Logo draw skipped due to cross-origin taint", e);
+        }
         drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130, 44, 'bold');
         drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175, 22, 'bold', '#c084fc');
       } else {
@@ -925,7 +1021,6 @@ export default function App() {
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
       y = drawRow('EXACT VENUE ADDRESS', b.venueAddress || 'To be confirmed', y);
 
-      // Exact same pricing hierarchy as the Main App Summary.
       y += 12;
       y = drawSectionTitle('1. Main Makeover Package', y, '#38bdf8');
       y = drawRow('• Vanity:', mainVanity, y, { labelSize: 18 });
@@ -979,90 +1074,55 @@ export default function App() {
       drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || ''} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle || '')}`, 600, footerY, 17, 'normal', '#64748b', 'center');
       drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 34, 18, 'italic', '#c084fc', 'center');
 
-      // Robust download: use Blob + a temporary anchor, with a guaranteed
-      // "open in new tab" fallback for mobile WebViews / in-app browsers
-      // (Instagram/WhatsApp/Telegram in-app browsers and many wrapped
-      // Android WebView "apps" silently ignore the <a download> attribute,
-      // so the click() appears to do nothing even though the slip WAS
-      // generated correctly).
-      const fileName = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
-
-      const openInNewTabFallback = (url) => {
-        const win = window.open(url, '_blank');
-        if (!win) {
-          // Popup blocked — last resort: navigate current tab to the image.
-          window.location.href = url;
-        }
-      };
-
       try {
         canvas.toBlob((blob) => {
           if (!blob) {
-            setPopupToast({ title: 'Slip Generation Failed', desc: 'Could not create the slip image. Please try again.' });
-            alert('Booking slip could not be generated. Please try again.');
+            const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
+            const fallbackLink = document.createElement('a');
+            fallbackLink.href = jpgUrl;
+            fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+            document.body.appendChild(fallbackLink);
+            fallbackLink.click();
+            fallbackLink.remove();
             return;
           }
-
-          // Slip is confirmed generated at this point.
-          setPopupToast({ title: 'Slip Generated', desc: `Preparing "${fileName}" for download...` });
-
           const url = URL.createObjectURL(blob);
           const downloadLink = document.createElement('a');
           downloadLink.href = url;
-          downloadLink.download = fileName;
-          downloadLink.rel = 'noopener';
-          downloadLink.target = '_blank';
+          downloadLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
           downloadLink.style.display = 'none';
           document.body.appendChild(downloadLink);
           downloadLink.click();
-
-          // Many embedded WebViews (Android "wrapped app" browsers, Instagram/
-          // WhatsApp in-app browsers) accept the click() but never actually
-          // save the file to Downloads — they neither error nor download.
-          // So we ALSO open it in a new tab as a guaranteed-working fallback;
-          // the user can long-press → "Save image" from there if the direct
-          // download didn't trigger.
-          openInNewTabFallback(url);
-
           setTimeout(() => {
             document.body.removeChild(downloadLink);
             URL.revokeObjectURL(url);
-          }, 4000);
+          }, 1000);
         }, 'image/jpeg', 0.95);
       } catch (err) {
         console.error('Booking slip download failed:', err);
         try {
           const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
-          setPopupToast({ title: 'Slip Generated', desc: 'Direct download blocked — opening in a new tab instead.' });
-          openInNewTabFallback(jpgUrl);
+          const fallbackLink = document.createElement('a');
+          fallbackLink.href = jpgUrl;
+          fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+          document.body.appendChild(fallbackLink);
+          fallbackLink.click();
+          fallbackLink.remove();
         } catch (fallbackErr) {
-          console.error('Booking slip fallback failed:', fallbackErr);
           alert('Booking slip download failed. Please try again or use Chrome/Edge.');
         }
       }
     };
 
     const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
-    if (!logoUrlToLoad) {
-      drawAdminSlip(null);
-    } else {
+    if (logoUrlToLoad) {
       const logoImg = new Image();
       logoImg.crossOrigin = 'anonymous';
-      // Safety net: if neither onload nor onerror fires (e.g. a stalled
-      // network request or a broken/no-CORS image host), don't leave the
-      // admin stuck forever — draw the slip anyway so the download still
-      // happens without the logo.
-      const logoTimeout = setTimeout(() => {
-        console.warn('Slip logo load timed out, generating slip without it.');
-        drawAdminSlip(null);
-      }, 6000);
-      const clearAndDraw = (fn) => (...args) => { clearTimeout(logoTimeout); fn(...args); };
-      logoImg.onload = clearAndDraw(() => drawAdminSlip(logoImg));
-      logoImg.onerror = clearAndDraw(() => {
-        console.warn('Slip logo failed to load, generating slip without it:', logoUrlToLoad);
-        drawAdminSlip(null);
-      });
+      logoImg.onload = () => drawAdminSlip(logoImg);
+      logoImg.onerror = () => drawAdminSlip(null);
       logoImg.src = logoUrlToLoad;
+    } else {
+      drawAdminSlip(null);
     }
   };
 
@@ -1265,7 +1325,7 @@ export default function App() {
         </div>
 
         {/* Live Status Banner */}
-        <div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10 text-slate-200' : 'bg-slate-50 border-black/5 shadow-sm text-slate-700'}`}>
+        <div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-black/5 shadow-sm text-slate-700'}`}>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span>Next Booking: <strong className={adminThemeStyle.accentText}>{nextConfirmedBooking ? `${nextConfirmedBooking.clientName} (${nextConfirmedBooking.eventDate})` : 'None Confirmed'}</strong></span>
@@ -1847,7 +1907,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 4. GENERAL & SECURITY SETTINGS (With Telegram Bot Token & Chat ID fields) */}
+        {/* 4. GENERAL & SECURITY SETTINGS */}
         {activeFolderId === 'general' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div>
@@ -1857,7 +1917,6 @@ export default function App() {
               <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Telegram Bot Notification credentials.</p>
             </div>
 
-            {/* Telegram Bot Credentials Config Section */}
             <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
                 <Send className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Telegram Bot Notification Settings
@@ -2174,7 +2233,6 @@ export default function App() {
 
                           return (
                             <>
-                              {/* 1. Main Makeover Package — same structure as Main App Summary */}
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-sky-500/10 border-sky-500/20' : 'bg-sky-50 border-sky-200'}`}>
                                 <div className="flex justify-between items-center font-bold text-sky-500">
                                   <span>1. Main Makeover Package:</span>
@@ -2189,7 +2247,6 @@ export default function App() {
                                 </div>
                               </div>
 
-                              {/* 2. Additional Family & Guest Makeovers — same structure as Main App Summary */}
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-200'}`}>
                                 <div className="flex justify-between items-center font-bold text-purple-500">
                                   <span>2. Additional Family & Guest Makeovers ({guests.length || Number(b.extraGuestsCount || 0)}):</span>
@@ -2217,7 +2274,6 @@ export default function App() {
                                 <span>Booking Total Before Discounts:</span><span className="font-mono">{money(totalBeforeDiscounts)}</span>
                               </div>
 
-                              {/* 3. Discounts & Offers — same structure as Main App Summary */}
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
                                 <div className="font-bold text-emerald-500">3. Discounts & Offers</div>
                                 {guestDiscount > 0 && (
@@ -2734,7 +2790,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Extra Guest Group Discount Card */}
             <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -3359,7 +3414,7 @@ export default function App() {
                   />
                   <label className={`inline-block px-4 py-2.5 rounded-[14px] bg-purple-500/15 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition`}>
                     Upload & Compress Profile Photo
-                    <input type="file" accept="image/*" onChange={e => handleProfileUpload(e)} className="hidden" />
+                    <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
                 </div>
               </div>
@@ -3376,7 +3431,7 @@ export default function App() {
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Instagram Handle</label>
-                <input type="text" value={currentDraftSafe.instagramHandle || ''} onChange={e => setDraft({ ...currentDraftSafe, signatureHandle: e.target.value, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
+                <input type="text" value={currentDraftSafe.instagramHandle || ''} onChange={e => setDraft({ ...currentDraftSafe, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
               </div>
               <div>
                 <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Artist Tagline / Subtitle</label>
