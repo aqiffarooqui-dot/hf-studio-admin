@@ -8,7 +8,7 @@ import {
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
   Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
-  Home, Building2, Navigation, Compass
+  Home, Building2, Navigation, Compass, MapPinned
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
@@ -312,25 +312,48 @@ const getCleanInstagramHandle = (handle) => {
   return handle.replace('@', '').trim();
 };
 
-const formatStructuredAddress = (b) => {
-  const parts = [];
-  const house = b.flatHouseNo || b.houseNo || b.flatNo;
-  const street = b.streetLocality || b.street || b.locality || b.area;
-  const landmark = b.landmark;
-  const city = b.city || b.town;
-  const state = b.state || b.region;
-  const pin = b.pincode || b.pinCode || b.postalCode;
+// Robust Parser to extract all 6 Shopping-App Address Fields from both structured objects and raw string inputs
+const parseBookingAddressDetails = (b) => {
+  const flatHouse = (b.flatHouseNo || b.houseNo || b.flatNo || b.buildingName || '').trim();
+  let streetLocality = (b.streetLocality || b.street || b.locality || b.area || b.venueAddress || b.address || '').trim();
+  const landmark = (b.landmark || b.nearLandmark || '').trim();
+  let city = (b.city || b.town || b.district || '').trim();
+  let state = (b.state || b.region || b.province || '').trim();
+  let pincode = (b.pincode || b.pinCode || b.postalCode || b.zipCode || '').trim();
+  const addressType = (b.addressType || b.venueType || 'Home').trim();
 
-  if (house) parts.push(house);
-  if (street) parts.push(street);
-  if (landmark) parts.push(`Near ${landmark}`);
-  if (city && state) parts.push(`${city}, ${state}`);
-  else if (city) parts.push(city);
-  else if (state) parts.push(state);
-  if (pin) parts.push(`PIN: ${pin}`);
+  // If city/state/pin were not saved separately, auto-extract from zoneName or address string
+  if (!pincode) {
+    const pinMatch = streetLocality.match(/\b\d{6}\b/);
+    if (pinMatch) {
+      pincode = pinMatch[0];
+    }
+  }
 
-  if (parts.length > 0) return parts.join(', ');
-  return b.venueAddress || 'To be confirmed';
+  if (!city && b.zoneName) {
+    if (b.zoneName.toLowerCase().includes('delhi')) city = 'New Delhi';
+    else if (b.zoneName.toLowerCase().includes('noida')) city = 'Noida';
+    else if (b.zoneName.toLowerCase().includes('gurugram')) city = 'Gurugram';
+    else if (b.zoneName.toLowerCase().includes('amroha')) city = 'Amroha';
+    else city = b.zoneName;
+  }
+
+  if (!state) {
+    if (city.toLowerCase().includes('delhi')) state = 'Delhi';
+    else if (city.toLowerCase().includes('noida') || city.toLowerCase().includes('amroha')) state = 'Uttar Pradesh';
+    else if (city.toLowerCase().includes('gurugram')) state = 'Haryana';
+  }
+
+  return {
+    flatHouse: flatHouse || 'Not Specified',
+    streetLocality: streetLocality || 'Not Provided',
+    landmark: landmark || 'None',
+    city: city || 'Delhi / NCR',
+    state: state || 'Delhi',
+    townCityState: (city || state) ? `${city}${city && state ? ', ' : ''}${state}` : 'Delhi / NCR',
+    pincode: pincode || 'Not Provided',
+    addressType: addressType.toUpperCase() === 'WORK' ? 'Work / Office' : 'Home'
+  };
 };
 
 const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
@@ -815,9 +838,7 @@ export default function App() {
   const handleAcceptBookingWhatsApp = async (b) => {
     setPopupToast({ title: "Dispatching Slip", desc: `Sending final confirmation slip to ${b.clientName}...` });
     try {
-      const fullAddrStr = formatStructuredAddress(b);
-      const addrTypeStr = b.addressType ? ` (${b.addressType.toUpperCase()})` : '';
-      
+      const addr = parseBookingAddressDetails(b);
       const confirmSlipMessage = 
         `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n` +
         `Dear *${b.clientName}*,\n` +
@@ -827,9 +848,13 @@ export default function App() {
         `💄 *Main Look:* ${b.packageName}\n` +
         `💎 *Vanity Tier:* ${b.kitType}\n` +
         `👥 *Extra Family Guests:* ${b.extraGuestsCount || 0} Person(s)\n` +
-        `📍 *Venue Location:* ${b.zoneName}\n` +
-        `🏠 *Exact Venue Address:* ${fullAddrStr}${addrTypeStr}\n` +
-        `📮 *Postal PIN Code:* ${b.pincode || b.pinCode || b.postalCode || 'Not Provided'}\n` +
+        `📍 *Venue Zone:* ${b.zoneName}\n` +
+        `🏠 *Flat/Building:* ${addr.flatHouse}\n` +
+        `🛣️ *Street/Locality:* ${addr.streetLocality}\n` +
+        `🚩 *Landmark:* ${addr.landmark}\n` +
+        `🌆 *City & State:* ${addr.townCityState}\n` +
+        `📮 *PIN Code:* ${addr.pincode}\n` +
+        `🏷️ *Address Type:* ${addr.addressType}\n` +
         `💰 *Total Amount:* ₹${b.totalAmount?.toLocaleString('en-IN')}\n\n` +
         `_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n` +
         `Our artist team will coordinate final timings with you prior to the date.`;
@@ -1003,7 +1028,7 @@ export default function App() {
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
   };
 
-  // Instant Download Slip with full e-commerce structured address hierarchy
+  // Instant Download Slip displaying all 6 E-Commerce Address Fields clearly
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -1031,19 +1056,13 @@ export default function App() {
     const mainPackage = b.packageName || 'Bridal Makeup';
     const hasRejectionNote = b.status === 'rejected' || !!b.rejectionReason;
 
-    // Structured fields extraction
-    const flatHouse = b.flatHouseNo || b.houseNo || b.flatNo || '';
-    const streetLocality = b.streetLocality || b.street || b.locality || b.area || b.venueAddress || 'To be confirmed';
-    const landmark = b.landmark || '';
-    const cityState = (b.city || b.state) ? `${b.city || ''}${b.city && b.state ? ', ' : ''}${b.state || ''}` : '';
-    const pincode = b.pincode || b.pinCode || b.postalCode || 'Not Provided';
-    const addressType = (b.addressType || 'Home').toUpperCase();
+    const addr = parseBookingAddressDetails(b);
 
-    const baseHeight = 2750;
+    const baseHeight = 2950;
     const guestRowsHeight = guestList.length * 82;
     const rejectionExtraHeight = hasRejectionNote ? 260 : 0;
     canvas.width = 1200;
-    canvas.height = Math.max(baseHeight, 2150 + guestRowsHeight + rejectionExtraHeight);
+    canvas.height = Math.max(baseHeight, 2350 + guestRowsHeight + rejectionExtraHeight);
 
     const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
       ctx.textAlign = align;
@@ -1132,21 +1151,15 @@ export default function App() {
       y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
 
-      // Dedicated E-Commerce Structured Address Section on Slip
+      // Dedicated 6 Shopping App Address Fields Block on Downloadable Slip
       y += 10;
       y = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', y, '#38bdf8');
-      y = drawRow('• Address Type:', `[ ${addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
-      if (flatHouse) {
-        y = drawRow('• Flat / House / Building:', flatHouse, y, { labelSize: 18 });
-      }
-      y = drawRow('• Street / Sector / Locality:', streetLocality, y, { labelSize: 18 });
-      if (landmark) {
-        y = drawRow('• Landmark (Nearby):', landmark, y, { labelSize: 18 });
-      }
-      if (cityState) {
-        y = drawRow('• Town / City & State:', cityState, y, { labelSize: 18 });
-      }
-      y = drawRow('• Postal PIN Code:', pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
+      y = drawRow('1. Address Type (Home/Work):', `[ ${addr.addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
+      y = drawRow('2. Flat / House No., Building Name:', addr.flatHouse, y, { labelSize: 18 });
+      y = drawRow('3. Street, Sector, Area, Locality:', addr.streetLocality, y, { labelSize: 18 });
+      y = drawRow('4. Landmark (Optional):', addr.landmark, y, { labelSize: 18 });
+      y = drawRow('5. Town / City & State:', addr.townCityState, y, { labelSize: 18 });
+      y = drawRow('6. Postal PIN Code:', addr.pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
 
       // Rejection details rendered on slip
       if (hasRejectionNote) {
@@ -2493,13 +2506,7 @@ export default function App() {
                           const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
                           const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
 
-                          const houseNo = b.flatHouseNo || b.houseNo || b.flatNo;
-                          const street = b.streetLocality || b.street || b.locality || b.area;
-                          const landmark = b.landmark;
-                          const city = b.city || b.town;
-                          const state = b.state || b.region;
-                          const pin = b.pincode || b.pinCode || b.postalCode;
-                          const addrType = b.addressType || 'Home';
+                          const addr = parseBookingAddressDetails(b);
 
                           return (
                             <>
@@ -2563,44 +2570,42 @@ export default function App() {
                                 <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
                               </div>
 
-                              {/* Structured E-Commerce Address Box in Admin Card */}
-                              <div className={`p-3.5 rounded-[18px] border space-y-2 mt-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100/70 border-slate-200'}`}>
+                              {/* Comprehensive 6-Field E-Commerce Address Card */}
+                              <div className={`p-4 rounded-[20px] border space-y-2.5 mt-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100/70 border-slate-200'}`}>
                                 <div className="flex items-center justify-between">
                                   <span className={`text-[12px] font-bold flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
-                                    <MapPin className="w-3.5 h-3.5" /> Structured Destination Address
+                                    <MapPin className="w-4 h-4" /> Full Delivery / Venue Address
                                   </span>
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 uppercase flex items-center gap-1">
-                                    {addrType.toLowerCase() === 'work' ? <Building2 className="w-3 h-3" /> : <Home className="w-3 h-3" />}
-                                    {addrType}
+                                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 uppercase flex items-center gap-1">
+                                    {addr.addressType.includes('Work') ? <Building2 className="w-3 h-3" /> : <Home className="w-3 h-3" />}
+                                    {addr.addressType}
                                   </span>
                                 </div>
 
-                                <div className="space-y-1 text-[12px]">
-                                  {houseNo && (
-                                    <div className="flex justify-between gap-2">
-                                      <span className={iosMuted}>Flat / House:</span>
-                                      <span className="font-semibold text-right">{houseNo}</span>
-                                    </div>
-                                  )}
+                                <div className="space-y-1.5 text-[12px] pt-1">
                                   <div className="flex justify-between gap-2">
-                                    <span className={iosMuted}>Street / Area:</span>
-                                    <span className="font-semibold text-right break-words max-w-[230px]">{street || b.venueAddress || 'Not Provided'}</span>
+                                    <span className={iosMuted}>1. Flat / House, Building:</span>
+                                    <span className="font-semibold text-right text-white/90">{addr.flatHouse}</span>
                                   </div>
-                                  {landmark && (
-                                    <div className="flex justify-between gap-2">
-                                      <span className={iosMuted}>Landmark:</span>
-                                      <span className="font-semibold text-right">{landmark}</span>
-                                    </div>
-                                  )}
-                                  {(city || state) && (
-                                    <div className="flex justify-between gap-2">
-                                      <span className={iosMuted}>City / State:</span>
-                                      <span className="font-semibold text-right">{city || ''}{city && state ? ', ' : ''}{state || ''}</span>
-                                    </div>
-                                  )}
+                                  <div className="flex justify-between gap-2">
+                                    <span className={iosMuted}>2. Street / Sector / Locality:</span>
+                                    <span className="font-semibold text-right text-white/90 break-words max-w-[240px]">{addr.streetLocality}</span>
+                                  </div>
+                                  <div className="flex justify-between gap-2">
+                                    <span className={iosMuted}>3. Landmark (Optional):</span>
+                                    <span className="font-semibold text-right text-white/90">{addr.landmark}</span>
+                                  </div>
+                                  <div className="flex justify-between gap-2">
+                                    <span className={iosMuted}>4. Town / City & State:</span>
+                                    <span className="font-semibold text-right text-white/90">{addr.townCityState}</span>
+                                  </div>
                                   <div className="flex justify-between gap-2 pt-1 border-t border-white/10">
-                                    <span className={`font-bold ${iosMuted}`}>PIN Code:</span>
-                                    <span className={`font-mono font-bold text-right ${adminThemeStyle.accentText}`}>{pin || 'Not Provided'}</span>
+                                    <span className={`font-bold ${iosMuted}`}>5. Postal PIN Code:</span>
+                                    <span className={`font-mono font-bold text-right ${adminThemeStyle.accentText}`}>{addr.pincode}</span>
+                                  </div>
+                                  <div className="flex justify-between gap-2">
+                                    <span className={iosMuted}>6. Venue Zone Tier:</span>
+                                    <span className="font-medium text-right text-sky-400">{b.zoneName || 'Standard Zone'}</span>
                                   </div>
                                 </div>
                               </div>
@@ -2818,7 +2823,9 @@ export default function App() {
                         <span className={`font-mono ${adminThemeStyle.accentText}`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span>
                       </div>
                       <p className={iosMuted}>Look: {b.packageName} ({b.kitType})</p>
-                      <p className={`text-[11px] ${iosMuted} break-words leading-relaxed`}>📍 {formatStructuredAddress(b)}</p>
+                      <p className={`text-[11px] ${iosMuted} break-words leading-relaxed`}>
+                        📍 {parseBookingAddressDetails(b).streetLocality}, {parseBookingAddressDetails(b).townCityState} ({parseBookingAddressDetails(b).pincode})
+                      </p>
                     </div>
                   ))}
                 </div>
