@@ -7,11 +7,33 @@ import {
   ListFilter, Car, Volume2, Activity, SlidersHorizontal, CheckCircle2, 
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
-  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
-  Zap, Flame
+  Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
+
+const DEFAULT_REJECTION_REASONS = [
+  {
+    code: "SLOT_FULL",
+    label: "Peak Demand Conflict",
+    message: "We are fully booked for this date and cannot accept additional appointments."
+  },
+  {
+    code: "OUT_OF_SERVICE_AREA",
+    label: "Venue Coverage",
+    message: "We do not currently provide on-site makeover services at the requested destination/venue location."
+  },
+  {
+    code: "TIMING_MISMATCH",
+    label: "Schedule Conflict",
+    message: "The requested service timing/slot cannot be accommodated alongside our existing confirmed appointments."
+  },
+  {
+    code: "INCOMPLETE_DETAILS",
+    label: "Incomplete Verification",
+    message: "The booking could not be verified due to incomplete contact or venue address details."
+  }
+];
 
 const DEFAULT_CONFIG = {
   adminPin: "8760",
@@ -35,6 +57,8 @@ const DEFAULT_CONFIG = {
   appVersionsList: [
     { version: "v4.1.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Full exact pricing per guest package, detailed discount subsections for guest/promo discounts on slips & admin queues." }
   ],
+
+  rejectionReasons: DEFAULT_REJECTION_REASONS,
 
   theme: {
     fontFamily: "sans",
@@ -234,15 +258,6 @@ const FONT_MAP = {
   roboto: "'Roboto', sans-serif"
 };
 
-const PRE_ADDED_REJECTION_REASONS = [
-  "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
-  "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
-  "Due to prior studio commitments in another city/location, we cannot take further appointments for this date.",
-  "Your requested time slot is unavailable. Please visit our app and choose an alternative available date.",
-  "We are currently experiencing peak seasonal bookings and this date has reached full capacity. We apologize for the inconvenience.",
-  "Thank you for your interest! Unfortunately, we are not operational at the requested venue location on this date."
-];
-
 const INITIAL_FOLDERS = [
   { id: 'bookings', label: 'Live Bookings Queue', icon: CalendarCheck, category: 'OPERATIONS', desc: 'Review, accept, hold, reject & generate slips', countKey: 'bookings' },
   { id: 'packages_master', label: 'Packages & Rates Manager', icon: Layers, category: 'CATALOG', desc: 'Manage package photos, names, rates and full details', countKey: null },
@@ -336,7 +351,9 @@ export default function App() {
   
   const [deleteConfirmModal, setDeleteConfirmModal] = useState(null);
   const [rejectModalData, setRejectModalData] = useState(null);
-  const [rejectionReasonText, setRejectionReasonText] = useState(PRE_ADDED_REJECTION_REASONS[0]);
+  const [selectedReasonCode, setSelectedReasonCode] = useState(DEFAULT_REJECTION_REASONS[0].code);
+  const [rejectionReasonText, setRejectionReasonText] = useState(DEFAULT_REJECTION_REASONS[0].message);
+  const [showManageReasonsModal, setShowManageReasonsModal] = useState(false);
 
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
@@ -486,6 +503,7 @@ export default function App() {
             telegramChatId: data.telegramChatId || DEFAULT_CONFIG.telegramChatId,
             activeAppVersion: data.activeAppVersion || DEFAULT_CONFIG.activeAppVersion,
             appVersionsList: (data.appVersionsList && data.appVersionsList.length > 0) ? data.appVersionsList : DEFAULT_CONFIG.appVersionsList,
+            rejectionReasons: (data.rejectionReasons && data.rejectionReasons.length > 0) ? data.rejectionReasons : DEFAULT_REJECTION_REASONS,
             recoveryEmail: data.recoveryEmail || DEFAULT_CONFIG.recoveryEmail,
             kitText: {
               international: { ...DEFAULT_CONFIG.kitText.international, ...(data.kitText?.international || {}) },
@@ -816,15 +834,57 @@ export default function App() {
   const handleConfirmRejection = async () => {
     if (!rejectModalData) return;
     try {
+      const availableReasons = draft?.rejectionReasons || DEFAULT_REJECTION_REASONS;
+      const matched = availableReasons.find(r => r.code === selectedReasonCode);
+      const chosenLabel = matched ? matched.label : "General";
+
       await updateDoc(doc(db, "bookings", rejectModalData.id), {
         status: "rejected",
+        rejectionCode: selectedReasonCode,
+        rejectionLabel: chosenLabel,
         rejectionReason: rejectionReasonText
       });
-      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully.` });
+      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully with reason code: ${selectedReasonCode}.` });
       setRejectModalData(null);
     } catch (err) {
       alert("Error rejecting booking: " + err.message);
     }
+  };
+
+  const handleAddRejectionReason = () => {
+    const code = prompt("Enter Unique Rejection Code (e.g. BRIDAL_LOCKOUT, SHORT_NOTICE):");
+    if (!code) return;
+    const cleanCode = code.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+    const label = prompt("Enter Rejection Reason Label / Category Title:", "Policy Mismatch");
+    if (!label) return;
+    const message = prompt("Enter Default Client Notification Message:", "We are unable to accept this booking request due to schedule limitations.");
+    if (!message) return;
+
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const currentReasons = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
+    const updated = [...currentReasons, { code: cleanCode, label, message }];
+
+    setDraft({ ...currentDraftSafe, rejectionReasons: updated });
+    updateLiveConfig({ ...currentDraftSafe, rejectionReasons: updated }).catch(console.warn);
+    setPopupToast({ title: "Reason Added", desc: `New rejection reason ${cleanCode} added successfully!` });
+  };
+
+  const handleRemoveRejectionReason = (codeToRemove) => {
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const currentReasons = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
+    if (currentReasons.length <= 1) {
+      alert("At least one rejection reason must be maintained.");
+      return;
+    }
+    const updated = currentReasons.filter(r => r.code !== codeToRemove);
+    setDraft({ ...currentDraftSafe, rejectionReasons: updated });
+    updateLiveConfig({ ...currentDraftSafe, rejectionReasons: updated }).catch(console.warn);
+
+    if (selectedReasonCode === codeToRemove && updated.length > 0) {
+      setSelectedReasonCode(updated[0].code);
+      setRejectionReasonText(updated[0].message);
+    }
+    setPopupToast({ title: "Reason Removed", desc: `Rejection reason ${codeToRemove} deleted.` });
   };
 
   const handleExecuteDelete = async () => {
@@ -951,7 +1011,7 @@ export default function App() {
 
     const baseHeight = 2550;
     const guestRowsHeight = guestList.length * 82;
-    const rejectionExtraHeight = hasRejectionNote ? 240 : 0;
+    const rejectionExtraHeight = hasRejectionNote ? 260 : 0;
     canvas.width = 1200;
     canvas.height = Math.max(baseHeight, 1900 + guestRowsHeight + rejectionExtraHeight);
 
@@ -1043,13 +1103,15 @@ export default function App() {
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
       y = drawRow('EXACT VENUE ADDRESS', b.venueAddress || 'To be confirmed', y);
 
-      // FIX: Rejection details are rendered directly on downloaded slip screen
+      // Rejection details rendered directly on downloaded slip screen
       if (hasRejectionNote) {
         y += 12;
         y = drawSectionTitle('⚠️ APPOINTMENT REJECTION & CANCELLATION DETAILS', y, '#f43f5e');
         y = drawRow('• Status Verdict:', 'DECLINED / REJECTED', y, { labelSize: 18, labelColor: '#fca5a5', valueColor: '#f43f5e' });
+        if (b.rejectionCode || b.rejectionLabel) {
+          y = drawRow('• Reason Code & Category:', `${b.rejectionCode || 'REJECT'} • ${b.rejectionLabel || 'Schedule Limitation'}`, y, { labelSize: 17, labelColor: '#fca5a5', valueColor: '#fda4af', mono: true });
+        }
         
-        // Multi-line rejection text drawing
         const reasonText = b.rejectionReason || 'Studio slot unavailable or fully booked for requested event date.';
         const boxHeight = 110;
         ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
@@ -1204,6 +1266,7 @@ export default function App() {
   const iosMuted = "text-[#a1a1aa]";
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
+  const rejectionReasonsList = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
 
   if (!isAuthenticated) {
     return (
@@ -1312,6 +1375,7 @@ export default function App() {
         </div>
       )}
 
+      {/* Rejection Modal with Multiple Reason Selector */}
       {rejectModalData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
           <div className={`max-w-lg w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
@@ -1324,22 +1388,115 @@ export default function App() {
             </div>
 
             <p className={`text-[13px] ${iosMuted}`}>
-              Are you sure you want to decline this booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>?
+              Decline booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>. Select or customize the rejection reason below:
             </p>
 
-            <div>
-              <label className="block text-[11px] font-bold mb-1.5 uppercase tracking-wider">Reason for Rejection:</label>
-              <textarea
-                rows={3}
-                value={rejectionReasonText}
-                onChange={e => setRejectionReasonText(e.target.value)}
-                className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
-              />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-bold uppercase tracking-wider">Select Preset Reason:</label>
+                <button
+                  type="button"
+                  onClick={() => setShowManageReasonsModal(true)}
+                  className={`text-[11px] font-bold ${adminThemeStyle.accentText} hover:underline flex items-center gap-1`}
+                >
+                  <Settings className="w-3.5 h-3.5" /> Manage Reasons List
+                </button>
+              </div>
+
+              <select
+                value={selectedReasonCode}
+                onChange={(e) => {
+                  const chosenCode = e.target.value;
+                  setSelectedReasonCode(chosenCode);
+                  const matched = rejectionReasonsList.find(r => r.code === chosenCode);
+                  if (matched) {
+                    setRejectionReasonText(matched.message);
+                  }
+                }}
+                className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold font-mono ${iosInputBg}`}
+              >
+                {rejectionReasonsList.map((reason) => (
+                  <option key={reason.code} value={reason.code} className="text-black font-sans">
+                    {reason.code} • {reason.label}
+                  </option>
+                ))}
+              </select>
+
+              <div>
+                <label className="block text-[11px] font-bold mb-1.5 uppercase tracking-wider">Rejection Message (Visible on App & Slip):</label>
+                <textarea
+                  rows={3}
+                  value={rejectionReasonText}
+                  onChange={e => setRejectionReasonText(e.target.value)}
+                  className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-500/20">
               <button onClick={() => setRejectModalData(null)} className="px-4 py-2.5 rounded-[16px] bg-slate-200 text-[13px] font-bold text-slate-700">Cancel</button>
               <button onClick={handleConfirmRejection} className="px-5 py-2.5 rounded-[16px] bg-rose-600 text-white font-bold text-[13px] shadow-lg">Confirm Rejection</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Reasons List Modal */}
+      {showManageReasonsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[24px] animate-fade-in">
+          <div className={`max-w-xl w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tag className={`w-5 h-5 ${adminThemeStyle.accentText}`} />
+                <h3 className="font-bold text-[17px]">Manage Rejection Reasons & Codes</h3>
+              </div>
+              <button onClick={() => setShowManageReasonsModal(false)} className="p-1 rounded-full text-slate-400"><X className="w-5 h-5" /></button>
+            </div>
+
+            <p className={`text-[12px] ${iosMuted}`}>
+              Add, edit, or delete standardized rejection reason codes used when declining booking appointments.
+            </p>
+
+            <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+              {rejectionReasonsList.map((reason) => (
+                <div key={reason.code} className={`p-3.5 rounded-[18px] border flex items-start justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`font-mono text-xs font-bold ${adminThemeStyle.accentText} bg-white/10 px-2 py-0.5 rounded-[8px]`}>
+                        {reason.code}
+                      </span>
+                      <span className="font-bold text-xs">{reason.label}</span>
+                    </div>
+                    <p className={`text-[12px] italic ${iosMuted}`}>"{reason.message}"</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveRejectionReason(reason.code)}
+                    className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg shrink-0"
+                    title="Delete Reason Code"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-500/20">
+              <button
+                type="button"
+                onClick={handleAddRejectionReason}
+                className="px-4 py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
+              >
+                <Plus className="w-4 h-4" /> Add New Reason Code
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowManageReasonsModal(false)}
+                className={`px-4 py-2.5 rounded-[14px] ${adminThemeStyle.btnPrimary} text-xs font-bold`}
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>
@@ -2358,8 +2515,18 @@ export default function App() {
                         })()}
 
                         {b.rejectionReason && (
-                          <div className="p-3 rounded-[14px] bg-rose-500/15 text-rose-300 text-[12px] border border-rose-500/30 space-y-0.5">
-                            <strong className="text-rose-400">⚠️ Rejection Note:</strong> {b.rejectionReason}
+                          <div className="p-3 rounded-[14px] bg-rose-500/15 text-rose-300 text-[12px] border border-rose-500/30 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <strong className="text-rose-400 flex items-center gap-1.5">
+                                <Ban className="w-3.5 h-3.5" /> Rejection Verdict:
+                              </strong>
+                              {b.rejectionCode && (
+                                <span className="font-mono font-bold text-[10px] bg-rose-500/30 px-2 py-0.5 rounded text-white">
+                                  {b.rejectionCode} {b.rejectionLabel ? `• ${b.rejectionLabel}` : ''}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11.5px] leading-relaxed italic">{b.rejectionReason}</p>
                           </div>
                         )}
                       </div>
@@ -2393,7 +2560,9 @@ export default function App() {
                             type="button"
                             onClick={() => {
                               setRejectModalData(b);
-                              setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
+                              const defaultReason = rejectionReasonsList[0] || DEFAULT_REJECTION_REASONS[0];
+                              setSelectedReasonCode(defaultReason.code);
+                              setRejectionReasonText(defaultReason.message);
                             }}
                             className="py-2.5 bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/30 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
                           >
