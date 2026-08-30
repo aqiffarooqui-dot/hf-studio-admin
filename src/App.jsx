@@ -977,7 +977,7 @@ export default function App() {
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
   };
 
-  // Instant Download Slip without any popup modal/toast
+  // Instant Download Slip without any popup modal/toast with dynamic multi-line address rendering
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -1009,11 +1009,37 @@ export default function App() {
     const mainPackage = b.packageName || 'Bridal Makeup';
     const hasRejectionNote = b.status === 'rejected' || !!b.rejectionReason;
 
+    // Calculate dynamic address lines
+    const fullVenueAddress = b.venueAddress || 'To be confirmed';
+    const addressWords = fullVenueAddress.split(' ');
+    let addressLines = [];
+    let curLine = '';
+    
+    // Test measurement for address lines
+    ctx.font = 'bold 18px sans-serif';
+    for (let i = 0; i < addressWords.length; i++) {
+      const testLine = curLine + addressWords[i] + ' ';
+      const metrics = ctx.measureText(testLine);
+      if (metrics.width > 560 && i > 0) {
+        addressLines.push(curLine.trim());
+        curLine = addressWords[i] + ' ';
+      } else {
+        curLine = testLine;
+      }
+    }
+    if (curLine.trim()) {
+      addressLines.push(curLine.trim());
+    }
+    if (addressLines.length === 0) addressLines = [fullVenueAddress];
+
+    const addressBlockHeight = Math.max(58, 32 + (addressLines.length * 26));
+
     const baseHeight = 2550;
     const guestRowsHeight = guestList.length * 82;
     const rejectionExtraHeight = hasRejectionNote ? 260 : 0;
+    const addressExtraHeight = Math.max(0, addressBlockHeight - 58);
     canvas.width = 1200;
-    canvas.height = Math.max(baseHeight, 1900 + guestRowsHeight + rejectionExtraHeight);
+    canvas.height = Math.max(baseHeight, 1920 + guestRowsHeight + rejectionExtraHeight + addressExtraHeight);
 
     const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
       ctx.textAlign = align;
@@ -1101,7 +1127,15 @@ export default function App() {
       y = drawRow('CLIENT NAME', b.clientName || 'Not Provided', y);
       y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
       y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
-      y = drawRow('EXACT VENUE ADDRESS', b.venueAddress || 'To be confirmed', y);
+
+      // Multi-line full address row on slip
+      ctx.fillStyle = 'rgba(255,255,255,0.035)';
+      ctx.fillRect(90, y, 1020, addressBlockHeight);
+      drawText('EXACT VENUE ADDRESS', 120, y + 36, 19, 'bold', '#94a3b8');
+      addressLines.forEach((line, lIdx) => {
+        drawText(line, 1080, y + 36 + (lIdx * 26), 18, 'bold', '#ffffff', 'right');
+      });
+      y += addressBlockHeight + 7;
 
       // Rejection details rendered directly on downloaded slip screen
       if (hasRejectionNote) {
@@ -1122,7 +1156,6 @@ export default function App() {
         
         drawText('• Stated Reason for Decline:', 120, y + 32, 18, 'bold', '#fda4af');
         
-        // Wrap rejection note
         ctx.font = 'italic 16px sans-serif';
         ctx.fillStyle = '#ffffff';
         const maxTextWidth = 960;
@@ -2508,8 +2541,13 @@ export default function App() {
                                 <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
                               </div>
 
-                              <div className="flex justify-between gap-3 pt-1"><span className={iosMuted}>Venue Location:</span><span className="font-medium text-right">{b.zoneName || 'Not Provided'}</span></div>
-                              <div className="flex justify-between gap-3"><span className={iosMuted}>Address:</span><span className="truncate max-w-[220px] text-right">{b.venueAddress || 'Not Provided'}</span></div>
+                              <div className="flex justify-between gap-3 pt-1"><span className={`${iosMuted} shrink-0`}>Venue Location:</span><span className="font-medium text-right">{b.zoneName || 'Not Provided'}</span></div>
+                              
+                              {/* Full multi-line address display in booking card */}
+                              <div className="flex flex-col sm:flex-row justify-between gap-1 pt-1">
+                                <span className={`${iosMuted} shrink-0`}>Exact Address:</span>
+                                <span className="font-medium text-left sm:text-right break-words text-white/95 leading-relaxed pl-0 sm:pl-4">{b.venueAddress || 'Not Provided'}</span>
+                              </div>
                             </>
                           );
                         })()}
@@ -2724,7 +2762,7 @@ export default function App() {
                         <span className={`font-mono ${adminThemeStyle.accentText}`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span>
                       </div>
                       <p className={iosMuted}>Look: {b.packageName} ({b.kitType})</p>
-                      <p className={`text-[11px] truncate ${iosMuted}`}>📍 {b.venueAddress}</p>
+                      <p className={`text-[11px] ${iosMuted} break-words leading-relaxed`}>📍 {b.venueAddress}</p>
                     </div>
                   ))}
                 </div>
