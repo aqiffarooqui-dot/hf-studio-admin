@@ -30,13 +30,13 @@ const DEFAULT_CONFIG = {
   telegramBotToken: "8891500480:AAGvxL16eNxSkn6ZXgoG28EW80VM75mwukg",
   telegramChatId: "8891500480",
 
-  activeAppVersion: "v4.1.0",
+  activeAppVersion: "v4.2.0",
   appVersionsList: [
-    { version: "v4.1.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Full exact pricing per guest package, detailed discount subsections for guest/promo discounts on slips & admin queues." }
+    { version: "v4.2.0", label: "Production Master (Current)", releaseDate: "August 30, 2026", status: "live", notes: "Apple Glass UI, 2-column folder matrix, status slip generation with rejection note & dynamic theme text contrast." }
   ],
 
   theme: {
-    fontFamily: "sans",
+    fontFamily: "outfit",
     colorTheme: "real_glass_lens",
     defaultMode: "light"
   },
@@ -175,35 +175,60 @@ const DEFAULT_CONFIG = {
 
 const THEME_STYLES = {
   admin_aurora: {
-    bg: "bg-[#090a0f] text-[#F2F2F7]",
-    cardBg: "bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-blue-500/15 backdrop-blur-[28px] border border-purple-500/30 shadow-[0_12px_40px_rgba(168,85,247,0.2)]",
-    btnPrimary: "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-bold shadow-[0_10px_25px_rgba(236,72,153,0.35)] rounded-[18px]",
-    accentText: "text-purple-400"
+    bg: "bg-[#0b0c16] text-[#f1f5f9]",
+    cardBg: "bg-slate-900/40 backdrop-blur-2xl border border-purple-500/25 shadow-[0_16px_35px_rgba(147,51,234,0.18)] hover:border-purple-400/50",
+    btnPrimary: "bg-gradient-to-r from-purple-600 via-fuchsia-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold shadow-[0_10px_25px_rgba(192,38,211,0.35)] rounded-[18px]",
+    accentText: "text-purple-400",
+    glowOrb: "from-purple-600/20 via-pink-600/15 to-transparent",
+    iconGrad: "from-purple-500 via-pink-500 to-rose-500",
+    mutedText: "text-purple-200/60",
+    inputBg: "bg-purple-950/20 border-purple-400/20 text-purple-100 placeholder-purple-300/40 focus:border-purple-400"
   },
   sunset_glow: {
-    bg: "bg-[#0c0a09] text-[#F2F2F7]",
-    cardBg: "bg-gradient-to-br from-amber-500/15 via-rose-500/15 to-purple-500/15 backdrop-blur-[28px] border border-amber-500/30 shadow-[0_12px_40px_rgba(245,158,11,0.2)]",
-    btnPrimary: "bg-gradient-to-r from-amber-500 to-rose-600 text-white font-bold shadow-[0_10px_25px_rgba(244,63,94,0.35)] rounded-[18px]",
-    accentText: "text-amber-400"
+    bg: "bg-[#140b07] text-[#fff7ed]",
+    cardBg: "bg-stone-900/45 backdrop-blur-2xl border border-amber-500/25 shadow-[0_16px_35px_rgba(245,158,11,0.18)] hover:border-amber-400/50",
+    btnPrimary: "bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 hover:from-amber-400 hover:to-rose-500 text-white font-bold shadow-[0_10px_25px_rgba(249,115,22,0.35)] rounded-[18px]",
+    accentText: "text-amber-400",
+    glowOrb: "from-amber-500/20 via-orange-600/15 to-transparent",
+    iconGrad: "from-amber-400 via-orange-500 to-rose-500",
+    mutedText: "text-amber-200/60",
+    inputBg: "bg-amber-950/20 border-amber-400/20 text-amber-100 placeholder-amber-300/40 focus:border-amber-400"
   },
   cyber_matrix: {
-    bg: "bg-[#030a0a] text-[#F2F2F7]",
-    cardBg: "bg-gradient-to-br from-emerald-500/15 via-cyan-500/20 to-blue-500/15 backdrop-blur-[28px] border border-cyan-500/35 shadow-[0_12px_40px_rgba(6,182,212,0.2)]",
-    btnPrimary: "bg-gradient-to-r from-emerald-500 to-cyan-600 text-neutral-950 font-bold shadow-[0_10px_25px_rgba(6,182,212,0.35)] rounded-[18px]",
-    accentText: "text-cyan-400"
+    bg: "bg-[#040d0c] text-[#ecfeff]",
+    cardBg: "bg-teal-950/35 backdrop-blur-2xl border border-teal-500/25 shadow-[0_16px_35px_rgba(20,184,166,0.18)] hover:border-cyan-400/50",
+    btnPrimary: "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-bold shadow-[0_10px_25px_rgba(6,182,212,0.35)] rounded-[18px]",
+    accentText: "text-cyan-400",
+    glowOrb: "from-teal-500/20 via-emerald-600/15 to-transparent",
+    iconGrad: "from-emerald-400 via-teal-500 to-cyan-500",
+    mutedText: "text-cyan-200/60",
+    inputBg: "bg-teal-950/30 border-cyan-400/25 text-cyan-100 placeholder-cyan-300/40 focus:border-cyan-400"
   },
   real_glass_lens: {
-    bg: "bg-[#090a0f] text-[#F2F2F7]",
-    cardBg: "bg-gradient-to-br from-white/10 via-sky-500/10 to-indigo-500/10 backdrop-blur-[24px] border border-white/20 shadow-[0_12px_40px_rgba(0,122,255,0.15)]",
-    btnPrimary: "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-[0_10px_25px_rgba(0,122,255,0.3)] rounded-[18px]",
-    accentText: "text-blue-400"
+    bg: "bg-[#070b16] text-[#e0e7ff]",
+    cardBg: "bg-indigo-950/35 backdrop-blur-2xl border border-blue-400/25 shadow-[0_16px_35px_rgba(59,130,246,0.18)] hover:border-blue-400/50",
+    btnPrimary: "bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-bold shadow-[0_10px_25px_rgba(59,130,246,0.35)] rounded-[18px]",
+    accentText: "text-blue-400",
+    glowOrb: "from-blue-600/20 via-indigo-600/15 to-transparent",
+    iconGrad: "from-sky-400 via-blue-500 to-indigo-600",
+    mutedText: "text-blue-200/60",
+    inputBg: "bg-blue-950/30 border-blue-400/25 text-blue-100 placeholder-blue-300/40 focus:border-blue-400"
+  },
+  midnight_velvet: {
+    bg: "bg-[#0f0714] text-[#fae8ff]",
+    cardBg: "bg-fuchsia-950/35 backdrop-blur-2xl border border-fuchsia-500/25 shadow-[0_16px_35px_rgba(217,70,239,0.18)] hover:border-fuchsia-400/50",
+    btnPrimary: "bg-gradient-to-r from-fuchsia-600 via-pink-600 to-rose-600 text-white font-bold shadow-[0_10px_25px_rgba(217,70,239,0.35)] rounded-[18px]",
+    accentText: "text-fuchsia-400",
+    glowOrb: "from-fuchsia-600/20 via-rose-600/15 to-transparent",
+    iconGrad: "from-fuchsia-400 via-pink-500 to-rose-500",
+    mutedText: "text-fuchsia-200/60",
+    inputBg: "bg-fuchsia-950/20 border-fuchsia-400/25 text-fuchsia-100 placeholder-fuchsia-300/40 focus:border-fuchsia-400"
   }
 };
 
 const FONT_MAP = {
-  sans: "'Plus Jakarta Sans', sans-serif",
   outfit: "'Outfit', sans-serif",
-  comic: "'Comic Neue', 'Comic Sans MS', cursive, sans-serif",
+  sans: "'Plus Jakarta Sans', sans-serif",
   serif: "'Playfair Display', serif",
   cormorant: "'Cormorant Garamond', serif",
   cinzel: "'Cinzel', serif",
@@ -214,12 +239,11 @@ const FONT_MAP = {
 };
 
 const PRE_ADDED_REJECTION_REASONS = [
-  "Thank you for reaching out! We are unfortunately already fully booked for this date. Please consider selecting another date.",
-  "Our senior makeup artists are scheduled for another event on this requested date. We would love to accommodate you on an alternate date.",
-  "Due to prior studio commitments in another city/location, we cannot take further appointments for this date.",
-  "Your requested time slot is unavailable. Please visit our app and choose an alternative available date.",
-  "We are currently experiencing peak seasonal bookings and this date has reached full capacity. We apologize for the inconvenience.",
-  "Thank you for your interest! Unfortunately, we are not operational at the requested venue location on this date."
+  "Thank you for reaching out! We are unfortunately already fully booked for this requested date.",
+  "Our senior makeup artists are scheduled for another VIP event on this date. Please consider choosing another slot.",
+  "Due to prior studio commitments in an outstation location, we are unable to accept new appointments on this date.",
+  "Your requested time slot is unavailable. Please visit our application and choose an alternative available date.",
+  "We have reached maximum booking capacity for this festive/wedding day. We apologize for the inconvenience."
 ];
 
 const INITIAL_FOLDERS = [
@@ -322,7 +346,7 @@ export default function App() {
 
   const canvasRef = useRef(null);
 
-  // Helper Upload Functions
+  // Logo & Profile Uploaders
   const handleLogoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -331,7 +355,7 @@ export default function App() {
       setDraft(prev => ({ ...prev, studioLogo: compressed }));
       setPopupToast({ title: "Logo Ready", desc: "Studio Logo uploaded and compressed. Save to persist." });
     } catch (err) {
-      alert("Error compressing logo image: " + err.message);
+      alert("Error compressing logo: " + err.message);
     }
   };
 
@@ -343,7 +367,7 @@ export default function App() {
       setDraft(prev => ({ ...prev, profileImage: compressed }));
       setPopupToast({ title: "Profile Image Ready", desc: "Artist profile photo compressed. Save to persist." });
     } catch (err) {
-      alert("Error compressing profile image: " + err.message);
+      alert("Error compressing profile photo: " + err.message);
     }
   };
 
@@ -362,7 +386,7 @@ export default function App() {
           }
         }
       }));
-      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Click Save to apply.` });
+      setPopupToast({ title: "Package Image Updated", desc: `Image ready for ${pkgKey}. Click Save to apply.` });
     } catch (err) {
       alert("Error uploading image: " + err.message);
     }
@@ -377,7 +401,7 @@ export default function App() {
         const copy = [...(draft.galleryPhotos || [])];
         copy[idx] = { ...copy[idx], url: compressed, type: 'image' };
         setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-        setPopupToast({ title: "Image Uploaded", desc: "Photo uploaded to transformations gallery." });
+        setPopupToast({ title: "Image Uploaded", desc: "Photo added to portfolio gallery." });
       } else {
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -554,20 +578,20 @@ export default function App() {
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
     } else {
-      alert("Incorrect PIN. Please enter your correct 4-digit security PIN.");
+      alert("Incorrect PIN. Please enter your valid 4-digit security PIN.");
     }
   };
 
   const handleBiometricOrFaceLogin = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      alert("⚠️ Biometric hardware scanner is not available in this browser context. Please use PIN 8760.");
+      alert("⚠️ Biometric platform sensor unavailable. Please use PIN.");
       return;
     }
 
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
       if (!available) {
-        alert("⚠️ No hardware biometric platform authenticator detected.");
+        alert("⚠️ No platform biometric hardware detected.");
         return;
       }
 
@@ -589,16 +613,16 @@ export default function App() {
       
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
-      setPopupToast({ title: "Biometric Verified", desc: "Fingerprint hardware sensor authenticated successfully." });
+      setPopupToast({ title: "Biometric Verified", desc: "Hardware sensor authenticated successfully." });
     } catch (err) {
-      console.warn("WebAuthn biometric auth error or cancelled:", err);
-      alert("⚠️ Fingerprint scan cancelled or failed by hardware. Please enter your 4-digit PIN.");
+      console.warn("WebAuthn auth error:", err);
+      alert("⚠️ Hardware authentication cancelled. Please enter PIN.");
     }
   };
 
   const handleRegisterFingerprintScan = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      alert("⚠️ Biometric hardware API is not supported in this browser context.");
+      alert("⚠️ Biometric hardware API is not supported in this browser.");
       return;
     }
 
@@ -624,11 +648,11 @@ export default function App() {
         await navigator.credentials.create({
           publicKey: {
             challenge,
-            rp: { name: "H&F Makeup Artist Admin" },
+            rp: { name: "H&F Makeup Artist Studio" },
             user: {
-              id: new TextEncoder().encode("admin_husna"),
-              name: "admin@husna.com",
-              displayName: "Husna Farooqui Admin"
+              id: new TextEncoder().encode("admin_farooqui"),
+              name: "admin@farooqui.com",
+              displayName: "Farooqui Admin"
             },
             pubKeyCredParams: [{ alg: -7, type: "public-key" }],
             timeout: 60000,
@@ -640,10 +664,10 @@ export default function App() {
         });
       }
     } catch (err) {
-      console.warn("Hardware credential creation notice:", err);
+      console.warn("Credential notice:", err);
       clearInterval(interval);
       setIsScanningFinger(false);
-      alert("⚠️ Fingerprint registration was cancelled or failed by device. Please try again.");
+      alert("⚠️ Fingerprint scan cancelled or failed by device.");
       return;
     }
 
@@ -663,10 +687,10 @@ export default function App() {
       try {
         await updateLiveConfig(JSON.parse(JSON.stringify(updatedDraft)));
       } catch (e) {
-        console.warn("Cloud sync warning for fingerprint:", e);
+        console.warn("Sync warning:", e);
       }
 
-      setPopupToast({ title: "Fingerprint Saved", desc: "Hardware biometrics successfully registered." });
+      setPopupToast({ title: "Fingerprint Saved", desc: "Biometric profile securely registered." });
     }, 2000);
   };
 
@@ -674,7 +698,7 @@ export default function App() {
     e.preventDefault();
     const currentDraftSafe = draft || DEFAULT_CONFIG;
     const targetEmail = currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com";
-    setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}! Check inbox.`);
+    setForgotPasswordStatus(`📧 Recovery instructions & PIN dispatched to ${targetEmail}!`);
     setTimeout(() => {
       setShowForgotPasswordModal(false);
       setForgotPasswordStatus('');
@@ -724,7 +748,7 @@ export default function App() {
       await updateLiveConfig(cleanData);
       setPopupToast({
         title: "Changes Saved Successfully!",
-        desc: `"${sectionName}" has been updated and synced live to customer app.`
+        desc: `"${sectionName}" has been updated live.`
       });
     } catch (err) {
       alert(`Error saving ${sectionName}: ${err.message}`);
@@ -747,12 +771,12 @@ export default function App() {
       await updateLiveConfig(JSON.parse(JSON.stringify(updated)));
       setPopupToast({ title: "Theme Applied Instantly", desc: `Admin console theme switched to ${newThemeKey}.` });
     } catch (err) {
-      console.warn("Theme instant sync notice:", err);
+      console.warn("Theme sync notice:", err);
     }
   };
 
   const handleAcceptBookingWhatsApp = async (b) => {
-    setPopupToast({ title: "Dispatching Slip", desc: `Sending final confirmation slip to ${b.clientName}...` });
+    setPopupToast({ title: "Dispatching Slip", desc: `Sending confirmation slip to ${b.clientName}...` });
     try {
       const confirmSlipMessage = 
         `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n` +
@@ -799,7 +823,7 @@ export default function App() {
         status: "rejected",
         rejectionReason: rejectionReasonText
       });
-      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully.` });
+      setPopupToast({ title: "Booking Rejected", desc: `Booking declined with note.` });
       setRejectModalData(null);
     } catch (err) {
       alert("Error rejecting booking: " + err.message);
@@ -859,10 +883,10 @@ export default function App() {
   };
 
   const handleAddNewPackage = () => {
-    const rawKey = prompt("Enter Package Key (e.g. deluxe_glam, royal_reception):");
+    const rawKey = prompt("Enter Package Key (e.g. deluxe_glam):");
     if (!rawKey) return;
     const cleanKey = rawKey.toLowerCase().replace(/[^a-z0-9_]/g, '');
-    const titleName = prompt("Enter Package Display Name (e.g. Deluxe Glamour Makeup):", "Deluxe Makeup");
+    const titleName = prompt("Enter Package Display Name:", "Deluxe Makeup");
     if (!titleName) return;
 
     const currentDraftSafe = draft || DEFAULT_CONFIG;
@@ -893,19 +917,20 @@ export default function App() {
       kitImages: updatedKitImages,
       pricingByKit: updatedPricing
     });
-    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully across kits!` });
+    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added successfully!` });
   };
 
+  // Status-Aware JPG Slip Generator with Rejection Note
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      alert('Unable to prepare the booking slip. Please try again.');
+      alert('Unable to initialize canvas slip generator.');
       return;
     }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      alert('Your browser could not initialize the booking slip generator.');
+      alert('Canvas context initialization failed.');
       return;
     }
 
@@ -928,10 +953,11 @@ export default function App() {
     const mainVanity = b.kitType || 'Luxury Vanity';
     const mainPackage = b.packageName || 'Bridal Makeup';
 
-    const baseHeight = 2550;
-    const guestRowsHeight = guestList.length * 82;
+    const hasRejectionNote = Boolean(b.status === 'rejected' && b.rejectionReason);
+    const baseHeight = hasRejectionNote ? 2750 : 2550;
+    const guestRowsHeight = guestList.length * 85;
     canvas.width = 1200;
-    canvas.height = Math.max(baseHeight, 1850 + guestRowsHeight);
+    canvas.height = Math.max(baseHeight, 1850 + guestRowsHeight + (hasRejectionNote ? 180 : 0));
 
     const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
       ctx.textAlign = align;
@@ -942,7 +968,7 @@ export default function App() {
 
     const drawRow = (label, value, y, options = {}) => {
       const rowHeight = options.height || 58;
-      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.04)';
       ctx.fillRect(90, y, 1020, rowHeight);
       drawText(label, 120, y + 36, options.labelSize || 19, 'bold', options.labelColor || '#94a3b8');
       drawText(value, 1080, y + 36, options.valueSize || 20, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
@@ -950,7 +976,7 @@ export default function App() {
     };
 
     const drawSectionTitle = (title, y, accent = '#c084fc') => {
-      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.14)' : 'rgba(14,165,233,0.14)';
+      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.15)' : 'rgba(56,189,248,0.15)';
       ctx.fillRect(90, y, 1020, 62);
       drawText(title, 120, y + 39, 21, 'bold', accent);
       return y + 72;
@@ -958,23 +984,28 @@ export default function App() {
 
     const drawAdminSlip = (logoImgObj) => {
       const bgGrad = ctx.createLinearGradient(0, 0, 1200, canvas.height);
-      bgGrad.addColorStop(0, '#09090b');
-      bgGrad.addColorStop(0.5, '#1e1b4b');
-      bgGrad.addColorStop(1, '#0f172a');
+      bgGrad.addColorStop(0, '#0a0a12');
+      bgGrad.addColorStop(0.5, '#13112c');
+      bgGrad.addColorStop(1, '#090d1a');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.strokeStyle = '#c084fc';
+      const isRejected = b.status === 'rejected';
+      const isConfirmed = b.status === 'confirmed';
+
+      const borderColor = isRejected ? '#f43f5e' : (isConfirmed ? '#10b981' : '#f59e0b');
+
+      ctx.strokeStyle = borderColor;
       ctx.lineWidth = 6;
       ctx.strokeRect(40, 40, 1120, canvas.height - 80);
-      ctx.strokeStyle = 'rgba(192,132,252,0.35)';
+      ctx.strokeStyle = `${borderColor}40`;
       ctx.lineWidth = 2;
       ctx.strokeRect(55, 55, 1090, canvas.height - 110);
 
       if (logoImgObj) {
         try {
           ctx.save();
-          ctx.globalAlpha = 0.07;
+          ctx.globalAlpha = 0.06;
           ctx.drawImage(logoImgObj, 300, 900, 600, 600);
           ctx.restore();
 
@@ -985,13 +1016,13 @@ export default function App() {
           ctx.clip();
           ctx.drawImage(logoImgObj, 80, 80, 120, 120);
           ctx.restore();
-          ctx.strokeStyle = '#c084fc';
+          ctx.strokeStyle = borderColor;
           ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
           ctx.stroke();
         } catch (e) {
-          console.warn("Logo draw skipped due to cross-origin taint", e);
+          console.warn("Logo skipped:", e);
         }
         drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130, 44, 'bold');
         drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175, 22, 'bold', '#c084fc');
@@ -1000,21 +1031,40 @@ export default function App() {
         drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 175, 22, 'bold', '#c084fc', 'center');
       }
 
-      ctx.strokeStyle = 'rgba(192,132,252,0.4)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(90, 230);
       ctx.lineTo(1110, 230);
       ctx.stroke();
 
-      const isRejected = b.status === 'rejected';
-      const isConfirmed = b.status === 'confirmed';
-      drawText(
-        isRejected ? '❌ APPOINTMENT DECLINED / REJECTED' : (isConfirmed ? '✅ OFFICIAL CONFIRMED APPOINTMENT SLIP' : '⏳ PENDING BOOKING REQUEST SLIP'),
-        600, 305, 26, 'bold', isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#fbbf24'), 'center'
-      );
+      const statusTitle = isRejected 
+        ? '❌ BOOKING STATUS: DECLINED / REJECTED' 
+        : (isConfirmed ? '✅ BOOKING STATUS: CONFIRMED & SCHEDULED' : '⏳ BOOKING STATUS: PENDING APPROVAL');
+      
+      const statusColor = isRejected ? '#f43f5e' : (isConfirmed ? '#10b981' : '#f59e0b');
+      const statusBg = isRejected ? 'rgba(244,63,94,0.18)' : (isConfirmed ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)');
 
-      let y = 370;
+      ctx.fillStyle = statusBg;
+      ctx.fillRect(90, 260, 1020, 65);
+      ctx.strokeStyle = statusColor;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(90, 260, 1020, 65);
+      drawText(statusTitle, 600, 303, 24, 'bold', statusColor, 'center');
+
+      let y = 350;
+
+      if (isRejected && b.rejectionReason) {
+        ctx.fillStyle = 'rgba(244,63,94,0.12)';
+        ctx.fillRect(90, y, 1020, 95);
+        ctx.strokeStyle = 'rgba(244,63,94,0.35)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(90, y, 1020, 95);
+        drawText('REASON FOR REJECTION / CANCELLATION NOTE:', 120, y + 33, 17, 'bold', '#fb7185');
+        drawText(b.rejectionReason, 120, y + 68, 16, 'normal', '#fda4af');
+        y += 115;
+      }
+
       y = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-RECORD', y, { valueColor: '#c084fc', mono: true });
       y = drawRow('CLIENT NAME', b.clientName || 'Not Provided', y);
       y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
@@ -1062,7 +1112,7 @@ export default function App() {
       y = drawRow('Total Discounts:', `-${money(totalDiscounts)}`, y, { labelColor: '#86efac', valueColor: '#86efac', mono: true, height: 64 });
 
       y += 18;
-      ctx.fillStyle = 'rgba(192,132,252,0.25)';
+      ctx.fillStyle = 'rgba(192,132,252,0.22)';
       ctx.fillRect(90, y, 1020, 125);
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 3;
@@ -1080,7 +1130,7 @@ export default function App() {
             const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
             const fallbackLink = document.createElement('a');
             fallbackLink.href = jpgUrl;
-            fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+            fallbackLink.download = `Booking_Slip_${b.status.toUpperCase()}_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
             document.body.appendChild(fallbackLink);
             fallbackLink.click();
             fallbackLink.remove();
@@ -1089,7 +1139,7 @@ export default function App() {
           const url = URL.createObjectURL(blob);
           const downloadLink = document.createElement('a');
           downloadLink.href = url;
-          downloadLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+          downloadLink.download = `Booking_Slip_${b.status.toUpperCase()}_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
           downloadLink.style.display = 'none';
           document.body.appendChild(downloadLink);
           downloadLink.click();
@@ -1099,18 +1149,7 @@ export default function App() {
           }, 1000);
         }, 'image/jpeg', 0.95);
       } catch (err) {
-        console.error('Booking slip download failed:', err);
-        try {
-          const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
-          const fallbackLink = document.createElement('a');
-          fallbackLink.href = jpgUrl;
-          fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
-          document.body.appendChild(fallbackLink);
-          fallbackLink.click();
-          fallbackLink.remove();
-        } catch (fallbackErr) {
-          alert('Booking slip download failed. Please try again or use Chrome/Edge.');
-        }
+        console.error('Download error:', err);
       }
     };
 
@@ -1145,66 +1184,70 @@ export default function App() {
   const currentDraftSafe = draft || DEFAULT_CONFIG;
   const activeAdminThemeKey = currentDraftSafe.adminTheme?.colorTheme || 'admin_aurora';
   const adminThemeStyle = THEME_STYLES[activeAdminThemeKey] || THEME_STYLES.admin_aurora;
-  const currentFontFamily = FONT_MAP[currentDraftSafe.theme?.fontFamily] || FONT_MAP.sans;
-
-  const iosBg = adminThemeStyle.bg;
-  const iosGroupCard = adminThemeStyle.cardBg;
-  const iosInputBg = "bg-white/10 text-white border border-white/20 rounded-[16px]";
-  const iosMuted = "text-[#a1a1aa]";
+  const currentFontFamily = FONT_MAP[currentDraftSafe.theme?.fontFamily] || FONT_MAP.outfit;
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
 
   if (!isAuthenticated) {
     return (
-      <div style={{ fontFamily: currentFontFamily }} className={`min-h-screen ${iosBg} flex items-center justify-center p-5 relative overflow-hidden transition-colors duration-300`}>
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
+      <div style={{ fontFamily: currentFontFamily }} className={`min-h-screen ${adminThemeStyle.bg} flex items-center justify-center p-5 relative overflow-hidden transition-colors duration-500`}>
+        <div className={`absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gradient-to-br ${adminThemeStyle.glowOrb} rounded-full blur-[120px] pointer-events-none animate-pulse`} />
         
         {showForgotPasswordModal ? (
-          <form onSubmit={handleForgotPasswordSubmit} className={`max-w-sm w-full p-8 rounded-[32px] border text-center space-y-4 shadow-2xl ${iosGroupCard} animate-fade-in`}>
-            <div className="w-16 h-16 rounded-[24px] bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto shadow-md">
+          <form onSubmit={handleForgotPasswordSubmit} className={`max-w-md w-full p-8 sm:p-10 rounded-[36px] border text-center space-y-5 shadow-2xl ${adminThemeStyle.cardBg} animate-fade-in`}>
+            <div className={`w-18 h-18 rounded-[26px] bg-gradient-to-tr ${adminThemeStyle.iconGrad} text-white flex items-center justify-center mx-auto shadow-xl`}>
               <Mail className="w-8 h-8 animate-bounce" />
             </div>
-            <h2 className="text-[22px] font-bold tracking-tight">Recover Password</h2>
-            <p className={`text-[13px] ${iosMuted}`}>Your recovery email is permanently secured to <strong>{currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
+            <h2 className="text-[24px] font-bold tracking-tight">Recover Master PIN</h2>
+            <p className={`text-[13px] ${adminThemeStyle.mutedText} leading-relaxed`}>Your recovery email is secured to <strong>{currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com"}</strong>.</p>
             
             {forgotPasswordStatus && (
-              <div className="p-3.5 rounded-[16px] bg-emerald-500/20 text-emerald-300 text-[13px] font-semibold border border-emerald-500/30">
+              <div className="p-4 rounded-[18px] bg-emerald-500/20 text-emerald-300 text-[13px] font-semibold border border-emerald-500/30">
                 {forgotPasswordStatus}
               </div>
             )}
 
-            <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[14px] rounded-[16px] shadow-lg active:scale-95 transition">Send PIN to Recovery Email</button>
-            <button type="button" onClick={() => setShowForgotPasswordModal(false)} className="text-[13px] text-purple-400 underline">Back to Login</button>
+            <button type="submit" className={`w-full py-4 ${adminThemeStyle.btnPrimary} text-[14px]`}>Send PIN to Recovery Email</button>
+            <button type="button" onClick={() => setShowForgotPasswordModal(false)} className={`text-[13px] ${adminThemeStyle.accentText} underline block mx-auto pt-2`}>Back to PIN Unlock</button>
           </form>
         ) : (
-          <form onSubmit={handleLogin} className={`max-w-sm w-full p-8 rounded-[32px] border text-center space-y-5 shadow-2xl ${iosGroupCard}`}>
-            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-purple-500 to-pink-500 text-white flex items-center justify-center mx-auto shadow-lg">
-              <Lock className="w-8 h-8 animate-bounce" />
+          <form onSubmit={handleLogin} className={`max-w-md w-full p-8 sm:p-10 rounded-[36px] border text-center space-y-6 shadow-2xl ${adminThemeStyle.cardBg}`}>
+            <div className={`w-20 h-20 rounded-[28px] bg-gradient-to-tr ${adminThemeStyle.iconGrad} text-white flex items-center justify-center mx-auto shadow-2xl`}>
+              <Lock className="w-9 h-9" />
             </div>
             <div>
-              <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
-              <p className={`text-[13px] ${iosMuted} mt-1`}>v4.2.0 Production Suite</p>
+              <h2 className="text-[26px] font-bold tracking-tight">Admin Master Console</h2>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-1 font-medium`}>H&F Makeup Studio v4.2.0 Glass Edition</p>
             </div>
-            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono text-purple-400 ${iosInputBg}`} />
+
+            <input 
+              type="password" 
+              placeholder="Enter 4-Digit Security PIN" 
+              value={pinInput} 
+              onChange={e => setPinInput(e.target.value)} 
+              className={`w-full text-center text-[20px] tracking-widest p-4.5 font-mono ${adminThemeStyle.inputBg} rounded-[20px] outline-none shadow-inner border`} 
+            />
             
-            <button type="submit" className={`w-full py-4 ${adminThemeStyle.btnPrimary}`}>Unlock Console</button>
+            <button type="submit" className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} text-[15px]`}>
+              Unlock Glass Console
+            </button>
             
-            <div className="space-y-2.5 pt-3 border-t border-slate-500/20">
+            <div className="space-y-3 pt-3 border-t border-white/10">
               <button
                 type="button"
                 onClick={handleBiometricOrFaceLogin}
-                className={`w-full py-3.5 font-bold text-[13px] text-purple-400 flex items-center justify-center gap-2 rounded-[16px] border border-purple-500/30 ${isAdminDarkMode ? 'bg-white/5' : 'bg-slate-50'}`}
+                className={`w-full py-3.5 font-bold text-[13px] ${adminThemeStyle.accentText} flex items-center justify-center gap-2 rounded-[18px] border border-white/15 bg-white/5 hover:bg-white/10 transition`}
               >
-                <Fingerprint className="w-4 h-4 text-purple-400" />
-                <span>Login with Fingerprint / Face ID</span>
+                <Fingerprint className="w-5 h-5" />
+                <span>Biometric Hardware / Face ID</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowForgotPasswordModal(true)}
-                className="text-[13px] text-purple-400 underline block w-full pt-1"
+                className={`text-[13px] ${adminThemeStyle.accentText} underline block w-full pt-1 opacity-80 hover:opacity-100`}
               >
-                Forgot Password? Send via Email
+                Forgot Password? Send PIN to Email
               </button>
             </div>
           </form>
@@ -1214,25 +1257,26 @@ export default function App() {
   }
 
   return (
-    <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`min-h-screen ${iosBg} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden`}>
-      <div className="absolute top-0 left-1/3 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-full blur-3xl pointer-events-none animate-pulse" />
+    <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`min-h-screen ${adminThemeStyle.bg} pb-36 transition-colors duration-500 relative overflow-x-hidden selection:bg-purple-500/30`}>
+      <div className={`fixed -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br ${adminThemeStyle.glowOrb} rounded-full blur-[140px] pointer-events-none -z-10`} />
+      <div className={`fixed -bottom-40 -right-40 w-[600px] h-[600px] bg-gradient-to-tl ${adminThemeStyle.glowOrb} rounded-full blur-[140px] pointer-events-none -z-10`} />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {popupToast && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-md w-full rounded-[32px] p-7 text-center space-y-4 shadow-2xl relative ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-2xl animate-fade-in">
+          <div className={`max-w-md w-full rounded-[32px] p-7 text-center space-y-4 shadow-2xl relative ${adminThemeStyle.cardBg}`}>
             <button
               onClick={() => setPopupToast(null)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-500/20 flex items-center justify-center text-slate-400 hover:text-white transition"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition"
             >
               <X className="w-4 h-4" />
             </button>
-            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-emerald-400 to-cyan-500 text-neutral-950 flex items-center justify-center mx-auto shadow-lg animate-bounce">
+            <div className={`w-16 h-16 rounded-[24px] bg-gradient-to-tr ${adminThemeStyle.iconGrad} text-white flex items-center justify-center mx-auto shadow-lg animate-bounce`}>
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-[20px] font-bold tracking-tight">{popupToast.title}</h3>
-            <p className={`text-[13px] leading-relaxed ${iosMuted}`}>{popupToast.desc}</p>
+            <p className={`text-[13px] leading-relaxed ${adminThemeStyle.mutedText}`}>{popupToast.desc}</p>
             <button
               onClick={() => setPopupToast(null)}
               className={`w-full py-3.5 ${adminThemeStyle.btnPrimary} text-[14px]`}
@@ -1244,160 +1288,174 @@ export default function App() {
       )}
 
       {deleteConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-sm w-full rounded-[28px] p-6 text-center space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
-            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-rose-500 to-pink-600 text-white flex items-center justify-center mx-auto shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-2xl animate-fade-in">
+          <div className={`max-w-sm w-full rounded-[30px] p-6 text-center space-y-4 shadow-2xl ${adminThemeStyle.cardBg}`}>
+            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-rose-500 to-red-600 text-white flex items-center justify-center mx-auto shadow-lg">
               <AlertTriangle className="w-8 h-8" />
             </div>
-            <h3 className="font-bold text-[18px]">Confirm Deletion</h3>
-            <p className={`text-[13px] ${iosMuted}`}>
-              {deleteConfirmModal.message || "Are you sure you want to delete this item? This action cannot be undone."}
+            <h3 className="font-bold text-[18px]">Confirm Action</h3>
+            <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>
+              {deleteConfirmModal.message || "Are you sure you want to permanently delete this record?"}
             </p>
             <div className="flex gap-2.5 pt-2">
-              <button onClick={() => setDeleteConfirmModal(null)} className={`flex-1 py-3 rounded-[16px] font-bold text-[13px] ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-900'}`}>Cancel</button>
-              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Delete</button>
+              <button onClick={() => setDeleteConfirmModal(null)} className="flex-1 py-3 rounded-[16px] font-bold text-[13px] bg-white/10 text-white hover:bg-white/15">Cancel</button>
+              <button onClick={handleExecuteDelete} className="flex-1 py-3 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Delete</button>
             </div>
           </div>
         </div>
       )}
 
       {rejectModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-lg w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-2xl animate-fade-in">
+          <div className={`max-w-lg w-full rounded-[32px] p-6 sm:p-7 space-y-4 shadow-2xl ${adminThemeStyle.cardBg}`}>
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2">
-                <Ban className="w-5 h-5 text-rose-500" />
-                <h3 className="font-bold text-[18px]">Reject Booking: {rejectModalData.bookingNumber || rejectModalData.clientName}</h3>
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-[14px] bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                  <Ban className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[18px]">Decline Booking</h3>
+                  <p className={`text-[12px] ${adminThemeStyle.mutedText}`}>{rejectModalData.bookingNumber || rejectModalData.clientName}</p>
+                </div>
               </div>
-              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-slate-400"><X className="w-5 h-5" /></button>
+              <button onClick={() => setRejectModalData(null)} className="p-1 rounded-full text-slate-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
 
-            <p className={`text-[13px] ${iosMuted}`}>
-              Are you sure you want to decline this booking for <strong>{rejectModalData.clientName}</strong> on <strong>{rejectModalData.eventDate}</strong>?
+            <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>
+              Client <strong>{rejectModalData.clientName}</strong> will receive this decline status and note on their generated slip.
             </p>
 
             <div>
-              <label className="block text-[11px] font-bold mb-1.5 uppercase tracking-wider">Reason for Rejection:</label>
+              <label className="block text-[11px] font-bold mb-1.5 uppercase tracking-wider text-rose-300">Select or Customize Rejection Reason:</label>
+              <select 
+                onChange={e => setRejectionReasonText(e.target.value)}
+                className={`w-full p-3 rounded-[14px] text-[12px] mb-2 font-medium ${adminThemeStyle.inputBg}`}
+              >
+                {PRE_ADDED_REJECTION_REASONS.map((r, i) => (
+                  <option key={i} value={r} className="text-black">{r}</option>
+                ))}
+              </select>
+
               <textarea
                 rows={3}
                 value={rejectionReasonText}
                 onChange={e => setRejectionReasonText(e.target.value)}
-                className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                className={`w-full p-3.5 rounded-[16px] text-[13px] ${adminThemeStyle.inputBg} border`}
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-500/20">
-              <button onClick={() => setRejectModalData(null)} className="px-4 py-2.5 rounded-[16px] bg-slate-200 text-[13px] font-bold text-slate-700">Cancel</button>
-              <button onClick={handleConfirmRejection} className="px-5 py-2.5 rounded-[16px] bg-rose-600 text-white font-bold text-[13px] shadow-lg">Confirm Rejection</button>
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+              <button onClick={() => setRejectModalData(null)} className="px-4 py-2.5 rounded-[16px] bg-white/10 text-[13px] font-bold text-white hover:bg-white/15">Cancel</button>
+              <button onClick={handleConfirmRejection} className="px-5 py-2.5 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-[13px] shadow-lg">Confirm Decline</button>
             </div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}>
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+      <header className={`sticky top-0 z-40 backdrop-blur-3xl saturate-150 border-b border-white/10 px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-lg bg-black/40`}>
+        <div className="flex items-center gap-3.5 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
             {currentDraftSafe.studioLogo ? (
-              <div className="w-10 h-10 rounded-[14px] bg-white/20 p-1 overflow-hidden shadow-sm shrink-0 border border-purple-500/30">
+              <div className="w-11 h-11 rounded-[16px] bg-white/10 p-1.5 overflow-hidden shadow-inner shrink-0 border border-white/20">
                 <img src={currentDraftSafe.studioLogo} alt="Logo" className="w-full h-full object-contain" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-[14px] bg-gradient-to-tr from-purple-500 to-pink-500 text-white flex items-center justify-center shadow-md shrink-0">
+              <div className={`w-11 h-11 rounded-[16px] bg-gradient-to-tr ${adminThemeStyle.iconGrad} text-white flex items-center justify-center shadow-lg shrink-0`}>
                 <Crown className="w-5 h-5" />
               </div>
             )}
 
             <div>
-              <h1 className="font-bold text-[16px] sm:text-[17px] tracking-tight leading-tight">
-                {currentDraftSafe.studioName || 'H&F Studio Admin'}
+              <h1 className="font-bold text-[17px] tracking-tight leading-tight text-white flex items-center gap-2">
+                {currentDraftSafe.studioName || 'H&F Makeup Studio'}
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 border border-white/10 ${adminThemeStyle.accentText}`}>v4.2</span>
               </h1>
-              <p className={`text-[11px] font-mono ${adminThemeStyle.accentText}`}>v4.2.0 Pro Suite</p>
+              <p className={`text-[11px] font-medium ${adminThemeStyle.mutedText}`}>{currentDraftSafe.artistTagline || 'Beauty, Styled Your Way'}</p>
             </div>
           </div>
 
           <div className="flex sm:hidden items-center gap-2">
-            <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2 rounded-[12px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-slate-100 text-slate-800'}`}>
-              {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-purple-600" />}
-            </button>
-            <button onClick={() => setIsAuthenticated(false)} className="text-[12px] text-rose-500 font-bold px-1 py-1">Lock</button>
+            <button onClick={() => setIsAuthenticated(false)} className="text-[12px] text-rose-400 font-bold px-2 py-1 bg-rose-500/10 rounded-lg border border-rose-500/20">Lock</button>
           </div>
         </div>
 
-        {/* Live Status Banner */}
-        <div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-black/5 shadow-sm text-slate-700'}`}>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span>Next Booking: <strong className={adminThemeStyle.accentText}>{nextConfirmedBooking ? `${nextConfirmedBooking.clientName} (${nextConfirmedBooking.eventDate})` : 'None Confirmed'}</strong></span>
+        {/* Live Status Pill */}
+        <div className={`flex items-center gap-3 px-4 py-2 rounded-[20px] border border-white/10 bg-white/5 text-xs font-medium w-full sm:w-auto justify-center shadow-inner`}>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className={adminThemeStyle.mutedText}>Next: <strong className="text-emerald-300 font-semibold">{nextConfirmedBooking ? `${nextConfirmedBooking.clientName} (${nextConfirmedBooking.eventDate})` : 'None Confirmed'}</strong></span>
           </div>
-          <span className="text-slate-300 dark:text-slate-600">•</span>
+          <span className="text-white/20">•</span>
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-            <span>Pending: <strong className="text-amber-500">{pendingBookingsCount}</strong></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+            <span className={adminThemeStyle.mutedText}>Pending: <strong className="text-amber-300 font-semibold">{pendingBookingsCount}</strong></span>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2.5">
-          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[14px] border ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-black/10'}`}>
-            <ZoomIn className="w-3.5 h-3.5 text-purple-500" />
+        <div className="hidden sm:flex items-center gap-3">
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[16px] border border-white/10 bg-white/5`}>
+            <ZoomIn className={`w-3.5 h-3.5 ${adminThemeStyle.accentText}`} />
             <select
               value={screenZoom}
               onChange={e => setScreenZoom(Number(e.target.value))}
-              className="bg-transparent text-xs font-bold outline-none cursor-pointer"
+              className="bg-transparent text-xs font-bold outline-none cursor-pointer text-white"
             >
-              <option value={80} className="text-black">80%</option>
+              <option value={85} className="text-black">85%</option>
               <option value={100} className="text-black">100%</option>
               <option value={115} className="text-black">115%</option>
-              <option value={130} className="text-black">130%</option>
             </select>
           </div>
 
-          <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-slate-100 text-slate-800 shadow-sm'}`} title="Toggle Day/Night">
-            {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-purple-600" />}
+          <button 
+            onClick={() => setIsAuthenticated(false)} 
+            className="text-[13px] text-rose-400 font-bold hover:bg-rose-500/20 px-3.5 py-1.5 rounded-[14px] bg-rose-500/10 border border-rose-500/20 transition flex items-center gap-1.5"
+          >
+            <Lock className="w-3.5 h-3.5" /> Lock
           </button>
-          <button onClick={() => setIsAuthenticated(false)} className="text-[13px] text-rose-500 font-bold hover:underline px-2 py-1">Lock</button>
         </div>
       </header>
 
-      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           {activeFolderId ? (
             <button
               onClick={closeFolder}
-              className={`px-4 py-2 rounded-[14px] text-[13px] font-bold flex items-center gap-2 ${adminThemeStyle.accentText} ${isAdminDarkMode ? 'bg-white/10' : 'bg-white shadow-sm border border-purple-500/20'}`}
+              className={`px-4 py-2.5 rounded-[18px] text-[13px] font-bold flex items-center gap-2 ${adminThemeStyle.accentText} bg-white/10 hover:bg-white/15 border border-white/15 shadow-md transition active:scale-95`}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Master Dashboard</span>
             </button>
           ) : (
             <div className="flex items-center justify-between w-full">
-              <h3 className={`font-bold text-[13px] uppercase tracking-wider ${iosMuted}`}>
-                {isReorderMode ? 'Reorder Mode Active: Use ⬆️ ⬇️ to move cards' : 'Master Control Dashboard'}
+              <h3 className={`font-bold text-[13px] uppercase tracking-wider ${adminThemeStyle.mutedText} flex items-center gap-2`}>
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                {isReorderMode ? 'Reorder Mode Active: Move Cards Up/Down' : 'Apple Glass Workspace • 2 Cards Per Row'}
               </h3>
               
               <button
                 onClick={() => {
-                  if (isReorderMode) handleSaveSpecificCard("Card Sequence");
+                  if (isReorderMode) handleSaveSpecificCard("Folder Sequence");
                   setIsReorderMode(!isReorderMode);
                 }}
-                className={`px-3.5 py-2 rounded-[12px] text-xs font-bold flex items-center gap-1.5 shadow ${isReorderMode ? 'bg-purple-600 text-white' : 'bg-purple-500/15 text-purple-400 border border-purple-500/30'}`}
+                className={`px-4 py-2 rounded-[16px] text-xs font-bold flex items-center gap-1.5 shadow transition ${isReorderMode ? 'bg-purple-600 text-white' : 'bg-white/10 hover:bg-white/15 text-purple-300 border border-purple-400/30'}`}
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>{isReorderMode ? 'Save Order' : 'Edit Order'}</span>
+                <span>{isReorderMode ? 'Save Layout' : 'Reorder Cards'}</span>
               </button>
             </div>
           )}
 
           {activeFolderObj && (
-            <span className={`text-[13px] font-bold font-mono ${iosMuted}`}>
-              Section: <strong className={isAdminDarkMode ? 'text-white' : 'text-[#1C1C1E]'}>{activeFolderObj.label}</strong>
+            <span className={`text-[13px] font-medium font-mono ${adminThemeStyle.mutedText}`}>
+              Active: <strong className="text-white font-bold">{activeFolderObj.label}</strong>
             </span>
           )}
         </div>
 
-        {/* Dashboard Cards Grid */}
+        {/* 2-COLUMN ILLUSTRATIVE APPLE GLASS GRID */}
         {!activeFolderId && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-5">
             {adminFolders.map((f, index) => {
               const Icon = f.icon;
               const count = f.countKey === 'bookings' ? bookingsList.length : (f.countKey === 'feedbacks' ? feedbacksList.length : null);
@@ -1406,31 +1464,31 @@ export default function App() {
                 <div
                   key={f.id}
                   onClick={() => !isReorderMode && openFolder(f.id)}
-                  className={`p-5 rounded-[28px] transition-all duration-300 cursor-pointer group border flex flex-col justify-between space-y-4 hover:-translate-y-1.5 hover:shadow-[0_15px_40px_rgba(168,85,247,0.2)] ${
+                  className={`p-4 sm:p-6 rounded-[28px] sm:rounded-[32px] transition-all duration-300 cursor-pointer group flex flex-col justify-between space-y-3 sm:space-y-4 hover:-translate-y-1 hover:shadow-2xl relative overflow-hidden ${
                     isReorderMode 
-                      ? 'bg-purple-500/15 ring-2 ring-purple-500 animate-pulse' 
-                      : iosGroupCard
+                      ? 'bg-purple-500/20 ring-2 ring-purple-400 animate-pulse' 
+                      : adminThemeStyle.cardBg
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="w-12 h-12 rounded-[20px] bg-gradient-to-tr from-purple-600 via-pink-600 to-blue-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                      <Icon className="w-6 h-6" />
+                  <div className="flex items-start justify-between relative z-10">
+                    <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-[18px] sm:rounded-[22px] bg-gradient-to-tr ${adminThemeStyle.iconGrad} text-white flex items-center justify-center shadow-lg group-hover:scale-105 group-hover:rotate-3 transition-transform duration-300 border border-white/20`}>
+                      <Icon className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2.2]" />
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       {count !== null && (
-                        <span className="text-[11px] font-mono font-bold bg-purple-500/20 text-purple-400 px-2.5 py-1 rounded-full border border-purple-500/30">
-                          {count} Active
+                        <span className={`text-[10px] sm:text-[11px] font-mono font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-white/15 bg-white/10 ${adminThemeStyle.accentText}`}>
+                          {count}
                         </span>
                       )}
                       
                       {isReorderMode && (
-                        <div className="flex items-center gap-1 bg-black/20 p-1 rounded-[12px]">
+                        <div className="flex items-center gap-1 bg-black/40 p-1 rounded-[14px] border border-white/10">
                           <button
                             type="button"
                             disabled={index === 0}
                             onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'up'); }}
-                            className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-20"
+                            className="p-1 rounded text-slate-300 hover:text-white disabled:opacity-20"
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
                           </button>
@@ -1438,7 +1496,7 @@ export default function App() {
                             type="button"
                             disabled={index === adminFolders.length - 1}
                             onClick={(e) => { e.stopPropagation(); moveFolderOrder(index, 'down'); }}
-                            className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-20"
+                            className="p-1 rounded text-slate-300 hover:text-white disabled:opacity-20"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
                           </button>
@@ -1447,11 +1505,13 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div>
-                    <h4 className="font-bold text-[17px] tracking-tight group-hover:text-purple-400 transition-colors">
+                  <div className="relative z-10">
+                    <h4 className={`font-bold text-[14px] sm:text-[18px] tracking-tight group-hover:${adminThemeStyle.accentText} transition-colors text-white line-clamp-1`}>
                       {f.label}
                     </h4>
-                    <p className={`text-[13px] mt-1 line-clamp-2 leading-relaxed ${iosMuted}`}>{f.desc}</p>
+                    <p className={`text-[11px] sm:text-[13px] mt-1 leading-relaxed line-clamp-2 font-medium ${adminThemeStyle.mutedText}`}>
+                      {f.desc}
+                    </p>
                   </div>
                 </div>
               );
@@ -1461,14 +1521,14 @@ export default function App() {
 
         {/* 1. PACKAGES & RATES MANAGER */}
         {activeFolderId === 'packages_master' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Layers className="w-5 h-5" /> Packages & Rates Master Manager
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Layers className="w-5 h-5" /> Packages & Rates Master
                 </h3>
-                <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Manage full aspect attributes: package display names, descriptions, extra modal details, images, and kit rates all in one place. Changes instantly sync to the client app cards.
+                <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>
+                  Manage package titles, photos, descriptions, skin finish notes and vanity tier pricing.
                 </p>
               </div>
 
@@ -1476,25 +1536,25 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleAddNewPackage}
-                  className="px-4 py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
+                  className="px-4 py-2.5 rounded-[16px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg"
                 >
-                  <Plus className="w-4 h-4" /> Add New Package
+                  <Plus className="w-4 h-4" /> Add Package
                 </button>
 
-                <div className={`inline-flex p-1.5 rounded-[18px] border gap-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                <div className="inline-flex p-1.5 rounded-[20px] border border-white/10 bg-white/5 gap-1">
                   <button
                     type="button"
                     onClick={() => setEditingKitTab('international')}
-                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'international' ? `${adminThemeStyle.btnPrimary} text-white shadow` : iosMuted}`}
+                    className={`px-4 py-2 rounded-[16px] text-xs font-bold transition ${editingKitTab === 'international' ? `${adminThemeStyle.btnPrimary} text-white shadow` : adminThemeStyle.mutedText}`}
                   >
                     👑 Luxury Kit
                   </button>
                   <button
                     type="button"
                     onClick={() => setEditingKitTab('drugstore')}
-                    className={`px-4 py-2 rounded-[14px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? `${adminThemeStyle.btnPrimary} text-white shadow` : iosMuted}`}
+                    className={`px-4 py-2 rounded-[16px] text-xs font-bold transition ${editingKitTab === 'drugstore' ? `${adminThemeStyle.btnPrimary} text-white shadow` : adminThemeStyle.mutedText}`}
                   >
-                    ✨ HD Kit
+                    ✨ HD Classic
                   </button>
                 </div>
               </div>
@@ -1507,16 +1567,15 @@ export default function App() {
                 const pkgPrice = currentDraftSafe.pricingByKit?.[editingKitTab]?.[k] || 0;
 
                 return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[28px] border border-white/10 space-y-4 bg-white/5 backdrop-blur-md relative`}>
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Key: {k}</span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 uppercase font-bold">{editingKitTab}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-white uppercase font-bold">{editingKitTab}</span>
                         <button
                           type="button"
-                          onClick={() => setDeleteConfirmModal({ type: 'single', isPackage: true, kit: editingKitTab, pkgKey: k, message: `Are you sure you want to delete package "${pkgText.name}"?` })}
-                          className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                          title="Delete Package"
+                          onClick={() => setDeleteConfirmModal({ type: 'single', isPackage: true, kit: editingKitTab, pkgKey: k, message: `Delete "${pkgText.name}" package?` })}
+                          className="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1524,7 +1583,7 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-3.5">
-                      <div className="w-20 h-20 rounded-[16px] overflow-hidden bg-neutral-200 border shrink-0 shadow">
+                      <div className="w-20 h-20 rounded-[18px] overflow-hidden bg-neutral-900 border border-white/20 shrink-0 shadow-lg">
                         <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 w-full space-y-2">
@@ -1542,18 +1601,18 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[16px] text-xs font-mono ${adminThemeStyle.inputBg}`}
                         />
-                        <label className={`block text-center py-2.5 rounded-[14px] bg-purple-500/15 ${adminThemeStyle.accentText} text-[11px] font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition`}>
-                          Upload Photo (&lt;20MB)
+                        <label className={`block text-center py-2.5 rounded-[14px] bg-white/10 ${adminThemeStyle.accentText} text-[11px] font-bold cursor-pointer border border-white/10 hover:bg-white/15 transition`}>
+                          Upload Compressed Photo
                           <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
                         </label>
                       </div>
                     </div>
 
-                    <div className="space-y-3 pt-3 border-t border-slate-500/20">
+                    <div className="space-y-3 pt-3 border-t border-white/10">
                       <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Package Display Name</span>
+                        <span className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Package Display Name</span>
                         <input
                           type="text"
                           value={pkgText.name || ''}
@@ -1567,12 +1626,12 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${iosInputBg}`}
+                          className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${adminThemeStyle.inputBg}`}
                         />
                       </div>
 
                       <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Price Rate (₹)</span>
+                        <span className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Price Rate (₹)</span>
                         <input
                           type="number"
                           value={pkgPrice}
@@ -1586,12 +1645,12 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3.5 rounded-[16px] font-mono ${adminThemeStyle.accentText} font-bold text-xs ${iosInputBg}`}
+                          className={`w-full p-3.5 rounded-[16px] font-mono ${adminThemeStyle.accentText} font-bold text-sm ${adminThemeStyle.inputBg}`}
                         />
                       </div>
 
                       <div>
-                        <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description (Card Display)</span>
+                        <span className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Description (Card Display)</span>
                         <textarea
                           rows={2}
                           value={pkgText.desc || ''}
@@ -1605,49 +1664,8 @@ export default function App() {
                               }
                             }
                           })}
-                          className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
+                          className={`w-full p-3.5 rounded-[16px] text-xs ${adminThemeStyle.inputBg}`}
                         />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <div>
-                          <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Skin Finish (Modal Detail)</span>
-                          <input
-                            type="text"
-                            placeholder="e.g. 16-Hour HD Glass"
-                            value={pkgText.skinFinish || ''}
-                            onChange={e => setDraft({
-                              ...currentDraftSafe,
-                              kitText: {
-                                ...(currentDraftSafe.kitText || {}),
-                                [editingKitTab]: {
-                                  ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                  [k]: { ...pkgText, skinFinish: e.target.value }
-                                }
-                              }
-                            })}
-                            className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
-                          />
-                        </div>
-                        <div>
-                          <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Includes (Modal Detail)</span>
-                          <input
-                            type="text"
-                            placeholder="e.g. Full Makeup + Styling"
-                            value={pkgText.includes || ''}
-                            onChange={e => setDraft({
-                              ...currentDraftSafe,
-                              kitText: {
-                                ...(currentDraftSafe.kitText || {}),
-                                [editingKitTab]: {
-                                  ...(currentDraftSafe.kitText?.[editingKitTab] || {}),
-                                  [k]: { ...pkgText, includes: e.target.value }
-                                }
-                              }
-                            })}
-                            className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
-                          />
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -1659,24 +1677,24 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Packages & Rates Master'}
               onClick={() => handleSaveSpecificCard('Packages & Rates Master')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Packages & Rates Master' ? 'Saving...' : 'Save Packages & Rates Master Live'}</span>
+              <span>{savingSection === 'Packages & Rates Master' ? 'Saving Changes...' : 'Save Packages & Rates Master'}</span>
             </button>
           </div>
         )}
 
         {/* 2. VANITY BRANDS MANAGER */}
         {activeFolderId === 'brands_master' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
                   <Star className="w-5 h-5" /> Vanity Brands Manager
                 </h3>
-                <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Manage categories, brand names, and descriptions displayed on the Vanity tab of the customer app.
+                <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>
+                  Manage categories, brand names, and descriptions displayed on the Vanity tab.
                 </p>
               </div>
               <button
@@ -1690,7 +1708,7 @@ export default function App() {
                     ]
                   });
                 }}
-                className="px-4 py-2.5 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
+                className="px-4 py-2.5 rounded-[16px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow"
               >
                 <Plus className="w-4 h-4" /> Add Brand Category
               </button>
@@ -1698,15 +1716,15 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {(currentDraftSafe?.internationalBrands || []).map((brand, idx) => (
-                <div key={idx} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={idx} className={`p-5 rounded-[28px] border border-white/10 space-y-4 bg-white/5`}>
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Item #{idx + 1}</span>
+                    <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Category #{idx + 1}</span>
                     <button
                       type="button"
                       onClick={() => {
                         setDeleteConfirmModal({
                           type: 'single',
-                          message: `Are you sure you want to delete the "${brand.category}" brand card?`,
+                          message: `Delete "${brand.category}" brand card?`,
                           onConfirm: () => {
                             const newBrands = [...(currentDraftSafe.internationalBrands || [])];
                             newBrands.splice(idx, 1);
@@ -1714,8 +1732,7 @@ export default function App() {
                           }
                         });
                       }}
-                      className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                      title="Delete Item"
+                      className="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -1723,45 +1740,42 @@ export default function App() {
 
                   <div className="space-y-3">
                     <div>
-                      <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Category Label</span>
+                      <span className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Category Title</span>
                       <input
                         type="text"
-                        placeholder="e.g. Skin Prep"
                         value={brand.category || ''}
                         onChange={(e) => {
                           const newBrands = [...currentDraftSafe.internationalBrands];
                           newBrands[idx] = { ...newBrands[idx], category: e.target.value };
                           setDraft({ ...currentDraftSafe, internationalBrands: newBrands });
                         }}
-                        className={`w-full p-3.5 rounded-[16px] text-xs font-bold uppercase ${iosInputBg}`}
+                        className={`w-full p-3.5 rounded-[16px] text-xs font-bold uppercase ${adminThemeStyle.inputBg}`}
                       />
                     </div>
                     <div>
-                      <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Brand Names</span>
+                      <span className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Cosmetic Brands</span>
                       <input
                         type="text"
-                        placeholder="e.g. Estée Lauder / Smashbox"
                         value={brand.name || ''}
                         onChange={(e) => {
                           const newBrands = [...currentDraftSafe.internationalBrands];
                           newBrands[idx] = { ...newBrands[idx], name: e.target.value };
                           setDraft({ ...currentDraftSafe, internationalBrands: newBrands });
                         }}
-                        className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}
+                        className={`w-full p-3.5 rounded-[16px] text-xs font-bold ${adminThemeStyle.accentText} ${adminThemeStyle.inputBg}`}
                       />
                     </div>
                     <div>
-                      <span className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Description</span>
+                      <span className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Description</span>
                       <input
                         type="text"
-                        placeholder="e.g. Premium hydration and primer layer."
                         value={brand.desc || ''}
                         onChange={(e) => {
                           const newBrands = [...currentDraftSafe.internationalBrands];
                           newBrands[idx] = { ...newBrands[idx], desc: e.target.value };
                           setDraft({ ...currentDraftSafe, internationalBrands: newBrands });
                         }}
-                        className={`w-full p-3.5 rounded-[16px] text-xs ${iosInputBg}`}
+                        className={`w-full p-3.5 rounded-[16px] text-xs ${adminThemeStyle.inputBg}`}
                       />
                     </div>
                   </div>
@@ -1773,34 +1787,34 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Vanity Brands'}
               onClick={() => handleSaveSpecificCard('Vanity Brands')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Vanity Brands' ? 'Saving...' : 'Save Vanity Brands Live'}</span>
+              <span>{savingSection === 'Vanity Brands' ? 'Saving...' : 'Save Vanity Brands'}</span>
             </button>
           </div>
         )}
 
-        {/* 3. APP VERSION & ROLLBACK MANAGER */}
+        {/* 3. APP VERSION & ROLLBACK */}
         {activeFolderId === 'versions_master' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <GitBranch className="w-5 h-5" /> Live App Version Controller & Safe Rollback
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <GitBranch className="w-5 h-5" /> Live Version Controller & Instant Rollback
                 </h3>
-                <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Control active deployed version of Main App across client devices. Promote staging releases to Live or execute instant fallback rollback.
+                <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>
+                  Control active deployed version across all clients. Promote staging releases to Live.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => {
-                  const ver = prompt("Enter Main App Version Tag (e.g. v3.9.1):");
+                  const ver = prompt("Enter App Version Tag (e.g. v4.2.1):");
                   if (!ver) return;
-                  const label = prompt("Enter Version Title/Label:", "New Main App Build");
-                  const notes = prompt("Enter Release Notes:", "Bug fixes & new features.");
+                  const label = prompt("Enter Version Title/Label:", "New App Build");
+                  const notes = prompt("Enter Release Notes:", "Improvements & design updates.");
                   
                   const updatedList = [
                     { version: ver.trim(), label: label || 'Release Build', releaseDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), status: "staged", notes: notes || '' },
@@ -1811,20 +1825,20 @@ export default function App() {
                     ...currentDraftSafe,
                     appVersionsList: updatedList
                   });
-                  setPopupToast({ title: "Version Staged", desc: `Main App version ${ver} registered. Click 'Make Live' to deploy.` });
+                  setPopupToast({ title: "Version Staged", desc: `App version ${ver} registered.` });
                 }}
-                className={`px-4 py-2.5 rounded-[14px] ${adminThemeStyle.btnPrimary} text-white text-xs font-bold flex items-center gap-1.5 shadow shrink-0`}
+                className={`px-4 py-2.5 rounded-[16px] ${adminThemeStyle.btnPrimary} text-white text-xs font-bold flex items-center gap-1.5 shadow`}
               >
                 <Plus className="w-4 h-4" /> Register New Build
               </button>
             </div>
 
-            <div className={`p-4 rounded-[20px] border flex items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="p-4 rounded-[22px] border border-white/10 bg-white/5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2.5">
-                <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping shrink-0" />
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-500">Currently Active Live Main App Version:</span>
-                  <h4 className={`text-[17px] font-mono font-bold ${adminThemeStyle.accentText}`}>{currentDraftSafe.activeAppVersion || 'v3.9.0'}</h4>
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Current Production Version:</span>
+                  <h4 className={`text-[17px] font-mono font-bold ${adminThemeStyle.accentText}`}>{currentDraftSafe.activeAppVersion || 'v4.2.0'}</h4>
                 </div>
               </div>
             </div>
@@ -1834,17 +1848,17 @@ export default function App() {
                 const isCurrentLive = currentDraftSafe.activeAppVersion === verItem.version;
                 
                 return (
-                  <div key={vIdx} className={`p-5 rounded-[22px] border space-y-3 transition-all ${isCurrentLive ? 'border-emerald-500/50 bg-emerald-500/10' : (isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200')}`}>
+                  <div key={vIdx} className={`p-5 rounded-[26px] border space-y-3 transition-all ${isCurrentLive ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-white/10 bg-white/5'}`}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <span className={`font-mono font-bold text-[16px] ${adminThemeStyle.accentText}`}>{verItem.version}</span>
-                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${isCurrentLive ? 'bg-emerald-500 text-neutral-950 shadow' : 'bg-slate-200 text-slate-700'}`}>
-                            {isCurrentLive ? '🟢 LIVE PRODUCTION' : (verItem.status === 'staged' ? '🟡 STAGED' : '⚪ ARCHIVED / ROLLBACK')}
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${isCurrentLive ? 'bg-emerald-500 text-neutral-950 font-bold' : 'bg-white/10 text-slate-300'}`}>
+                            {isCurrentLive ? '🟢 LIVE PRODUCTION' : (verItem.status === 'staged' ? '🟡 STAGED' : '⚪ ARCHIVED')}
                           </span>
-                          <span className={`text-[11px] font-mono ${iosMuted}`}>Released: {verItem.releaseDate}</span>
+                          <span className={`text-[11px] font-mono ${adminThemeStyle.mutedText}`}>Released: {verItem.releaseDate}</span>
                         </div>
-                        <h4 className="font-bold text-[14px]">{verItem.label}</h4>
+                        <h4 className="font-bold text-[14px] text-white">{verItem.label}</h4>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
@@ -1856,11 +1870,11 @@ export default function App() {
                                 ...currentDraftSafe,
                                 activeAppVersion: verItem.version
                               });
-                              setPopupToast({ title: "Rollback Triggered", desc: `Main App target switched to ${verItem.version}. Click Save below to finalize.` });
+                              setPopupToast({ title: "Target Switched", desc: `Target switched to ${verItem.version}. Click Save to apply.` });
                             }}
                             className="px-4 py-2 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow flex items-center gap-1.5 transition active:scale-95"
                           >
-                            <Check className="w-3.5 h-3.5" /> Rollback / Make Live
+                            <Check className="w-3.5 h-3.5" /> Make Live
                           </button>
                         )}
                         
@@ -1870,15 +1884,14 @@ export default function App() {
                           onClick={() => {
                             setDeleteConfirmModal({
                               type: 'single',
-                              message: `Are you sure you want to remove release ${verItem.version}?`,
+                              message: `Remove release ${verItem.version}?`,
                               onConfirm: () => {
                                 const list = (currentDraftSafe.appVersionsList || []).filter((_, i) => i !== vIdx);
                                 setDraft({ ...currentDraftSafe, appVersionsList: list });
                               }
                             });
                           }}
-                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px] disabled:opacity-20"
-                          title="Delete"
+                          className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-[12px] disabled:opacity-20"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1886,7 +1899,7 @@ export default function App() {
                     </div>
 
                     {verItem.notes && (
-                      <p className={`text-[12px] leading-relaxed p-3 rounded-[14px] ${isAdminDarkMode ? 'bg-black/30 text-slate-300' : 'bg-white text-slate-700 shadow-sm'}`}>
+                      <p className="text-[12px] leading-relaxed p-3 rounded-[16px] bg-black/30 text-slate-300">
                         <strong>Release Notes:</strong> {verItem.notes}
                       </p>
                     )}
@@ -1899,143 +1912,143 @@ export default function App() {
               type="button"
               disabled={savingSection === 'App Versions'}
               onClick={() => handleSaveSpecificCard('App Versions')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'App Versions' ? 'Saving...' : 'Save Main App Version Rollback Live'}</span>
+              <span>{savingSection === 'App Versions' ? 'Saving...' : 'Save App Version Status'}</span>
             </button>
           </div>
         )}
 
         {/* 4. GENERAL & SECURITY SETTINGS */}
         {activeFolderId === 'general' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div>
-              <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+              <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
                 <Settings className="w-5 h-5" /> General & Security Settings
               </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure Biometric, Face ID, Fingerprint Scan Registration, Password & Telegram Bot Notification credentials.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>Configure Biometrics, Telegram bot tokens, and master password credentials.</p>
             </div>
 
-            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+            <div className={`p-5 rounded-[26px] border border-white/10 space-y-4 bg-white/5`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2 text-white">
                 <Send className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Telegram Bot Notification Settings
               </h4>
-              <p className={`text-[13px] ${iosMuted}`}>Enter your official Telegram Bot API Token and Chat ID to receive instant booking alerts.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Enter your Telegram Bot API Token and Chat ID to receive instant customer booking notifications.</p>
 
               <div className="space-y-3">
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Telegram Bot API Token</label>
+                  <label className={`block text-[11px] font-bold mb-1 ${adminThemeStyle.mutedText}`}>Telegram Bot API Token</label>
                   <input
                     type="text"
                     placeholder="e.g. 8891500480:AAGvxL16..."
                     value={currentDraftSafe.telegramBotToken || ''}
                     onChange={e => setDraft({ ...currentDraftSafe, telegramBotToken: e.target.value })}
-                    className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${adminThemeStyle.inputBg}`}
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Telegram Chat ID</label>
+                  <label className={`block text-[11px] font-bold mb-1 ${adminThemeStyle.mutedText}`}>Telegram Chat ID</label>
                   <input
                     type="text"
                     placeholder="e.g. 8891500480"
                     value={currentDraftSafe.telegramChatId || ''}
                     onChange={e => setDraft({ ...currentDraftSafe, telegramChatId: e.target.value })}
-                    className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${adminThemeStyle.inputBg}`}
                   />
                 </div>
               </div>
             </div>
 
-            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <Fingerprint className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Hardware Fingerprint Scanner Integration
+            <div className={`p-5 rounded-[26px] border border-white/10 space-y-4 bg-white/5`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2 text-white">
+                <Fingerprint className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Hardware Biometrics Integration
               </h4>
-              <p className={`text-[13px] ${iosMuted}`}>Scan and save your fingerprint data locally via your device biometric hardware.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Scan and save your fingerprint profile locally via your device sensor.</p>
 
-              <div className="p-4 rounded-[18px] bg-purple-500/10 border border-purple-500/20 text-center space-y-3">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center mx-auto shadow-md">
+              <div className="p-4 rounded-[20px] bg-white/5 border border-white/10 text-center space-y-3">
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-tr ${adminThemeStyle.iconGrad} text-white flex items-center justify-center mx-auto shadow-md`}>
                   <Fingerprint className={`w-7 h-7 ${isScanningFinger ? 'animate-pulse text-amber-300' : ''}`} />
                 </div>
                 
                 {isScanningFinger ? (
                   <div className="space-y-1.5">
-                    <p className="text-[13px] font-bold text-amber-500">Scanning Fingerprint... ({scanProgress}%)</p>
-                    <div className="w-48 h-2 bg-slate-200 rounded-full mx-auto overflow-hidden">
-                      <div className="h-full bg-amber-500 transition-all duration-300" style={{ width: `${scanProgress}%` }} />
+                    <p className="text-[13px] font-bold text-amber-400">Scanning Hardware Sensor... ({scanProgress}%)</p>
+                    <div className="w-48 h-2 bg-white/10 rounded-full mx-auto overflow-hidden">
+                      <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${scanProgress}%` }} />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className={`text-[12px] ${iosMuted}`}>
-                      {currentDraftSafe.registeredFingerprintHash ? "✅ Hardware Fingerprint Registered & Saved Securely" : "⚠️ No fingerprint scanned yet"}
+                    <p className={`text-[12px] ${adminThemeStyle.mutedText}`}>
+                      {currentDraftSafe.registeredFingerprintHash ? "✅ Biometrics Successfully Registered" : "⚠️ No fingerprint recorded"}
                     </p>
                     <button
                       type="button"
                       onClick={handleRegisterFingerprintScan}
-                      className="px-5 py-2.5 rounded-[14px] bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold text-[13px] shadow active:scale-95 transition"
+                      className={`px-5 py-2.5 rounded-[16px] ${adminThemeStyle.btnPrimary} text-white font-bold text-[13px] shadow active:scale-95 transition`}
                     >
-                      {currentDraftSafe.registeredFingerprintHash ? "Re-Scan & Update Fingerprint" : "Scan & Save Fingerprint"}
+                      {currentDraftSafe.registeredFingerprintHash ? "Re-Scan Biometrics" : "Register Hardware Fingerprint"}
                     </button>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
-                <Mail className="w-4 h-4 text-amber-500" /> Permanent Recovery Email ID
+            <div className={`p-5 rounded-[26px] border border-white/10 space-y-3 bg-white/5`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2 text-white">
+                <Mail className="w-4 h-4 text-amber-400" /> Permanent Recovery Email ID
               </h4>
-              <p className={`text-[13px] ${iosMuted}`}>If you forget your PIN, recovery instructions and current PIN are dispatched here.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Emergency PIN reset instructions are dispatched to this email address.</p>
               
               <input
                 type="email"
                 value={currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com"}
                 onChange={e => setDraft({ ...currentDraftSafe, recoveryEmail: e.target.value })}
-                className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold ${adminThemeStyle.accentText} border ${iosInputBg}`}
+                className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] font-bold ${adminThemeStyle.accentText} border ${adminThemeStyle.inputBg}`}
               />
             </div>
 
-            <form onSubmit={handlePasswordChange} className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
+            <form onSubmit={handlePasswordChange} className={`p-5 rounded-[26px] border border-white/10 space-y-4 bg-white/5`}>
+              <h4 className="font-bold text-[14px] uppercase flex items-center gap-2 text-white">
                 <Key className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Change Admin PIN Password
               </h4>
 
               <div className="space-y-3">
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Current PIN</label>
+                  <label className={`block text-[11px] font-bold mb-1 ${adminThemeStyle.mutedText}`}>Current PIN</label>
                   <input
                     type="password"
                     required
                     placeholder="Enter current PIN"
                     value={oldPinInput}
                     onChange={e => setOldPinInput(e.target.value)}
-                    className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] ${adminThemeStyle.inputBg}`}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>New PIN (Min 4 digits)</label>
+                    <label className={`block text-[11px] font-bold mb-1 ${adminThemeStyle.mutedText}`}>New PIN</label>
                     <input
                       type="password"
                       required
-                      placeholder="Enter new PIN"
+                      placeholder="Min 4 digits"
                       value={newPinInput}
                       onChange={e => setNewPinInput(e.target.value)}
-                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${adminThemeStyle.inputBg}`}
                     />
                   </div>
                   <div>
-                    <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Confirm New PIN</label>
+                    <label className={`block text-[11px] font-bold mb-1 ${adminThemeStyle.mutedText}`}>Confirm New PIN</label>
                     <input
                       type="password"
                       required
-                      placeholder="Confirm new PIN"
+                      placeholder="Repeat new PIN"
                       value={confirmPinInput}
                       onChange={e => setConfirmPinInput(e.target.value)}
-                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] ${adminThemeStyle.inputBg}`}
                     />
                   </div>
                 </div>
@@ -2053,68 +2066,68 @@ export default function App() {
               type="button"
               disabled={savingSection === 'General Settings'}
               onClick={() => handleSaveSpecificCard('General Settings')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'General Settings' ? 'Saving...' : 'Save General & Security Settings Live'}</span>
+              <span>{savingSection === 'General Settings' ? 'Saving...' : 'Save General Settings'}</span>
             </button>
           </div>
         )}
 
         {/* 5. LIVE BOOKINGS QUEUE */}
         {activeFolderId === 'bookings' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className={`font-bold text-[16px] ${adminThemeStyle.accentText}`}>Incoming Customer Bookings Queue</h3>
-                <p className={`text-[13px] ${iosMuted}`}>Filter, search by name/phone/no, select all, or delete multiple records.</p>
+                <h3 className={`font-bold text-[19px] ${adminThemeStyle.accentText}`}>Live Customer Appointments Queue</h3>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Accept, reject, manage records, or export status-aware JPG receipts.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-purple-500/20 text-purple-400 px-3.5 py-1.5 rounded-full shadow-sm border border-purple-500/30">
-                {filteredBookingsList.length} / {bookingsList.length} Bookings
+              <span className={`text-[13px] font-mono font-bold px-4 py-1.5 rounded-full border border-white/15 bg-white/10 ${adminThemeStyle.accentText}`}>
+                {filteredBookingsList.length} of {bookingsList.length} Appointments
               </span>
             </div>
 
-            <div className={`p-4 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-5 rounded-[28px] border border-white/10 space-y-4 bg-white/5 backdrop-blur-md`}>
               <div className="relative">
-                <Search className={`absolute left-3.5 top-3.5 w-4 h-4 ${iosMuted}`} />
+                <Search className={`absolute left-4 top-3.5 w-4 h-4 ${adminThemeStyle.mutedText}`} />
                 <input
                   type="text"
-                  placeholder="Search by client name, phone number, or booking #..."
+                  placeholder="Search by client name, mobile number, or booking #..."
                   value={bookingSearchQuery}
                   onChange={e => setBookingSearchQuery(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 text-[13px] outline-none ${iosInputBg}`}
+                  className={`w-full pl-11 pr-4 py-3.5 text-[13px] outline-none ${adminThemeStyle.inputBg} rounded-[18px]`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Filter by Status</label>
+                  <label className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Filter by Booking Status</label>
                   <select
                     value={bookingStatusFilter}
                     onChange={e => setBookingStatusFilter(e.target.value)}
-                    className={`w-full p-3 text-[13px] font-bold outline-none ${iosInputBg}`}
+                    className={`w-full p-3.5 text-[13px] font-bold outline-none ${adminThemeStyle.inputBg} rounded-[18px]`}
                   >
                     <option value="all" className="text-black">🌟 All Statuses</option>
                     <option value="confirmed" className="text-black">✅ Confirmed / Accepted</option>
                     <option value="pending" className="text-black">⏳ Pending Review</option>
-                    <option value="rejected" className="text-black">❌ Cancelled / Rejected</option>
+                    <option value="rejected" className="text-black">❌ Declined / Cancelled</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Filter by Event Date</label>
+                  <label className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Filter by Event Date</label>
                   <div className="flex gap-2">
                     <input
                       type="date"
                       value={bookingDateFilter}
                       onChange={e => setBookingDateFilter(e.target.value)}
-                      className={`flex-1 p-3 text-[13px] outline-none ${iosInputBg}`}
+                      className={`flex-1 p-3.5 text-[13px] outline-none ${adminThemeStyle.inputBg} rounded-[18px]`}
                     />
                     {bookingDateFilter && (
                       <button
                         type="button"
                         onClick={() => setBookingDateFilter('')}
-                        className="px-3.5 py-2.5 rounded-[14px] bg-slate-200 text-xs font-bold text-slate-700"
+                        className="px-4 py-2.5 rounded-[16px] bg-white/15 text-xs font-bold text-white"
                       >
                         Clear
                       </button>
@@ -2123,7 +2136,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-slate-500/20">
+              <div className="flex items-center justify-between pt-2 border-t border-white/10">
                 <button
                   type="button"
                   onClick={handleToggleSelectAll}
@@ -2134,13 +2147,13 @@ export default function App() {
                   ) : (
                     <Square className="w-4 h-4 text-slate-400" />
                   )}
-                  <span>Select All Visible ({filteredBookingsList.length})</span>
+                  <span>Select Visible ({filteredBookingsList.length})</span>
                 </button>
 
                 {selectedBookings.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setDeleteConfirmModal({ type: 'batch', message: `Are you sure you want to delete ${selectedBookings.length} selected bookings?` })}
+                    onClick={() => setDeleteConfirmModal({ type: 'batch', message: `Delete ${selectedBookings.length} selected appointments?` })}
                     className="px-4 py-2 rounded-[14px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md active:scale-95 flex items-center gap-1.5 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -2151,19 +2164,18 @@ export default function App() {
             </div>
 
             {filteredBookingsList.length === 0 ? (
-              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No bookings match the search or filter criteria.</p>
+              <p className={`text-[14px] py-14 text-center ${adminThemeStyle.mutedText}`}>No appointments found matching this filter.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filteredBookingsList.map(b => {
                   const isSelected = selectedBookings.includes(b.id);
-                  const conflictingConfirmedBooking = b.status === 'pending' 
-                    ? bookingsList.find(other => other.id !== b.id && other.eventDate === b.eventDate && other.status === 'confirmed')
-                    : null;
+                  const isDeclined = b.status === 'rejected';
+                  const isConfirmed = b.status === 'confirmed';
 
                   return (
-                    <div key={b.id} className={`p-5 rounded-[24px] border space-y-3.5 transition-all ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'} ${isSelected ? 'ring-2 ring-purple-500' : ''} ${conflictingConfirmedBooking ? 'ring-2 ring-rose-500/60' : ''}`}>
+                    <div key={b.id} className={`p-6 rounded-[30px] border border-white/10 space-y-4 bg-white/5 backdrop-blur-md transition-all ${isSelected ? 'ring-2 ring-purple-400' : ''}`}>
                       <div className="flex justify-between items-start">
-                        <div className="flex items-start gap-2.5 min-w-0">
+                        <div className="flex items-start gap-3 min-w-0">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -2178,156 +2190,83 @@ export default function App() {
                           />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`font-mono text-[12px] font-bold ${adminThemeStyle.accentText} bg-purple-500/10 px-2.5 py-0.5 rounded-[8px]`}>
-                                {b.bookingNumber || '#HF-PENDING'}
+                              <span className={`font-mono text-[12px] font-bold ${adminThemeStyle.accentText} bg-white/10 px-2.5 py-0.5 rounded-[10px]`}>
+                                {b.bookingNumber || '#HF-RECORD'}
                               </span>
-                              <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
-                                b.status === 'confirmed' ? 'bg-emerald-500/20 text-emerald-600' : 
-                                b.status === 'rejected' ? 'bg-rose-500/20 text-rose-600' : 
-                                'bg-amber-500/20 text-amber-600'
+                              <span className={`text-[10px] font-bold uppercase px-3 py-0.5 rounded-full ${
+                                isConfirmed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 
+                                isDeclined ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 
+                                'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                               }`}>
-                                {b.status === 'confirmed' ? '✅ Confirmed' : b.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
+                                {isConfirmed ? '✅ Confirmed' : isDeclined ? '❌ Declined' : '⏳ Pending'}
                               </span>
                             </div>
                             
-                            <h4 className="font-bold text-[16px] mt-1.5 truncate">{b.clientName}</h4>
-                            <p className={`text-[12px] font-mono ${iosMuted}`}>📞 {b.clientPhone}</p>
+                            <h4 className="font-bold text-[17px] mt-1.5 text-white truncate">{b.clientName}</h4>
+                            <p className={`text-[12px] font-mono ${adminThemeStyle.mutedText}`}>📞 {b.clientPhone}</p>
                           </div>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => setDeleteConfirmModal({ type: 'single', isBooking: true, id: b.id, message: `Are you sure you want to delete booking for ${b.clientName}?` })}
-                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-[12px]"
-                          title="Delete Booking"
+                          onClick={() => setDeleteConfirmModal({ type: 'single', isBooking: true, id: b.id, message: `Delete booking record for ${b.clientName}?` })}
+                          className="p-2 text-rose-400 hover:bg-rose-500/20 rounded-[14px]"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
 
-                      {conflictingConfirmedBooking && (
-                        <div className="p-3 rounded-[14px] bg-rose-500/15 text-rose-700 text-[12px] space-y-0.5">
-                          <div className="flex items-center gap-1.5 font-bold">
-                            <AlertTriangle className="w-4 h-4 shrink-0" />
-                            <span>STUDIO BUSY FOR THIS DATE!</span>
+                      {isDeclined && b.rejectionReason && (
+                        <div className="p-3.5 rounded-[18px] bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[12px] space-y-1">
+                          <div className="font-bold flex items-center gap-1.5">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <span>Rejection Reason Attached:</span>
                           </div>
-                          <p className="text-[11px]">You already have Confirmed Booking <strong>{conflictingConfirmedBooking.bookingNumber || conflictingConfirmedBooking.clientName}</strong> on {b.eventDate}.</p>
+                          <p className="leading-relaxed text-rose-200">{b.rejectionReason}</p>
                         </div>
                       )}
 
-                      <div className={`text-[13px] space-y-2 border-t border-b py-3 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
-                        {(() => {
-                          const mainPackagePrice = Number(b.basePackagePrice || 0);
-                          const zoneFee = Number(b.zoneFee || 0);
-                          const mainMakeoverTotal = mainPackagePrice + zoneFee;
-                          const guests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
-                          const guestGross = Number(b.extraGuestsCost || 0);
-                          const guestDiscount = Number(b.guestDiscountSaved || 0);
-                          const couponDiscount = Number(b.couponDiscountAmount || 0) || (
-                            b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - guestDiscount) : 0
-                          );
-                          const totalBeforeDiscounts = mainMakeoverTotal + guestGross;
-                          const totalDiscounts = Math.max(0, guestDiscount + couponDiscount);
-                          const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
-                          const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
-
-                          return (
-                            <>
-                              <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-sky-500/10 border-sky-500/20' : 'bg-sky-50 border-sky-200'}`}>
-                                <div className="flex justify-between items-center font-bold text-sky-500">
-                                  <span>1. Main Makeover Package:</span>
-                                  <span className="font-mono">{money(mainMakeoverTotal)}</span>
-                                </div>
-                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Vanity:</span><span className="font-medium text-right">{b.kitType || 'Luxury Vanity Kit'}</span></div>
-                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Package:</span><span className="font-medium text-right">{b.packageName || 'Bridal Makeup'}</span></div>
-                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Package Price:</span><span className="font-mono">{money(mainPackagePrice)}</span></div>
-                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Travel Fee ({b.zoneName || 'Venue Location'}):</span><span className="font-mono">{money(zoneFee)}</span></div>
-                                <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-sky-400">
-                                  <span>Main Makeover Package Total:</span><span className="font-mono">{money(mainMakeoverTotal)}</span>
-                                </div>
-                              </div>
-
-                              <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-200'}`}>
-                                <div className="flex justify-between items-center font-bold text-purple-500">
-                                  <span>2. Additional Family & Guest Makeovers ({guests.length || Number(b.extraGuestsCount || 0)}):</span>
-                                  <span className="font-mono">{money(guestGross)}</span>
-                                </div>
-                                {guests.length > 0 ? guests.map((g, gIdx) => {
-                                  const guestVanity = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'International Luxury Vanity Kit' : 'Premium HD Kit');
-                                  const guestPackage = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
-                                  const guestPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
-                                  return (
-                                    <div key={gIdx} className="p-2 mt-1 rounded-[12px] bg-white/5 border border-white/5 space-y-1">
-                                      <div className="font-bold text-[11px] text-purple-400">Makeover #{gIdx + 1}</div>
-                                      <div className="flex justify-between gap-3"><span className={iosMuted}>• Vanity:</span><span className="font-medium text-right">{guestVanity}</span></div>
-                                      <div className="flex justify-between gap-3"><span className={iosMuted}>• Package:</span><span className="font-medium text-right">{guestPackage}</span></div>
-                                      <div className="flex justify-between gap-3"><span className={iosMuted}>• Price:</span><span className="font-mono text-emerald-500">{money(guestPrice)}</span></div>
-                                    </div>
-                                  );
-                                }) : <span className={`text-[11px] ${iosMuted}`}>No additional family or guest makeovers.</span>}
-                                <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-purple-400">
-                                  <span>Additional Family & Guest Makeovers Total:</span><span className="font-mono">{money(guestGross)}</span>
-                                </div>
-                              </div>
-
-                              <div className={`flex justify-between items-center p-3 rounded-[14px] font-bold ${isAdminDarkMode ? 'bg-white/10' : 'bg-slate-100'}`}>
-                                <span>Booking Total Before Discounts:</span><span className="font-mono">{money(totalBeforeDiscounts)}</span>
-                              </div>
-
-                              <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
-                                <div className="font-bold text-emerald-500">3. Discounts & Offers</div>
-                                {guestDiscount > 0 && (
-                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Additional Family & Guest Makeovers Discount:</span><span className="font-mono text-emerald-500">-{money(guestDiscount)}</span></div>
-                                )}
-                                {b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0 && (
-                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Coupon Code ({b.appliedCoupon}):</span><span className="font-mono text-emerald-500">-{money(couponDiscount)}</span></div>
-                                )}
-                                {guestDiscount === 0 && couponDiscount === 0 && <div className={`text-[11px] ${iosMuted}`}>• No discounts applied.</div>}
-                                <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-emerald-500">
-                                  <span>Total Discounts:</span><span className="font-mono">-{money(totalDiscounts)}</span>
-                                </div>
-                              </div>
-
-                              <div className="flex justify-between items-center pt-2 font-bold text-[15px]">
-                                <span>Final Amount Payable:</span>
-                                <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
-                              </div>
-
-                              <div className="flex justify-between gap-3 pt-1"><span className={iosMuted}>Venue Location:</span><span className="font-medium text-right">{b.zoneName || 'Not Provided'}</span></div>
-                              <div className="flex justify-between gap-3"><span className={iosMuted}>Address:</span><span className="truncate max-w-[220px] text-right">{b.venueAddress || 'Not Provided'}</span></div>
-                            </>
-                          );
-                        })()}
-
-                        {b.rejectionReason && (
-                          <div className="p-2.5 rounded-[10px] bg-rose-500/15 text-rose-700 text-[11px]">
-                            <strong>Rejection Note:</strong> {b.rejectionReason}
-                          </div>
-                        )}
+                      <div className="text-[13px] space-y-2 border-t border-b border-white/10 py-3.5">
+                        <div className="flex justify-between gap-3">
+                          <span className={adminThemeStyle.mutedText}>Event Date:</span>
+                          <span className="font-mono font-bold text-white">{b.eventDate}</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                          <span className={adminThemeStyle.mutedText}>Look & Vanity:</span>
+                          <span className="font-semibold text-right text-slate-200">{b.packageName} ({b.kitType})</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                          <span className={adminThemeStyle.mutedText}>Total Payable:</span>
+                          <span className={`font-mono font-bold ${adminThemeStyle.accentText} text-[15px]`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span>
+                        </div>
+                        <div className="flex justify-between gap-3">
+                          <span className={adminThemeStyle.mutedText}>Venue:</span>
+                          <span className="text-right truncate max-w-[200px] text-slate-300">{b.venueAddress || b.zoneName}</span>
+                        </div>
                       </div>
 
-                      <div className="space-y-2 pt-1">
+                      <div className="space-y-2.5 pt-1">
                         <button
                           type="button"
                           onClick={() => handleAcceptBookingWhatsApp(b)}
-                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[14px] shadow-sm flex items-center justify-center gap-1.5 transition"
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[16px] shadow flex items-center justify-center gap-1.5 transition"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
+                          <span>{isConfirmed ? 'Resend WhatsApp Confirmation Slip' : 'Accept & Dispatch WhatsApp Slip'}</span>
                         </button>
 
                         <div className="grid grid-cols-3 gap-2">
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'confirmed')}
-                            className="py-2.5 bg-blue-500/15 text-blue-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
+                            className="py-2.5 bg-blue-500/20 text-blue-300 font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1 border border-blue-500/30"
                           >
                             <Check className="w-3 h-3" /> Accept
                           </button>
                           <button
                             type="button"
                             onClick={() => handleManualStatusChange(b.id, 'pending')}
-                            className="py-2.5 bg-amber-500/15 text-amber-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
+                            className="py-2.5 bg-amber-500/20 text-amber-300 font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1 border border-amber-500/30"
                           >
                             <RotateCcw className="w-3 h-3" /> Pending
                           </button>
@@ -2337,7 +2276,7 @@ export default function App() {
                               setRejectModalData(b);
                               setRejectionReasonText(PRE_ADDED_REJECTION_REASONS[0]);
                             }}
-                            className="py-2.5 bg-rose-500/15 text-rose-600 font-bold text-[11px] rounded-[12px] flex items-center justify-center gap-1"
+                            className="py-2.5 bg-rose-500/20 text-rose-300 font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1 border border-rose-500/30"
                           >
                             <Ban className="w-3 h-3" /> Reject
                           </button>
@@ -2346,10 +2285,10 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className="w-full py-2.5 bg-slate-200/80 hover:bg-slate-300 text-slate-800 font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1.5 transition"
+                          className={`w-full py-3 bg-white/10 hover:bg-white/15 text-white font-bold text-[12px] rounded-[16px] flex items-center justify-center gap-2 transition border border-white/15 shadow-sm`}
                         >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Download Status Slip (.JPG)</span>
+                          <Download className="w-4 h-4 text-purple-300" />
+                          <span>Download {b.status.toUpperCase()} Slip (.JPG)</span>
                         </button>
                       </div>
                     </div>
@@ -2360,27 +2299,27 @@ export default function App() {
           </div>
         )}
 
-        {/* 6. FEEDBACKS */}
+        {/* 6. CLIENT FEEDBACKS */}
         {activeFolderId === 'feedbacks' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-5 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <MessageSquare className="w-5 h-5" /> Client Feedback & Suggestions Box
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <MessageSquare className="w-5 h-5" /> Client Reviews & Suggestions
                 </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Reviews, ratings, and creative suggestions submitted by clients.</p>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Customer testimonials and ratings submitted via app.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-purple-500/20 text-purple-400 px-3.5 py-1.5 rounded-full border border-purple-500/30">
+              <span className={`text-[13px] font-mono font-bold px-3.5 py-1.5 rounded-full border border-white/15 bg-white/10 ${adminThemeStyle.accentText}`}>
                 {feedbacksList.length} Feedbacks
               </span>
             </div>
 
             {feedbacksList.length === 0 ? (
-              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No client feedback submitted yet.</p>
+              <p className={`text-[14px] py-14 text-center ${adminThemeStyle.mutedText}`}>No client feedback records found.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {feedbacksList.map(item => (
-                  <div key={item.id} className={`p-4.5 rounded-[20px] border space-y-2.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={item.id} className="p-5 rounded-[26px] border border-white/10 space-y-3 bg-white/5">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex items-center gap-1 text-amber-400">
@@ -2388,20 +2327,20 @@ export default function App() {
                             <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
                           ))}
                         </div>
-                        <h4 className="font-bold text-[15px] mt-1">{item.clientName}</h4>
+                        <h4 className="font-bold text-[15px] mt-1 text-white">{item.clientName}</h4>
                         {item.clientPhone && item.clientPhone !== 'Not Provided' && (
-                          <p className={`text-[11px] font-mono ${iosMuted}`}>📞 {item.clientPhone}</p>
+                          <p className={`text-[11px] font-mono ${adminThemeStyle.mutedText}`}>📞 {item.clientPhone}</p>
                         )}
                       </div>
-                      <button onClick={() => setDeleteConfirmModal({ type: 'single', isFeedback: true, id: item.id, message: `Are you sure you want to delete feedback from ${item.clientName}?` })} className="p-1 text-rose-500 hover:bg-rose-500/10 rounded-lg"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => setDeleteConfirmModal({ type: 'single', isFeedback: true, id: item.id, message: `Delete feedback from ${item.clientName}?` })} className="p-1.5 text-rose-400 hover:bg-rose-500/20 rounded-lg"><Trash2 className="w-4 h-4" /></button>
                     </div>
 
-                    <p className={`text-[13px] leading-relaxed p-3.5 rounded-[16px] ${isAdminDarkMode ? 'bg-black/30 text-slate-300' : 'bg-white text-slate-800 shadow-sm'}`}>
+                    <p className="text-[13px] leading-relaxed p-3.5 rounded-[18px] bg-black/30 text-slate-200">
                       "{item.message}"
                     </p>
 
                     <div className="flex justify-end">
-                      <span className={`text-[10px] font-mono ${iosMuted}`}>
+                      <span className={`text-[10px] font-mono ${adminThemeStyle.mutedText}`}>
                         {item.submittedAt ? new Date(item.submittedAt.toDate?.() || item.submittedAt).toLocaleDateString() : 'Recent'}
                       </span>
                     </div>
@@ -2414,25 +2353,25 @@ export default function App() {
 
         {/* 7. AVAILABILITY CALENDAR */}
         {activeFolderId === 'calendar_view' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Calendar className="w-5 h-5" /> Interactive Monthly Booking Calendar
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Calendar className="w-5 h-5" /> Booking Matrix Calendar
                 </h3>
-                <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Visual color tags show free vs booked dates (🟢 Green = Confirmed / Busy, 🟡 Amber = Pending).
+                <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>
+                  Color tags indicate reserved slots (🟢 Confirmed, 🟡 Pending).
                 </p>
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2.5 rounded-[14px] bg-slate-200 text-purple-600">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2.5 rounded-[14px] bg-white/10 hover:bg-white/15 text-white">
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-bold text-[14px] font-mono min-w-[130px] text-center">
+                <span className="font-bold text-[14px] font-mono min-w-[130px] text-center text-white">
                   {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2.5 rounded-[14px] bg-slate-200 text-purple-600">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2.5 rounded-[14px] bg-white/10 hover:bg-white/15 text-white">
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -2440,11 +2379,11 @@ export default function App() {
 
             <div className="grid grid-cols-7 gap-2 text-center">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                <span key={d} className={`text-[11px] font-bold py-1 uppercase ${iosMuted}`}>{d}</span>
+                <span key={d} className={`text-[11px] font-bold py-1 uppercase ${adminThemeStyle.mutedText}`}>{d}</span>
               ))}
 
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-[16px]" />
+                <div key={`empty_${i}`} className="h-16 sm:h-20 rounded-[18px]" />
               ))}
 
               {Array.from({ length: totalDaysInMonth }).map((_, i) => {
@@ -2454,21 +2393,21 @@ export default function App() {
                   <div
                     key={`day_${day}`}
                     onClick={() => status.hasBookings ? setSelectedCalendarDay(status) : null}
-                    className={`h-16 sm:h-20 rounded-[16px] p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
+                    className={`h-16 sm:h-20 rounded-[18px] p-1.5 flex flex-col justify-between items-center transition-all duration-200 border cursor-pointer ${
                       status.hasBookings 
                         ? (status.isConfirmed 
                             ? 'bg-emerald-500/20 border-emerald-500/50 hover:scale-105 shadow-md' 
                             : 'bg-amber-500/20 border-amber-500/50 hover:scale-105 shadow-md')
-                        : (isAdminDarkMode ? 'bg-white/5 border-white/10 opacity-75' : 'bg-slate-100 border-slate-200 opacity-75')
+                        : 'bg-white/5 border-white/10 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-500' : 'text-amber-500') : ''}`}>
+                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : 'text-slate-300'}`}>
                       {day}
                     </span>
 
                     {status.hasBookings && (
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${status.isConfirmed ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>
-                        {status.count} Booked
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${status.isConfirmed ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-amber-500 text-slate-950 font-bold'}`}>
+                        {status.count}
                       </span>
                     )}
                   </div>
@@ -2477,26 +2416,26 @@ export default function App() {
             </div>
 
             {selectedCalendarDay && (
-              <div className={`p-4 rounded-[18px] border space-y-3 animate-fade-in ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="p-5 rounded-[26px] border border-white/10 space-y-3 bg-white/5 animate-fade-in">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className={`font-mono font-bold text-sm ${adminThemeStyle.accentText}`}>Date: {selectedCalendarDay.dateStr}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${selectedCalendarDay.isConfirmed ? 'bg-emerald-500/20 text-emerald-600' : 'bg-amber-500/20 text-amber-600'}`}>
-                      {selectedCalendarDay.isConfirmed ? 'LOCKED / CONFIRMED' : 'PENDING REVIEW'}
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${selectedCalendarDay.isConfirmed ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}`}>
+                      {selectedCalendarDay.isConfirmed ? 'CONFIRMED' : 'PENDING'}
                     </span>
                   </div>
-                  <button onClick={() => setSelectedCalendarDay(null)} className={`${adminThemeStyle.accentText} text-xs underline font-bold`}>Close</button>
+                  <button onClick={() => setSelectedCalendarDay(null)} className={`text-xs underline font-bold ${adminThemeStyle.accentText}`}>Close</button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedCalendarDay.list.map(b => (
-                    <div key={b.id} className={`p-3 rounded-[14px] border text-xs space-y-1 ${isAdminDarkMode ? 'bg-black/40 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                      <div className="flex justify-between font-bold">
+                    <div key={b.id} className="p-3.5 rounded-[18px] border border-white/10 text-xs space-y-1 bg-black/40">
+                      <div className="flex justify-between font-bold text-white">
                         <span>{b.bookingNumber || ''} • {b.clientName}</span>
                         <span className={`font-mono ${adminThemeStyle.accentText}`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span>
                       </div>
-                      <p className={iosMuted}>Look: {b.packageName} ({b.kitType})</p>
-                      <p className={`text-[11px] truncate ${iosMuted}`}>📍 {b.venueAddress}</p>
+                      <p className={adminThemeStyle.mutedText}>Look: {b.packageName} ({b.kitType})</p>
+                      <p className={`text-[11px] truncate ${adminThemeStyle.mutedText}`}>📍 {b.venueAddress}</p>
                     </div>
                   ))}
                 </div>
@@ -2507,13 +2446,13 @@ export default function App() {
 
         {/* 8. GALLERY & MEDIA */}
         {activeFolderId === 'gallery' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-5 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Film className="w-5 h-5" /> Transformations, Videos & GIFs Studio (20MB Max)
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Film className="w-5 h-5" /> Video Reels, GIFs & Portfolio Studio
                 </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Direct URLs (.mp4, .webm, .gif) or file uploads up to 20MB.</p>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Upload high-res media clips (.mp4, .gif, .jpg) up to 20MB.</p>
               </div>
               <button
                 type="button"
@@ -2522,11 +2461,11 @@ export default function App() {
                     ...currentDraftSafe,
                     galleryPhotos: [
                       ...(currentDraftSafe.galleryPhotos || []),
-                      { type: "video", title: "New Glam Transformation", sub: "16HR HD Finish", url: "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-applying-makeup-41419-large.mp4" }
+                      { type: "video", title: "New Glam Look", sub: "16HR HD Finish", url: "https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-applying-makeup-41419-large.mp4" }
                     ]
                   });
                 }}
-                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow`}
+                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[16px] text-xs flex items-center gap-1 shadow`}
               >
                 <Plus className="w-3.5 h-3.5" /> Add Card
               </button>
@@ -2534,62 +2473,62 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(currentDraftSafe?.galleryPhotos || []).map((item, idx) => (
-                <div key={idx} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={idx} className="p-5 rounded-[28px] border border-white/10 space-y-3 bg-white/5">
                   <div className="flex items-center justify-between">
-                    <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Media #{idx + 1} ({item.type === 'video' ? '🎥 Live Video' : '🖼️ Image/GIF'})</span>
+                    <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Item #{idx + 1} ({item.type === 'video' ? '🎥 Video' : '🖼️ Photo'})</span>
                     <button onClick={() => {
                       setDeleteConfirmModal({
                         type: 'single',
-                        message: `Are you sure you want to delete media item #${idx + 1}?`,
+                        message: `Delete media card #${idx + 1}?`,
                         onConfirm: () => {
                           setDraft({ ...currentDraftSafe, galleryPhotos: currentDraftSafe.galleryPhotos.filter((_, i) => i !== idx) });
                         }
                       });
-                    }} className="text-rose-500 p-1"><Trash2 className="w-4 h-4" /></button>
+                    }} className="text-rose-400 p-1"><Trash2 className="w-4 h-4" /></button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className={`block text-[10px] mb-1 ${iosMuted}`}>Type</label>
+                      <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Type</label>
                       <select value={item.type || 'video'} onChange={e => {
                         const copy = [...currentDraftSafe.galleryPhotos];
                         copy[idx] = { ...copy[idx], type: e.target.value };
                         setDraft({ ...currentDraftSafe, galleryPhotos: copy });
-                      }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}>
-                        <option value="video">🎥 Auto-play Video</option>
-                        <option value="image">🖼️ Image / Animated GIF</option>
+                      }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${adminThemeStyle.inputBg}`}>
+                        <option value="video" className="text-black">🎥 Video Clip</option>
+                        <option value="image" className="text-black">🖼️ Image / GIF</option>
                       </select>
                     </div>
                     <div>
-                      <label className={`block text-[10px] mb-1 ${iosMuted}`}>Subtitle</label>
+                      <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Subtitle</label>
                       <input type="text" value={item.sub || ''} onChange={e => {
                         const copy = [...currentDraftSafe.galleryPhotos];
                         copy[idx] = { ...copy[idx], sub: e.target.value };
                         setDraft({ ...currentDraftSafe, galleryPhotos: copy });
-                      }} className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`} />
+                      }} className={`w-full p-3 rounded-[14px] text-xs ${adminThemeStyle.inputBg}`} />
                     </div>
                   </div>
 
                   <div>
-                    <label className={`block text-[10px] mb-1 ${iosMuted}`}>Title</label>
+                    <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Title</label>
                     <input type="text" value={item.title || ''} onChange={e => {
                       const copy = [...currentDraftSafe.galleryPhotos];
                       copy[idx] = { ...copy[idx], title: e.target.value };
                       setDraft({ ...currentDraftSafe, galleryPhotos: copy });
-                    }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
+                    }} className={`w-full p-3 rounded-[14px] text-xs font-bold ${adminThemeStyle.inputBg}`} />
                   </div>
 
                   <div>
-                    <label className={`block text-[10px] mb-1 ${iosMuted}`}>Direct URL (Video, GIF, or Image link)</label>
+                    <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>URL</label>
                     <input type="text" value={item.url || ''} onChange={e => {
                       const copy = [...currentDraftSafe.galleryPhotos];
                       copy[idx] = { ...copy[idx], url: e.target.value };
                       setDraft({ ...currentDraftSafe, galleryPhotos: copy });
-                    }} className={`w-full p-3 rounded-[14px] text-xs font-mono ${adminThemeStyle.accentText} ${iosInputBg}`} />
+                    }} className={`w-full p-3 rounded-[14px] text-xs font-mono ${adminThemeStyle.accentText} ${adminThemeStyle.inputBg}`} />
                   </div>
 
-                  <label className={`block text-center py-3 rounded-[14px] bg-purple-500/15 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition shadow-sm`}>
-                    Upload Video / GIF / Image (&lt;20MB)
+                  <label className={`block text-center py-3 rounded-[14px] bg-white/10 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-white/10 hover:bg-white/15 transition`}>
+                    Upload Compressed Media (&lt;20MB)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
                 </div>
@@ -2600,48 +2539,48 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Gallery Media'}
               onClick={() => handleSaveSpecificCard('Gallery Media')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media Live'}</span>
+              <span>{savingSection === 'Gallery Media' ? 'Saving...' : 'Save Gallery Media'}</span>
             </button>
           </div>
         )}
 
         {/* 9. MAINTENANCE MODE */}
         {activeFolderId === 'app_maintenance' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div>
-              <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                <Wrench className="w-5 h-5" /> App Down & Maintenance Controller
+              <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                <Wrench className="w-5 h-5" /> Maintenance & App Down Switch
               </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                Turn on to politely lock customer app with an elegant maintenance notice during upgrades.
+              <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>
+                Temporarily restrict client access during scheduled updates.
               </p>
             </div>
 
-            <div className={`p-5 rounded-[22px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="p-5 rounded-[28px] border border-white/10 bg-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className={`w-3 h-3 rounded-full ${currentDraftSafe.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-500'}`} />
-                  <h4 className="font-bold text-sm">App Down / Maintenance Mode</h4>
+                  <span className={`w-3 h-3 rounded-full ${currentDraftSafe.isAppDown ? 'bg-rose-500 animate-ping' : 'bg-emerald-400'}`} />
+                  <h4 className="font-bold text-sm text-white">Application Maintenance State</h4>
                 </div>
-                <p className={`text-xs max-w-lg leading-relaxed ${iosMuted}`}>
+                <p className={`text-xs max-w-lg leading-relaxed ${adminThemeStyle.mutedText}`}>
                   {currentDraftSafe.isAppDown 
-                    ? "🔴 ON: Customer App is locked. Visitors see a polite maintenance banner stating system upgrades are in progress."
-                    : "🟢 OFF: Customer App is fully active, accepting estimates and live bookings."}
+                    ? "🔴 ON: Customer App displays an elegant maintenance splash screen."
+                    : "🟢 OFF: Customer App is active and taking appointments."}
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setDraft({ ...currentDraftSafe, isAppDown: !currentDraftSafe.isAppDown })}
-                className={`px-5 py-3 rounded-[16px] font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-md ${
+                className={`px-5 py-3 rounded-[16px] font-bold text-xs flex items-center gap-2 transition active:scale-95 shadow ${
                   currentDraftSafe.isAppDown ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'
                 }`}
               >
                 {currentDraftSafe.isAppDown ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-                <span>{currentDraftSafe.isAppDown ? 'MAINTENANCE (ON)' : 'LIVE (ACTIVE)'}</span>
+                <span>{currentDraftSafe.isAppDown ? 'MAINTENANCE (ON)' : 'ACTIVE (LIVE)'}</span>
               </button>
             </div>
 
@@ -2649,27 +2588,27 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Maintenance Mode'}
               onClick={() => handleSaveSpecificCard('Maintenance Mode')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance Status Live'}</span>
+              <span>{savingSection === 'Maintenance Mode' ? 'Saving...' : 'Save Maintenance State'}</span>
             </button>
           </div>
         )}
 
-        {/* 10. FLOATING PROMO BANNER */}
+        {/* 10. FLOATING BANNER */}
         {activeFolderId === 'floating' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div>
-              <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                <Gift className="w-5 h-5" /> Floating Promo Offer Banner Controller
+              <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                <Gift className="w-5 h-5" /> Floating Offer Pill Widget
               </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure bottom-right floating offer pill text, code and activation status.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>Configure promotional pill text, target code and visibility.</p>
             </div>
 
-            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="p-5 rounded-[28px] border border-white/10 space-y-4 bg-white/5">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-xs">Enable Floating Promo Banner Widget</span>
+                <span className="font-bold text-xs text-white">Enable Floating Widget</span>
                 <button
                   type="button"
                   onClick={() => setDraft({
@@ -2679,7 +2618,7 @@ export default function App() {
                       enabled: !(currentDraftSafe.floatingBanner?.enabled !== false)
                     }
                   })}
-                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.floatingBanner?.enabled !== false ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}
                 >
                   {currentDraftSafe?.floatingBanner?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <span>{currentDraftSafe?.floatingBanner?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
@@ -2688,7 +2627,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className={`block text-[10px] mb-1 ${iosMuted}`}>Badge Tag</label>
+                  <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Badge Tag</label>
                   <input
                     type="text"
                     value={currentDraftSafe?.floatingBanner?.tag || ''}
@@ -2696,11 +2635,11 @@ export default function App() {
                       ...currentDraftSafe,
                       floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), tag: e.target.value }
                     })}
-                    className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[14px] text-xs ${adminThemeStyle.inputBg}`}
                   />
                 </div>
                 <div>
-                  <label className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Code</label>
+                  <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Promo Code</label>
                   <input
                     type="text"
                     value={currentDraftSafe?.floatingBanner?.code || ''}
@@ -2708,13 +2647,13 @@ export default function App() {
                       ...currentDraftSafe,
                       floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), code: e.target.value.toUpperCase() }
                     })}
-                    className={`w-full p-3.5 rounded-[14px] text-xs font-mono font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[14px] text-xs font-mono font-bold ${adminThemeStyle.accentText} ${adminThemeStyle.inputBg}`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className={`block text-[10px] mb-1 ${iosMuted}`}>Banner Title</label>
+                <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Title</label>
                 <input
                   type="text"
                   value={currentDraftSafe?.floatingBanner?.title || ''}
@@ -2722,12 +2661,12 @@ export default function App() {
                     ...currentDraftSafe,
                     floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), title: e.target.value }
                   })}
-                  className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
+                  className={`w-full p-3.5 rounded-[14px] text-xs ${adminThemeStyle.inputBg}`}
                 />
               </div>
 
               <div>
-                <label className={`block text-[10px] mb-1 ${iosMuted}`}>Action Button Text</label>
+                <label className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Button Text</label>
                 <input
                   type="text"
                   value={currentDraftSafe?.floatingBanner?.actionText || ''}
@@ -2735,7 +2674,7 @@ export default function App() {
                     ...currentDraftSafe,
                     floatingBanner: { ...(currentDraftSafe.floatingBanner || {}), actionText: e.target.value }
                   })}
-                  className={`w-full p-3.5 rounded-[14px] text-xs ${iosInputBg}`}
+                  className={`w-full p-3.5 rounded-[14px] text-xs ${adminThemeStyle.inputBg}`}
                 />
               </div>
             </div>
@@ -2744,23 +2683,23 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Floating Banner'}
               onClick={() => handleSaveSpecificCard('Floating Banner')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner Live'}</span>
+              <span>{savingSection === 'Floating Banner' ? 'Saving...' : 'Save Floating Banner'}</span>
             </button>
           </div>
         )}
 
-        {/* 11. PROMO COUPONS, TIMERS & GUEST OFFERS SECTION */}
+        {/* 11. PROMO COUPONS & GUEST OFFERS */}
         {activeFolderId === 'coupons' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
-                <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Tag className="w-5 h-5" /> Promo Coupons, Timers & Extra Guest Offers
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Tag className="w-5 h-5" /> Promo Coupons & Extra Guest Offers
                 </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Set promo discount codes, timers, active status, and automated extra guest group savings.</p>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Configure discount codes, timers, and automatic guest bundle discounts.</p>
               </div>
               <button
                 type="button"
@@ -2784,17 +2723,17 @@ export default function App() {
                     });
                   }
                 }}
-                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow`}
+                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[16px] text-xs flex items-center gap-1 shadow`}
               >
                 <Plus className="w-3.5 h-3.5" /> Add Coupon
               </button>
             </div>
 
-            <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="p-5 rounded-[28px] border border-white/10 space-y-4 bg-white/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Gift className="w-4 h-4 text-emerald-400" />
-                  <span className="font-bold text-xs uppercase tracking-wider">Extra Family Guest Discount Tier</span>
+                  <span className="font-bold text-xs uppercase tracking-wider text-white">Extra Guest Bundle Discount Tier</span>
                 </div>
                 <button
                   type="button"
@@ -2805,7 +2744,7 @@ export default function App() {
                       enabled: !(currentDraftSafe.guestDiscount?.enabled !== false)
                     }
                   })}
-                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                  className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 ${currentDraftSafe?.guestDiscount?.enabled !== false ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}
                 >
                   {currentDraftSafe?.guestDiscount?.enabled !== false ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <span>{currentDraftSafe?.guestDiscount?.enabled !== false ? 'Enabled' : 'Disabled'}</span>
@@ -2814,7 +2753,7 @@ export default function App() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>Discount Percentage (%)</label>
+                  <label className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>Discount Percentage (%)</label>
                   <input
                     type="number"
                     value={currentDraftSafe?.guestDiscount?.discountPercent ?? 15}
@@ -2825,11 +2764,11 @@ export default function App() {
                         discountPercent: Number(e.target.value)
                       }
                     })}
-                    className={`w-full p-3.5 rounded-[16px] font-mono ${adminThemeStyle.accentText} font-bold text-sm ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] font-mono ${adminThemeStyle.accentText} font-bold text-sm ${adminThemeStyle.inputBg}`}
                   />
                 </div>
                 <div>
-                  <label className={`block text-[11px] mb-1 font-bold ${iosMuted}`}>⏱️ Guest Offer Expiry Date & Time</label>
+                  <label className={`block text-[11px] mb-1 font-bold ${adminThemeStyle.mutedText}`}>⏱️ Guest Offer Expiry Date & Time</label>
                   <input
                     type="datetime-local"
                     value={currentDraftSafe?.guestDiscount?.expiryDate || ''}
@@ -2840,7 +2779,7 @@ export default function App() {
                         expiryDate: e.target.value
                       }
                     })}
-                    className={`w-full p-3.5 rounded-[16px] text-xs font-mono text-amber-500 ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-xs font-mono text-amber-400 ${adminThemeStyle.inputBg}`}
                   />
                 </div>
               </div>
@@ -2850,11 +2789,11 @@ export default function App() {
               {Object.entries(currentDraftSafe?.validCoupons || {}).map(([code, c]) => {
                 const isCodeActive = c.enabled !== false;
                 return (
-                  <div key={code} className={`p-4.5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={code} className="p-5 rounded-[28px] border border-white/10 space-y-3 bg-white/5">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5">
                         <span className={`font-mono font-bold text-[15px] ${adminThemeStyle.accentText}`}>{code}</span>
-                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${isCodeActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
                           {isCodeActive ? 'ACTIVE' : 'DISABLED'}
                         </span>
                       </div>
@@ -2869,7 +2808,7 @@ export default function App() {
                               [code]: { ...c, enabled: !isCodeActive }
                             }
                           })}
-                          className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                          className={`px-3.5 py-1.5 rounded-[14px] font-bold text-xs flex items-center gap-1.5 transition active:scale-95 ${isCodeActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}
                         >
                           {isCodeActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                           <span>{isCodeActive ? 'Active' : 'Disabled'}</span>
@@ -2878,20 +2817,20 @@ export default function App() {
                         <button onClick={() => {
                           setDeleteConfirmModal({
                             type: 'single',
-                            message: `Are you sure you want to delete coupon "${code}"?`,
+                            message: `Delete coupon "${code}"?`,
                             onConfirm: () => {
                               const copy = { ...(currentDraftSafe.validCoupons || {}) };
                               delete copy[code];
                               setDraft({ ...currentDraftSafe, validCoupons: copy });
                             }
                           });
-                        }} className="text-rose-500 p-2 hover:bg-rose-500/10 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
+                        }} className="text-rose-400 p-2 hover:bg-rose-500/20 rounded-[12px]"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>Discount Type</span>
+                        <span className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Type</span>
                         <select
                           value={c.type || 'percent'}
                           onChange={e => setDraft({
@@ -2901,15 +2840,15 @@ export default function App() {
                               [code]: { ...c, type: e.target.value }
                             }
                           })}
-                          className={`w-full p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] text-xs font-bold ${adminThemeStyle.inputBg}`}
                         >
-                          <option value="percent">% Percent Off</option>
-                          <option value="flat">₹ Flat Discount</option>
+                          <option value="percent" className="text-black">% Percent Off</option>
+                          <option value="flat" className="text-black">₹ Flat Off</option>
                         </select>
                       </div>
 
                       <div>
-                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
+                        <span className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Value ({c.type === 'percent' ? '%' : '₹'})</span>
                         <input
                           type="number"
                           value={c.value || 0}
@@ -2920,12 +2859,12 @@ export default function App() {
                               [code]: { ...c, value: Number(e.target.value) }
                             }
                           })}
-                          className={`w-full p-3 rounded-[14px] font-mono ${adminThemeStyle.accentText} text-xs font-bold ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] font-mono ${adminThemeStyle.accentText} text-xs font-bold ${adminThemeStyle.inputBg}`}
                         />
                       </div>
 
                       <div>
-                        <span className={`block text-[10px] mb-1 ${iosMuted}`}>⏱️ Expiry Date & Time</span>
+                        <span className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>⏱️ Expiry Date</span>
                         <input
                           type="datetime-local"
                           value={c.expiryDate || ''}
@@ -2936,13 +2875,13 @@ export default function App() {
                               [code]: { ...c, expiryDate: e.target.value }
                             }
                           })}
-                          className={`w-full p-3 rounded-[14px] text-xs font-mono text-amber-500 ${iosInputBg}`}
+                          className={`w-full p-3 rounded-[14px] text-xs font-mono text-amber-400 ${adminThemeStyle.inputBg}`}
                         />
                       </div>
                     </div>
 
                     <div>
-                      <span className={`block text-[10px] mb-1 ${iosMuted}`}>Promo Display Description / Label</span>
+                      <span className={`block text-[10px] mb-1 ${adminThemeStyle.mutedText}`}>Promo Display Label</span>
                       <input
                         type="text"
                         value={c.label || ''}
@@ -2953,7 +2892,7 @@ export default function App() {
                             [code]: { ...c, label: e.target.value }
                           }
                         })}
-                        className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
+                        className={`w-full p-3 rounded-[14px] text-xs ${adminThemeStyle.inputBg}`}
                       />
                     </div>
                   </div>
@@ -2965,42 +2904,42 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Coupons & Offers'}
               onClick={() => handleSaveSpecificCard('Coupons & Offers')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Coupons & Offers' ? 'Saving...' : 'Save Promo Coupons & Guest Offers Live'}</span>
+              <span>{savingSection === 'Coupons & Offers' ? 'Saving...' : 'Save Coupons & Offers'}</span>
             </button>
           </div>
         )}
 
         {/* 12. MASTER FEATURE TOGGLES */}
         {activeFolderId === 'toggles_master' && (
-          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-5 ${adminThemeStyle.cardBg}`}>
             <div>
-              <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                <SlidersHorizontal className="w-5 h-5" /> Master Feature & Section Toggles
+              <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                <SlidersHorizontal className="w-5 h-5" /> Master Feature & Tab Toggles
               </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Enable or disable any tab, section or feature on the customer app.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>Enable or disable individual components and sections across customer app.</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { key: 'showLogoOnApp', label: 'Show Studio Logo on Main App', desc: 'Render uploaded brand logo in header and splash' },
-                { key: 'showProfileOnApp', label: 'Show Profile Photo on Main App', desc: 'Render artist avatar photo in header' },
-                { key: 'enableAnnouncements', label: 'Top Announcements Ticker', desc: 'Show/hide rotating top announcement bar' },
-                { key: 'enableCoupons', label: 'Promo Coupon System', desc: 'Enable/disable coupon codes application' },
-                { key: 'enableGuestDiscount', label: 'Extra Guest Group Discount', desc: 'Apply automatic savings on multiple guests' },
-                { key: 'enableFloatingBanner', label: 'Bottom Floating Offer Widget', desc: 'Show/hide bottom right floating promo pill' },
-                { key: 'enableGallery', label: 'Transformations Video Gallery Tab', desc: 'Show/hide signature video & photo lookbook' },
-                { key: 'enableBrands', label: 'Vanity Brands Kit Tab', desc: 'Show/hide authentic cosmetics brand list' },
-                { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
+                { key: 'showLogoOnApp', label: 'Studio Logo in Header', desc: 'Display official studio logo in client top header' },
+                { key: 'showProfileOnApp', label: 'Artist Profile Avatar', desc: 'Display artist profile photo on banner' },
+                { key: 'enableAnnouncements', label: 'Top Rotating Announcements', desc: 'Show/hide rotating offer banner ticker' },
+                { key: 'enableCoupons', label: 'Promo Coupon Input', desc: 'Allow visitors to apply discount codes' },
+                { key: 'enableGuestDiscount', label: 'Extra Guest Group Savings', desc: 'Apply automatic bundle discount on multiple guests' },
+                { key: 'enableFloatingBanner', label: 'Bottom Floating Offer Pill', desc: 'Show/hide floating bottom offer widget' },
+                { key: 'enableGallery', label: 'Transformations Video Gallery Tab', desc: 'Show/hide signature video lookbook tab' },
+                { key: 'enableBrands', label: 'Vanity Brands Showcase Tab', desc: 'Show/hide authentic cosmetics brand kit tab' },
+                { key: 'enableEstimator', label: 'Price Estimator Calculator Tab', desc: 'Show/hide custom booking price estimator tab' }
               ].map(toggle => {
                 const isEnabled = currentDraftSafe?.toggles?.[toggle.key] !== false;
                 return (
-                  <div key={toggle.key} className={`p-4 rounded-[18px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={toggle.key} className="p-4.5 rounded-[24px] border border-white/10 flex items-center justify-between gap-3 bg-white/5">
                     <div className="space-y-0.5">
-                      <h4 className="font-bold text-[13px]">{toggle.label}</h4>
-                      <p className={`text-[11px] ${iosMuted}`}>{toggle.desc}</p>
+                      <h4 className="font-bold text-[13px] text-white">{toggle.label}</h4>
+                      <p className={`text-[11px] ${adminThemeStyle.mutedText}`}>{toggle.desc}</p>
                     </div>
                     <button
                       type="button"
@@ -3011,10 +2950,10 @@ export default function App() {
                           [toggle.key]: !isEnabled
                         }
                       })}
-                      className={`px-4 py-2 rounded-[14px] flex items-center gap-1 font-bold text-xs transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}
+                      className={`px-4 py-2 rounded-[14px] flex items-center gap-1 font-bold text-xs transition active:scale-95 ${isEnabled ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}
                     >
                       {isEnabled ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                      <span>{isEnabled ? 'ENABLED' : 'DISABLED'}</span>
+                      <span>{isEnabled ? 'ON' : 'OFF'}</span>
                     </button>
                   </div>
                 );
@@ -3025,41 +2964,41 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Master Toggles'}
               onClick={() => handleSaveSpecificCard('Master Toggles')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
+              <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Feature Toggles'}</span>
             </button>
           </div>
         )}
 
-        {/* 13. VISITOR & TRAFFIC LOGS */}
+        {/* 13. TRAFFIC LOGS */}
         {activeFolderId === 'traffic_logs' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-4 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Activity className="w-5 h-5" /> Live Traffic & Instagram Visitor Logs
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Activity className="w-5 h-5" /> Real-time Instagram Visitor Logs
                 </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Track live visits arriving from Instagram bio and direct link clicks.</p>
               </div>
-              <span className="text-[13px] font-mono font-bold bg-purple-500/20 text-purple-400 px-3.5 py-1.5 rounded-full border border-purple-500/30">
-                {visitorLogs.length} Recent Visits Logged
+              <span className={`text-[13px] font-mono font-bold px-3.5 py-1.5 rounded-full border border-white/15 bg-white/10 ${adminThemeStyle.accentText}`}>
+                {visitorLogs.length} Visits Logged
               </span>
             </div>
 
             {visitorLogs.length === 0 ? (
-              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No visitor traffic recorded yet.</p>
+              <p className={`text-[14px] py-14 text-center ${adminThemeStyle.mutedText}`}>No visitor activity recorded yet.</p>
             ) : (
               <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                 {visitorLogs.map(log => (
-                  <div key={log.id} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[13px] ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={log.id} className="p-4 rounded-[22px] border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[13px] bg-white/5">
                     <div className="space-y-0.5">
                       <div className="flex items-center gap-2">
-                        <span className={`font-bold font-mono ${adminThemeStyle.accentText}`}>Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
+                        <span className={`font-bold font-mono ${adminThemeStyle.accentText}`}>Source: @{log.instagramIdOrSource || 'Direct Bio'}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 font-bold">Active Visitor</span>
                       </div>
-                      <p className={`text-[12px] truncate max-w-md ${iosMuted}`}>{log.userAgent}</p>
+                      <p className={`text-[12px] truncate max-w-md ${adminThemeStyle.mutedText}`}>{log.userAgent}</p>
                     </div>
                     <span className={`text-[12px] font-mono font-medium ${adminThemeStyle.accentText}`}>
                       {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
@@ -3071,10 +3010,10 @@ export default function App() {
           </div>
         )}
 
-        {/* 14. PROMOTIONS & BROADCAST */}
+        {/* 14. BROADCAST STUDIO */}
         {activeFolderId === 'promotions' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-4 ${adminThemeStyle.cardBg}`}>
+            <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
               <Megaphone className="w-5 h-5" /> WhatsApp Broadcast Studio
             </h3>
             <textarea
@@ -3085,33 +3024,33 @@ export default function App() {
                 updated[0] = e.target.value;
                 setDraft({...currentDraftSafe, announcements: updated});
               }}
-              className={`w-full p-4 rounded-[18px] text-[13px] font-mono ${iosInputBg}`}
+              className={`w-full p-4 rounded-[20px] text-[13px] font-mono ${adminThemeStyle.inputBg}`}
             />
             <button
               type="button"
               onClick={() => handleSaveSpecificCard('Broadcast Studio')}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white font-bold text-[14px] rounded-[18px] shadow-lg active:scale-95 flex items-center justify-center gap-2 transition"
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Send className="w-4 h-4" />
-              <span>Save Broadcast Settings</span>
+              <span>Save Broadcast Message</span>
             </button>
           </div>
         )}
 
         {/* 15. ANNOUNCEMENTS TICKER */}
         {activeFolderId === 'announcements' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-4 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Volume2 className="w-5 h-5" /> Top Announcement Lines Ticker
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Volume2 className="w-5 h-5" /> Rotating Top Announcement Lines
                 </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Edit rotating top banner messages displayed to clients.</p>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Configure scrolling announcements displayed on customer app top header.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setDraft({ ...currentDraftSafe, announcements: [...(currentDraftSafe.announcements || []), "✨ New studio announcement line ✨"] })}
-                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow`}
+                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[16px] text-xs flex items-center gap-1 shadow`}
               >
                 <Plus className="w-3.5 h-3.5" /> Add Line
               </button>
@@ -3129,20 +3068,20 @@ export default function App() {
                       copy[idx] = e.target.value;
                       setDraft({ ...currentDraftSafe, announcements: copy });
                     }}
-                    className={`flex-1 p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`}
+                    className={`flex-1 p-3.5 rounded-[18px] text-[13px] ${adminThemeStyle.inputBg}`}
                   />
                   <button
                     type="button"
                     onClick={() => {
                       setDeleteConfirmModal({
                         type: 'single',
-                        message: `Are you sure you want to delete announcement line #${idx + 1}?`,
+                        message: `Delete announcement line #${idx + 1}?`,
                         onConfirm: () => {
                           setDraft({ ...currentDraftSafe, announcements: currentDraftSafe.announcements.filter((_, i) => i !== idx) });
                         }
                       });
                     }}
-                    className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
+                    className="p-2.5 text-rose-400 hover:bg-rose-500/20 rounded-[14px]"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -3154,28 +3093,28 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Announcements'}
               onClick={() => handleSaveSpecificCard('Announcements')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements Live'}</span>
+              <span>{savingSection === 'Announcements' ? 'Saving...' : 'Save Announcements'}</span>
             </button>
           </div>
         )}
 
-        {/* 16. TRAVEL FEES & CONVENIENCE ZONES */}
+        {/* 16. TRAVEL FEES & CONVENIENCE */}
         {activeFolderId === 'convenience' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-4 ${adminThemeStyle.cardBg}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
               <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Car className="w-5 h-5" /> Travel Fees & Convenience Zones
+                <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Car className="w-5 h-5" /> Travel Fees & Venue Zones
                 </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Manage venue travel charges for customer locations.</p>
+                <p className={`text-[13px] ${adminThemeStyle.mutedText}`}>Manage location charges automatically factored into the total bill.</p>
               </div>
               <button
                 type="button"
                 onClick={() => {
-                  const keyName = prompt("Enter Unique Zone Key (e.g. noida_ext):");
+                  const keyName = prompt("Enter Zone Key (e.g. noida_ext):");
                   if (keyName) {
                     const cleanKey = keyName.toLowerCase().replace(/[^a-z0-9_]/g, '');
                     setDraft({
@@ -3187,7 +3126,7 @@ export default function App() {
                     });
                   }
                 }}
-                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[14px] text-xs flex items-center gap-1 active:scale-95 shadow`}
+                className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-white font-bold rounded-[16px] text-xs flex items-center gap-1 shadow`}
               >
                 <Plus className="w-3.5 h-3.5" /> Add Zone
               </button>
@@ -3195,9 +3134,9 @@ export default function App() {
 
             <div className="space-y-3">
               {Object.entries(currentDraftSafe?.convenienceZones || {}).map(([zKey, zData]) => (
-                <div key={zKey} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-center justify-between gap-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={zKey} className="p-4 rounded-[22px] border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3.5 bg-white/5">
                   <div className="flex-1 w-full space-y-1">
-                    <span className={`text-[11px] font-mono uppercase font-bold ${adminThemeStyle.accentText}`}>Zone Key: {zKey}</span>
+                    <span className={`text-[11px] font-mono uppercase font-bold ${adminThemeStyle.accentText}`}>Key: {zKey}</span>
                     <input
                       type="text"
                       value={zData.name}
@@ -3208,12 +3147,12 @@ export default function App() {
                           [zKey]: { ...zData, name: e.target.value }
                         }
                       })}
-                      className={`w-full p-3.5 rounded-[14px] text-[13px] font-semibold ${iosInputBg}`}
+                      className={`w-full p-3.5 rounded-[16px] text-[13px] font-semibold ${adminThemeStyle.inputBg}`}
                     />
                   </div>
 
                   <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                    <label className={`text-[13px] font-bold ${iosMuted}`}>Fee (₹):</label>
+                    <label className={`text-[13px] font-bold ${adminThemeStyle.mutedText}`}>Fee (₹):</label>
                     <input
                       type="number"
                       value={zData.fee}
@@ -3224,14 +3163,14 @@ export default function App() {
                           [zKey]: { ...zData, fee: Number(e.target.value) }
                         }
                       })}
-                      className={`w-32 p-3.5 rounded-[14px] font-mono ${adminThemeStyle.accentText} font-bold text-[13px] ${iosInputBg}`}
+                      className={`w-32 p-3.5 rounded-[16px] font-mono ${adminThemeStyle.accentText} font-bold text-[13px] ${adminThemeStyle.inputBg}`}
                     />
                     <button
                       type="button"
                       onClick={() => {
                         setDeleteConfirmModal({
                           type: 'single',
-                          message: `Are you sure you want to delete zone "${zData.name}"?`,
+                          message: `Delete zone "${zData.name}"?`,
                           onConfirm: () => {
                             const copy = { ...(currentDraftSafe.convenienceZones || {}) };
                             delete copy[zKey];
@@ -3239,7 +3178,7 @@ export default function App() {
                           }
                         });
                       }}
-                      className="p-2.5 text-rose-500 hover:bg-rose-500/10 rounded-[14px]"
+                      className="p-2.5 text-rose-400 hover:bg-rose-500/20 rounded-[14px]"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -3252,85 +3191,62 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Travel Fees'}
               onClick={() => handleSaveSpecificCard('Travel Fees')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees Live'}</span>
+              <span>{savingSection === 'Travel Fees' ? 'Saving...' : 'Save Travel Fees'}</span>
             </button>
           </div>
         )}
 
-        {/* 17. THEMES & TYPOGRAPHY */}
+        {/* 17. THEMES & CUSTOMIZATION */}
         {activeFolderId === 'theme' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-            <h3 className={`font-bold text-[16px] uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-              <Palette className="w-5 h-5" /> Aesthetics & Console Customization
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
+            <h3 className={`font-bold text-[19px] uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+              <Palette className="w-5 h-5" /> Aesthetics & Theme Controller
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="p-5 rounded-[28px] border border-white/10 space-y-3.5 bg-white/5">
                 <h4 className={`font-bold text-[14px] flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
-                  <Smartphone className="w-4 h-4" /> Customer Main App Theme Settings
+                  <Shield className="w-4 h-4" /> Admin Console Theme (Live Switch)
                 </h4>
-                <p className={`text-[12px] ${iosMuted}`}>Controls the appearance of the client booking application.</p>
+                <p className={`text-[12px] ${adminThemeStyle.mutedText}`}>Select your preferred illustrative glass skin:</p>
                 
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Color Theme</label>
-                  <select value={currentDraftSafe?.theme?.colorTheme || 'real_glass_lens'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), colorTheme: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}>
-                    <option value="real_glass_lens">🔮 Real Glass Lens (Translucent Mirror)</option>
-                    <option value="real_ios_glass">🍎 Real iOS Liquid Glass</option>
-                    <option value="liquid_glass">💎 Liquid Glass iOS</option>
-                    <option value="one_ui_9">✨ Samsung One UI 9</option>
-                    <option value="gold_rose">👑 Royal Gold Rose</option>
-                    <option value="champagne">🥂 Champagne Gold</option>
-                    <option value="emerald">💚 Emerald Luxe</option>
-                    <option value="violet">🔮 Midnight Orchid Violet</option>
-                    <option value="ruby">❤️ Ruby Velvet</option>
-                    <option value="sapphire">💙 Sapphire Royal</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Font Family</label>
-                  <select value={currentDraftSafe?.theme?.fontFamily || 'sans'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), fontFamily: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}>
-                    <option value="sans">Plus Jakarta Sans</option>
-                    <option value="outfit">Outfit (iOS Glass Minimal)</option>
-                    <option value="serif">Playfair Display (Royal)</option>
-                    <option value="cormorant">Cormorant Garamond</option>
-                    <option value="cinzel">Cinzel</option>
-                    <option value="montserrat">Montserrat</option>
-                    <option value="inter">Inter</option>
-                    <option value="poppins">Poppins</option>
-                    <option value="roboto">Roboto</option>
+                  <select 
+                    value={activeAdminThemeKey} 
+                    onChange={e => handleInstantThemeChange(e.target.value)} 
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold ${adminThemeStyle.inputBg}`}
+                  >
+                    <option value="admin_aurora" className="text-black">✨ Admin Aurora (Purple Neon Glow)</option>
+                    <option value="cyber_matrix" className="text-black">⚡ Cyber Matrix (Teal & Emerald)</option>
+                    <option value="sunset_glow" className="text-black">🌅 Sunset Amber (Gold Glow)</option>
+                    <option value="real_glass_lens" className="text-black">🔮 Crystal Glass Lens (Cobalt Blue)</option>
+                    <option value="midnight_velvet" className="text-black">🌸 Midnight Velvet (Fuchsia Orchid)</option>
                   </select>
                 </div>
               </div>
 
-              <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="p-5 rounded-[28px] border border-white/10 space-y-3.5 bg-white/5">
                 <h4 className={`font-bold text-[14px] flex items-center gap-1.5 ${adminThemeStyle.accentText}`}>
-                  <Shield className="w-4 h-4" /> Admin Console Theme Settings (Instant Apply)
+                  <Smartphone className="w-4 h-4" /> Customer App Typography & Fonts
                 </h4>
-                <p className={`text-[12px] ${iosMuted}`}>Instantly switch and apply console vibe.</p>
+                <p className={`text-[12px] ${adminThemeStyle.mutedText}`}>Sync fonts across entire client portal:</p>
                 
                 <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Admin Aura Theme</label>
                   <select 
-                    value={activeAdminThemeKey} 
-                    onChange={e => handleInstantThemeChange(e.target.value)} 
-                    className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg}`}
+                    value={currentDraftSafe?.theme?.fontFamily || 'outfit'} 
+                    onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), fontFamily: e.target.value } })} 
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-bold ${adminThemeStyle.inputBg}`}
                   >
-                    <option value="admin_aurora">✨ Admin Aurora (Purple Neon Glow)</option>
-                    <option value="sunset_glow">🌅 Sunset Amber Glow</option>
-                    <option value="cyber_matrix">⚡ Cyber Matrix Emerald</option>
-                    <option value="real_glass_lens">🔮 Crystal Glass Lens</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Default Customer Mode</label>
-                  <select value={currentDraftSafe?.theme?.defaultMode || 'light'} onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), defaultMode: e.target.value } })} className={`w-full p-3 rounded-[14px] text-[13px] font-bold ${iosInputBg}`}>
-                    <option value="light">☀️ Light Mode</option>
-                    <option value="dark">🌙 Dark Mode</option>
+                    <option value="outfit" className="text-black">Outfit (Apple Glass Minimal)</option>
+                    <option value="sans" className="text-black">Plus Jakarta Sans</option>
+                    <option value="serif" className="text-black">Playfair Display (Royal Classic)</option>
+                    <option value="cormorant" className="text-black">Cormorant Garamond</option>
+                    <option value="montserrat" className="text-black">Montserrat</option>
+                    <option value="inter" className="text-black">Inter</option>
+                    <option value="poppins" className="text-black">Poppins</option>
                   </select>
                 </div>
               </div>
@@ -3340,38 +3256,37 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Theme & Styles'}
               onClick={() => handleSaveSpecificCard('Theme & Styles')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts Live'}</span>
+              <span>{savingSection === 'Theme & Styles' ? 'Saving...' : 'Save Theme & Fonts'}</span>
             </button>
           </div>
         )}
 
         {/* 18. STUDIO IDENTITY & LOGO */}
         {activeFolderId === 'profile' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-6 sm:p-8 rounded-[36px] space-y-6 ${adminThemeStyle.cardBg}`}>
             <div>
-              <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                <User className="w-5 h-5" /> Studio Identity, Logo & Social Profiles
+              <h3 className={`font-bold text-[19px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                <User className="w-5 h-5" /> Studio Identity, Logo & Socials
               </h3>
-              <p className={`text-[13px] ${iosMuted} mt-0.5`}>Configure official studio title, upload custom logo & artist profile photo.</p>
+              <p className={`text-[13px] ${adminThemeStyle.mutedText} mt-0.5`}>Configure studio title, contact number, Instagram profile, and brand logos.</p>
             </div>
 
-            <div className={`p-4.5 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="p-5 rounded-[28px] border border-white/10 space-y-3 bg-white/5">
               <div className="flex items-center justify-between">
                 <span className={`text-[12px] font-bold uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Crown className="w-4 h-4" /> 1. Official Studio Logo (Header & Splash)
+                  <Crown className="w-4 h-4" /> Studio Brand Logo (Header & Splash)
                 </span>
-                <span className={`text-[11px] font-mono ${iosMuted}`}>Auto-Compressed</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-16 h-16 rounded-[16px] bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow border">
+                <div className="w-16 h-16 rounded-[18px] bg-white/10 p-1.5 flex items-center justify-center overflow-hidden shrink-0 shadow border border-white/20">
                   {currentDraftSafe.studioLogo ? (
                     <img src={currentDraftSafe.studioLogo} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
-                    <Crown className="w-7 h-7 text-slate-400" />
+                    <Crown className="w-8 h-8 text-slate-400" />
                   )}
                 </div>
 
@@ -3381,26 +3296,25 @@ export default function App() {
                     placeholder="Paste Logo Image URL"
                     value={currentDraftSafe.studioLogo || ''}
                     onChange={e => setDraft({ ...currentDraftSafe, studioLogo: e.target.value })}
-                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${adminThemeStyle.inputBg}`}
                   />
-                  <label className={`inline-block px-4 py-2.5 rounded-[14px] bg-purple-500/15 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition`}>
-                    Upload & Compress Logo File
+                  <label className={`inline-block px-4 py-2.5 rounded-[14px] bg-white/10 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-white/10 hover:bg-white/15 transition`}>
+                    Upload Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
                 </div>
               </div>
             </div>
 
-            <div className={`p-4.5 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+            <div className="p-5 rounded-[28px] border border-white/10 space-y-3 bg-white/5">
               <div className="flex items-center justify-between">
                 <span className={`text-[12px] font-bold uppercase flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <ImageIcon className="w-4 h-4" /> 2. Artist Profile Photo
+                  <ImageIcon className="w-4 h-4" /> Artist Profile Avatar
                 </span>
-                <span className={`text-[11px] font-mono ${iosMuted}`}>Avatar Card</span>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-purple-500/40 shrink-0 shadow">
+                <div className="w-16 h-16 rounded-[18px] overflow-hidden bg-neutral-900 border-2 border-purple-400/40 shrink-0 shadow">
                   <img src={currentDraftSafe.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
                 </div>
 
@@ -3410,10 +3324,10 @@ export default function App() {
                     placeholder="Paste Profile Photo URL"
                     value={currentDraftSafe.profileImage || ''}
                     onChange={e => setDraft({ ...currentDraftSafe, profileImage: e.target.value })}
-                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
+                    className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${adminThemeStyle.inputBg}`}
                   />
-                  <label className={`inline-block px-4 py-2.5 rounded-[14px] bg-purple-500/15 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-purple-500/30 hover:bg-purple-500/25 transition`}>
-                    Upload & Compress Profile Photo
+                  <label className={`inline-block px-4 py-2.5 rounded-[14px] bg-white/10 ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer border border-white/10 hover:bg-white/15 transition`}>
+                    Upload Profile Photo
                     <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
                 </div>
@@ -3422,20 +3336,20 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Display Title</label>
-                <input type="text" value={currentDraftSafe.studioName || ''} onChange={e => setDraft({ ...currentDraftSafe, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
+                <label className={`block text-[12px] font-bold mb-1.5 ${adminThemeStyle.mutedText}`}>Studio Display Title</label>
+                <input type="text" value={currentDraftSafe.studioName || ''} onChange={e => setDraft({ ...currentDraftSafe, studioName: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${adminThemeStyle.inputBg}`} />
               </div>
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Booking Contact Number</label>
-                <input type="text" value={currentDraftSafe.whatsappNumber || ''} onChange={e => setDraft({ ...currentDraftSafe, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${adminThemeStyle.accentText} ${iosInputBg}`} />
+                <label className={`block text-[12px] font-bold mb-1.5 ${adminThemeStyle.mutedText}`}>WhatsApp Booking Number</label>
+                <input type="text" value={currentDraftSafe.whatsappNumber || ''} onChange={e => setDraft({ ...currentDraftSafe, whatsappNumber: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${adminThemeStyle.accentText} ${adminThemeStyle.inputBg}`} />
               </div>
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Instagram Handle</label>
-                <input type="text" value={currentDraftSafe.instagramHandle || ''} onChange={e => setDraft({ ...currentDraftSafe, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-500 ${iosInputBg}`} />
+                <label className={`block text-[12px] font-bold mb-1.5 ${adminThemeStyle.mutedText}`}>Instagram Handle</label>
+                <input type="text" value={currentDraftSafe.instagramHandle || ''} onChange={e => setDraft({ ...currentDraftSafe, instagramHandle: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono text-pink-400 ${adminThemeStyle.inputBg}`} />
               </div>
               <div>
-                <label className={`block text-[12px] font-bold mb-1.5 ${iosMuted}`}>Artist Tagline / Subtitle</label>
-                <input type="text" value={currentDraftSafe.artistTagline || ''} onChange={e => setDraft({ ...currentDraftSafe, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${iosInputBg}`} />
+                <label className={`block text-[12px] font-bold mb-1.5 ${adminThemeStyle.mutedText}`}>Tagline / Subtitle</label>
+                <input type="text" value={currentDraftSafe.artistTagline || ''} onChange={e => setDraft({ ...currentDraftSafe, artistTagline: e.target.value })} className={`w-full p-3.5 rounded-[16px] text-[13px] ${adminThemeStyle.inputBg}`} />
               </div>
             </div>
 
@@ -3443,10 +3357,10 @@ export default function App() {
               type="button"
               disabled={savingSection === 'Studio Profile'}
               onClick={() => handleSaveSpecificCard('Studio Profile')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+              className={`w-full py-4.5 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
             >
               <Save className="w-4 h-4" />
-              <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Profile & Logo Live'}</span>
+              <span>{savingSection === 'Studio Profile' ? 'Saving...' : 'Save Studio Profile & Socials'}</span>
             </button>
           </div>
         )}
