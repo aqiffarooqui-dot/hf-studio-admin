@@ -801,35 +801,84 @@ export default function App() {
 
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    canvas.width = 1200;
-    canvas.height = 2200;
+    if (!canvas) {
+      alert('Unable to prepare the booking slip. Please try again.');
+      return;
+    }
 
-    const isRejected = b.status === 'rejected';
-    const isConfirmed = b.status === 'confirmed';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      alert('Your browser could not initialize the booking slip generator.');
+      return;
+    }
+
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const mainPackagePrice = Number(b.basePackagePrice || 0);
+    const zoneFee = Number(b.zoneFee || 0);
+    const mainMakeoverTotal = mainPackagePrice + zoneFee;
+    const guestGross = Number(b.extraGuestsCost || 0);
+    const guestDiscount = Number(b.guestDiscountSaved || 0);
+    const couponDiscount = Number(b.couponDiscountAmount || 0) || (
+      b.appliedCoupon && b.appliedCoupon !== 'None' ? Number(b.discountAmount || 0) - guestDiscount : 0
+    );
+    const totalBeforeDiscounts = mainMakeoverTotal + guestGross;
+    const totalDiscounts = Math.max(0, guestDiscount + Math.max(0, couponDiscount));
+    const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
+
+    const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
+    const guestList = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
+    const guestCount = guestList.length || Number(b.extraGuestsCount || 0);
+    const mainVanity = b.kitType || 'Luxury Vanity';
+    const mainPackage = b.packageName || 'Bridal Makeup';
+
+    // Use a taller canvas so every guest/package/discount row can fit without clipping.
+    const baseHeight = 2550;
+    const guestRowsHeight = guestList.length * 82;
+    canvas.width = 1200;
+    canvas.height = Math.max(baseHeight, 1850 + guestRowsHeight);
+
+    const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
+      ctx.textAlign = align;
+      ctx.fillStyle = color;
+      ctx.font = `${weight} ${size}px ${family}`;
+      ctx.fillText(String(text ?? ''), x, y);
+    };
+
+    const drawRow = (label, value, y, options = {}) => {
+      const rowHeight = options.height || 58;
+      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+      ctx.fillRect(90, y, 1020, rowHeight);
+      drawText(label, 120, y + 36, options.labelSize || 19, 'bold', options.labelColor || '#94a3b8');
+      drawText(value, 1080, y + 36, options.valueSize || 20, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
+      return y + rowHeight + (options.gap ?? 7);
+    };
+
+    const drawSectionTitle = (title, y, accent = '#c084fc') => {
+      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.14)' : 'rgba(14,165,233,0.14)';
+      ctx.fillRect(90, y, 1020, 62);
+      drawText(title, 120, y + 39, 21, 'bold', accent);
+      return y + 72;
+    };
 
     const drawAdminSlip = (logoImgObj) => {
-      const bgGrad = ctx.createLinearGradient(0, 0, 1200, 2200);
+      const bgGrad = ctx.createLinearGradient(0, 0, 1200, canvas.height);
       bgGrad.addColorStop(0, '#09090b');
       bgGrad.addColorStop(0.5, '#1e1b4b');
       bgGrad.addColorStop(1, '#0f172a');
       ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1200, 2200);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 6;
-      ctx.strokeRect(40, 40, 1120, 2120);
-
-      ctx.strokeStyle = 'rgba(192, 132, 252, 0.35)';
+      ctx.strokeRect(40, 40, 1120, canvas.height - 80);
+      ctx.strokeStyle = 'rgba(192,132,252,0.35)';
       ctx.lineWidth = 2;
-      ctx.strokeRect(55, 55, 1090, 2090);
+      ctx.strokeRect(55, 55, 1090, canvas.height - 110);
 
       if (logoImgObj) {
         ctx.save();
-        ctx.globalAlpha = 0.08;
-        ctx.drawImage(logoImgObj, 300, 800, 600, 600);
+        ctx.globalAlpha = 0.07;
+        ctx.drawImage(logoImgObj, 300, 900, 600, 600);
         ctx.restore();
       }
 
@@ -841,200 +890,134 @@ export default function App() {
         ctx.clip();
         ctx.drawImage(logoImgObj, 80, 80, 120, 120);
         ctx.restore();
-
         ctx.strokeStyle = '#c084fc';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
         ctx.stroke();
-
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 44px sans-serif';
-        ctx.fillText(draft.studioName || 'H&F MAKEUP ARTIST', 230, 130);
-
-        ctx.fillStyle = '#c084fc';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText(draft.artistTagline || 'Beauty, Styled Your Way', 230, 175);
+        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130, 44, 'bold');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175, 22, 'bold', '#c084fc');
       } else {
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 50px sans-serif';
-        ctx.fillText(draft.studioName || 'H&F MAKEUP ARTIST', 600, 135);
-
-        ctx.fillStyle = '#c084fc';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText(draft.artistTagline || 'Beauty, Styled Your Way', 600, 175);
+        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 135, 50, 'bold', '#ffffff', 'center');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 175, 22, 'bold', '#c084fc', 'center');
       }
 
-      ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)';
+      ctx.strokeStyle = 'rgba(192,132,252,0.4)';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(90, 230);
       ctx.lineTo(1110, 230);
       ctx.stroke();
 
-      ctx.textAlign = 'center';
-      ctx.fillStyle = isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#fbbf24');
-      ctx.font = 'bold 26px sans-serif';
-      ctx.fillText(
-        isRejected ? '❌ APPOINTMENT DECLINED / REJECTED' : (isConfirmed ? '✅ OFFICIAL CONFIRMED APPOINTMENT SLIP' : '⏳ PENDING BOOKING REQUEST SLIP'), 
-        600, 305
+      const isRejected = b.status === 'rejected';
+      const isConfirmed = b.status === 'confirmed';
+      drawText(
+        isRejected ? '❌ APPOINTMENT DECLINED / REJECTED' : (isConfirmed ? '✅ OFFICIAL CONFIRMED APPOINTMENT SLIP' : '⏳ PENDING BOOKING REQUEST SLIP'),
+        600, 305, 26, 'bold', isRejected ? '#e11d48' : (isConfirmed ? '#059669' : '#fbbf24'), 'center'
       );
 
-      const rows = [
-        { label: 'BOOKING NUMBER', val: b.bookingNumber || '#HF-RECORD' },
-        { label: 'CLIENT NAME', val: b.clientName || 'Not Provided' },
-        { label: 'CONTACT NUMBER', val: b.clientPhone || 'Not Provided' },
-        { label: 'EVENT DATE', val: b.eventDate || 'Not Provided' },
-        { label: 'MAIN VANITY TIER', val: b.kitType || 'Luxury Vanity' },
-        { label: 'SELECTED PACKAGE', val: b.packageName || 'Bridal Makeup' },
-        { label: 'BASE PACKAGE PRICE', val: `₹${b.basePackagePrice?.toLocaleString('en-IN') || 0}` },
-        { label: 'LOCATION ZONE', val: `${b.zoneName || 'Delhi NCR'} (+₹${b.zoneFee || 350})` },
-        { label: 'EXACT VENUE ADDRESS', val: b.venueAddress || 'To be confirmed' },
-        { label: 'PROMO CODE DISCOUNT', val: b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.couponDiscountAmount || b.discountAmount || 0})` : 'None Applied' }
-      ];
+      let y = 370;
+      y = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-RECORD', y, { valueColor: '#c084fc', mono: true });
+      y = drawRow('CLIENT NAME', b.clientName || 'Not Provided', y);
+      y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
+      y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
+      y = drawRow('EXACT VENUE ADDRESS', b.venueAddress || 'To be confirmed', y);
 
-      let startY = 370;
-      rows.forEach((row, idx) => {
-        ctx.fillStyle = idx % 2 === 0 ? 'rgba(255, 255, 255, 0.04)' : 'rgba(255, 255, 255, 0.02)';
-        ctx.fillRect(90, startY, 1020, 60);
+      // Exact same pricing hierarchy as the Main App Summary.
+      y += 12;
+      y = drawSectionTitle('1. Main Makeover Package', y, '#38bdf8');
+      y = drawRow('• Vanity:', mainVanity, y, { labelSize: 18 });
+      y = drawRow('• Package:', mainPackage, y, { labelSize: 18 });
+      y = drawRow('• Package Price:', money(mainPackagePrice), y, { labelSize: 18, mono: true });
+      y = drawRow(`• Travel Fee (${b.zoneName || 'Venue Location'}):`, money(zoneFee), y, { labelSize: 18, mono: true });
+      y = drawRow('Main Makeover Package Total:', money(mainMakeoverTotal), y, { labelColor: '#7dd3fc', valueColor: '#7dd3fc', mono: true, height: 64 });
 
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText(row.label, 120, startY + 37);
-
-        ctx.textAlign = 'right';
-        ctx.fillStyle = idx === 0 ? '#c084fc' : '#ffffff';
-        ctx.font = 'bold 22px monospace';
-        ctx.fillText(row.val, 1080, startY + 37);
-
-        startY += 64;
-      });
-
-      if (b.extraGuestsList && b.extraGuestsList.length > 0) {
-        startY += 10;
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
-        ctx.fillRect(90, startY, 1020, 55);
-
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#d8b4fe';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText(`EXTRA FAMILY GUESTS (${b.extraGuestsList.length} PERSONS)`, 120, startY + 34);
-
-        ctx.textAlign = 'right';
-        ctx.font = 'bold 22px monospace';
-        ctx.fillText(`+₹${b.extraGuestsCost?.toLocaleString('en-IN') || 0}`, 1080, startY + 34);
-        startY += 62;
-
-        b.extraGuestsList.forEach((g, gIdx) => {
-          const kitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
-          const rawP = draft.pricingByKit?.[g.kit]?.[g.packageKey] || 2500;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-          ctx.fillRect(90, startY, 1020, 50);
-
-          ctx.textAlign = 'left';
-          ctx.fillStyle = '#cbd5e1';
-          ctx.font = '18px sans-serif';
-          ctx.fillText(`• Guest #${gIdx + 1} (${kitLabel}) — Look: ${g.packageKey || 'Party'}`, 130, startY + 32);
-
-          ctx.textAlign = 'right';
-          ctx.font = '18px monospace';
-          ctx.fillStyle = '#34d399';
-          ctx.fillText(`₹${rawP.toLocaleString('en-IN')}`, 1070, startY + 32);
-          startY += 56;
+      y += 12;
+      y = drawSectionTitle(`2. Additional Family & Guest Makeovers (${guestCount}):`, y, '#c084fc');
+      if (guestList.length) {
+        guestList.forEach((g, idx) => {
+          const guestKit = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'International Luxury Vanity Kit' : 'Premium HD Kit');
+          const guestPkg = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
+          const guestPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
+          y = drawRow(`Makeover #${idx + 1} • Vanity:`, guestKit, y, { labelSize: 17, valueSize: 18 });
+          y = drawRow('• Package:', guestPkg, y, { labelSize: 17, valueSize: 18 });
+          y = drawRow('• Price:', money(guestPrice), y, { labelSize: 17, mono: true });
         });
+      } else {
+        y = drawRow('• No additional family or guest makeovers', money(0), y, { labelSize: 17, valueColor: '#94a3b8', mono: true });
       }
+      y = drawRow('Additional Family & Guest Makeovers Total:', money(guestGross), y, { labelColor: '#d8b4fe', valueColor: '#d8b4fe', mono: true, height: 64 });
 
-      startY += 10;
-      ctx.fillStyle = 'rgba(5, 150, 105, 0.15)';
-      ctx.fillRect(90, startY, 1020, 55);
+      y += 12;
+      y = drawRow('Booking Total Before Discounts:', money(totalBeforeDiscounts), y, { labelColor: '#ffffff', valueColor: '#ffffff', mono: true, height: 68, bg: 'rgba(255,255,255,0.08)' });
 
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#34d399';
-      ctx.font = 'bold 20px sans-serif';
-      ctx.fillText('DISCOUNTS APPLIED', 120, startY + 34);
-      startY += 62;
-
-      const guestDisc = b.guestDiscountSaved || 0;
-      if (guestDisc > 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-        ctx.fillRect(90, startY, 1020, 48);
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '18px sans-serif';
-        ctx.fillText(`• Extra Guest Group Discount`, 130, startY + 31);
-        ctx.textAlign = 'right';
-        ctx.font = '18px monospace';
-        ctx.fillStyle = '#34d399';
-        ctx.fillText(`-₹${guestDisc.toLocaleString('en-IN')}`, 1070, startY + 31);
-        startY += 52;
+      y += 12;
+      y = drawSectionTitle('3. Discounts & Offers', y, '#34d399');
+      if (guestDiscount > 0) {
+        y = drawRow('• Additional Family & Guest Makeovers Discount:', `-${money(guestDiscount)}`, y, { labelSize: 17, valueColor: '#34d399', mono: true });
       }
-
-      const couponDisc = b.couponDiscountAmount || (b.appliedCoupon && b.appliedCoupon !== 'None' ? b.discountAmount : 0) || 0;
-      if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDisc > 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-        ctx.fillRect(90, startY, 1020, 48);
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#cbd5e1';
-        ctx.font = '18px sans-serif';
-        ctx.fillText(`• Promo Code (${b.appliedCoupon})`, 130, startY + 31);
-        ctx.textAlign = 'right';
-        ctx.font = '18px monospace';
-        ctx.fillStyle = '#34d399';
-        ctx.fillText(`-₹${couponDisc.toLocaleString('en-IN')}`, 1070, startY + 31);
-        startY += 52;
+      if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0) {
+        y = drawRow(`• Coupon Code (${b.appliedCoupon}):`, `-${money(couponDiscount)}`, y, { labelSize: 17, valueColor: '#34d399', mono: true });
       }
-
-      if (guestDisc === 0 && (!b.appliedCoupon || b.appliedCoupon === 'None' || couponDisc === 0)) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
-        ctx.fillRect(90, startY, 1020, 48);
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '18px sans-serif';
-        ctx.fillText('• None Applied', 130, startY + 31);
-        startY += 52;
+      if (guestDiscount === 0 && couponDiscount === 0) {
+        y = drawRow('• No discounts applied', money(0), y, { labelSize: 17, valueColor: '#94a3b8', mono: true });
       }
+      y = drawRow('Total Discounts:', `-${money(totalDiscounts)}`, y, { labelColor: '#86efac', valueColor: '#86efac', mono: true, height: 64 });
 
-      startY += 15;
-      ctx.fillStyle = 'rgba(192, 132, 252, 0.25)';
-      ctx.fillRect(90, startY, 1020, 115);
+      y += 18;
+      ctx.fillStyle = 'rgba(192,132,252,0.25)';
+      ctx.fillRect(90, y, 1020, 125);
       ctx.strokeStyle = '#c084fc';
       ctx.lineWidth = 3;
-      ctx.strokeRect(90, startY, 1020, 115);
+      ctx.strokeRect(90, y, 1020, 125);
+      drawText('Final Amount Payable:', 600, y + 42, 23, 'bold', '#e2e8f0', 'center');
+      drawText(money(finalAmount), 600, y + 99, 48, 'bold', '#ffffff', 'center', 'serif');
 
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = 'bold 22px sans-serif';
-      ctx.fillText('FINAL LOCKED TOTAL PAYABLE AMOUNT', 600, startY + 38);
+      const footerY = canvas.height - 105;
+      drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || ''} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle || '')}`, 600, footerY, 17, 'normal', '#64748b', 'center');
+      drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 34, 18, 'italic', '#c084fc', 'center');
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 48px serif';
-      ctx.fillText(`₹${b.totalAmount?.toLocaleString('en-IN') || 0}`, 600, startY + 92);
-
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#64748b';
-      ctx.font = '18px sans-serif';
-      ctx.fillText(`Studio Base Location: ${draft.baseLocation} • Instagram: @${getCleanInstagramHandle(draft.instagramHandle)}`, 600, 2110);
-
-      ctx.fillStyle = '#c084fc';
-      ctx.font = 'italic 18px sans-serif';
-      ctx.fillText(draft.artistTagline || 'Beauty, Styled Your Way', 600, 2145);
-
-      const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
-      const downloadLink = document.createElement('a');
-      downloadLink.download = `Premium_Booking_Slip_${b.bookingNumber || b.clientName}.jpg`;
-      downloadLink.href = jpgUrl;
-      downloadLink.click();
+      // Robust download: use Blob + a temporary anchor and append it to the DOM.
+      try {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            alert('Booking slip could not be generated. Please try again.');
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = url;
+          downloadLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          setTimeout(() => {
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+          }, 1000);
+        }, 'image/jpeg', 0.95);
+      } catch (err) {
+        console.error('Booking slip download failed:', err);
+        try {
+          const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
+          const fallbackLink = document.createElement('a');
+          fallbackLink.href = jpgUrl;
+          fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
+          document.body.appendChild(fallbackLink);
+          fallbackLink.click();
+          fallbackLink.remove();
+        } catch (fallbackErr) {
+          alert('Booking slip download failed. Please try again or use Chrome/Edge.');
+        }
+      }
     };
 
-    const logoUrlToLoad = draft.studioLogo || DEFAULT_CONFIG.studioLogo;
+    const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
     const logoImg = new Image();
-    logoImg.crossOrigin = "anonymous";
-    logoImg.src = logoUrlToLoad;
+    logoImg.crossOrigin = 'anonymous';
     logoImg.onload = () => drawAdminSlip(logoImg);
     logoImg.onerror = () => drawAdminSlip(null);
+    logoImg.src = logoUrlToLoad;
   };
 
   const filteredBookingsList = bookingsList.filter(b => {
@@ -2127,44 +2110,98 @@ export default function App() {
                         </div>
                       )}
 
-                      <div className={`text-[13px] space-y-1.5 border-t border-b py-2.5 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
-                        <div className="flex justify-between"><span className={iosMuted}>Event Date:</span><strong className={`${adminThemeStyle.accentText} font-mono`}>{b.eventDate}</strong></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Main Package:</span><span className="font-medium">{b.packageName}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Vanity Kit:</span><span className="font-medium">{b.kitType}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Base Price:</span><span className="font-mono">₹{b.basePackagePrice?.toLocaleString('en-IN') || 0}</span></div>
-                        
-                        {/* Rich Guest Breakdown */}
-                        <div className="pt-1 pb-1 border-t border-dashed border-slate-500/30">
-                          <span className={`block text-[11px] font-bold ${adminThemeStyle.accentText}`}>Extra Family Guests ({b.extraGuestsCount || 0}):</span>
-                          {b.extraGuestsList && b.extraGuestsList.length > 0 ? (
-                            <div className="mt-1 space-y-1 pl-2">
-                              {b.extraGuestsList.map((g, gIdx) => {
-                                const guestRawP = currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 2500;
-                                const guestKitLabel = g.kit === 'international' ? 'Luxury' : 'HD Kit';
-                                const guestPkgName = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey;
-                                return (
-                                  <div key={gIdx} className="text-[11px] flex justify-between items-center">
-                                    <span className={iosMuted}>• Guest #{gIdx + 1} ({guestKitLabel}) — {guestPkgName}:</span>
-                                    <span className="font-mono font-medium text-emerald-400">₹{guestRawP.toLocaleString('en-IN')}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <span className={`text-[11px] ${iosMuted} pl-2`}>None</span>
-                          )}
-                        </div>
+                      <div className={`text-[13px] space-y-2 border-t border-b py-3 ${isAdminDarkMode ? 'border-white/10' : 'border-slate-200'}`}>
+                        {(() => {
+                          const mainPackagePrice = Number(b.basePackagePrice || 0);
+                          const zoneFee = Number(b.zoneFee || 0);
+                          const mainMakeoverTotal = mainPackagePrice + zoneFee;
+                          const guests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
+                          const guestGross = Number(b.extraGuestsCost || 0);
+                          const guestDiscount = Number(b.guestDiscountSaved || 0);
+                          const couponDiscount = Number(b.couponDiscountAmount || 0) || (
+                            b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - guestDiscount) : 0
+                          );
+                          const totalBeforeDiscounts = mainMakeoverTotal + guestGross;
+                          const totalDiscounts = Math.max(0, guestDiscount + couponDiscount);
+                          const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
+                          const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
 
-                        <div className="flex justify-between"><span className={iosMuted}>Venue Zone:</span><span className="font-medium">{b.zoneName} (+₹{b.zoneFee || 350})</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Address:</span><span className="truncate max-w-[180px]">{b.venueAddress}</span></div>
-                        <div className="flex justify-between"><span className={iosMuted}>Promo Coupon:</span><span className="font-mono text-emerald-400">{b.appliedCoupon && b.appliedCoupon !== 'None' ? `${b.appliedCoupon} (-₹${b.discountAmount || 0})` : 'None'}</span></div>
-                        
+                          return (
+                            <>
+                              {/* 1. Main Makeover Package — same structure as Main App Summary */}
+                              <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-sky-500/10 border-sky-500/20' : 'bg-sky-50 border-sky-200'}`}>
+                                <div className="flex justify-between items-center font-bold text-sky-500">
+                                  <span>1. Main Makeover Package:</span>
+                                  <span className="font-mono">{money(mainMakeoverTotal)}</span>
+                                </div>
+                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Vanity:</span><span className="font-medium text-right">{b.kitType || 'Luxury Vanity Kit'}</span></div>
+                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Package:</span><span className="font-medium text-right">{b.packageName || 'Bridal Makeup'}</span></div>
+                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Package Price:</span><span className="font-mono">{money(mainPackagePrice)}</span></div>
+                                <div className="flex justify-between gap-3"><span className={iosMuted}>• Travel Fee ({b.zoneName || 'Venue Location'}):</span><span className="font-mono">{money(zoneFee)}</span></div>
+                                <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-sky-400">
+                                  <span>Main Makeover Package Total:</span><span className="font-mono">{money(mainMakeoverTotal)}</span>
+                                </div>
+                              </div>
+
+                              {/* 2. Additional Family & Guest Makeovers — same structure as Main App Summary */}
+                              <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-200'}`}>
+                                <div className="flex justify-between items-center font-bold text-purple-500">
+                                  <span>2. Additional Family & Guest Makeovers ({guests.length || Number(b.extraGuestsCount || 0)}):</span>
+                                  <span className="font-mono">{money(guestGross)}</span>
+                                </div>
+                                {guests.length > 0 ? guests.map((g, gIdx) => {
+                                  const guestVanity = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'International Luxury Vanity Kit' : 'Premium HD Kit');
+                                  const guestPackage = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
+                                  const guestPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
+                                  return (
+                                    <div key={gIdx} className="p-2 mt-1 rounded-[12px] bg-white/5 border border-white/5 space-y-1">
+                                      <div className="font-bold text-[11px] text-purple-400">Makeover #{gIdx + 1}</div>
+                                      <div className="flex justify-between gap-3"><span className={iosMuted}>• Vanity:</span><span className="font-medium text-right">{guestVanity}</span></div>
+                                      <div className="flex justify-between gap-3"><span className={iosMuted}>• Package:</span><span className="font-medium text-right">{guestPackage}</span></div>
+                                      <div className="flex justify-between gap-3"><span className={iosMuted}>• Price:</span><span className="font-mono text-emerald-500">{money(guestPrice)}</span></div>
+                                    </div>
+                                  );
+                                }) : <span className={`text-[11px] ${iosMuted}`}>No additional family or guest makeovers.</span>}
+                                <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-purple-400">
+                                  <span>Additional Family & Guest Makeovers Total:</span><span className="font-mono">{money(guestGross)}</span>
+                                </div>
+                              </div>
+
+                              <div className={`flex justify-between items-center p-3 rounded-[14px] font-bold ${isAdminDarkMode ? 'bg-white/10' : 'bg-slate-100'}`}>
+                                <span>Booking Total Before Discounts:</span><span className="font-mono">{money(totalBeforeDiscounts)}</span>
+                              </div>
+
+                              {/* 3. Discounts & Offers — same structure as Main App Summary */}
+                              <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
+                                <div className="font-bold text-emerald-500">3. Discounts & Offers</div>
+                                {guestDiscount > 0 && (
+                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Additional Family & Guest Makeovers Discount:</span><span className="font-mono text-emerald-500">-{money(guestDiscount)}</span></div>
+                                )}
+                                {b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0 && (
+                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Coupon Code ({b.appliedCoupon}):</span><span className="font-mono text-emerald-500">-{money(couponDiscount)}</span></div>
+                                )}
+                                {guestDiscount === 0 && couponDiscount === 0 && <div className={`text-[11px] ${iosMuted}`}>• No discounts applied.</div>}
+                                <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-emerald-500">
+                                  <span>Total Discounts:</span><span className="font-mono">-{money(totalDiscounts)}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-between items-center pt-2 font-bold text-[15px]">
+                                <span>Final Amount Payable:</span>
+                                <span className={`${adminThemeStyle.accentText} font-mono text-[17px]`}>{money(finalAmount)}</span>
+                              </div>
+
+                              <div className="flex justify-between gap-3 pt-1"><span className={iosMuted}>Venue Location:</span><span className="font-medium text-right">{b.zoneName || 'Not Provided'}</span></div>
+                              <div className="flex justify-between gap-3"><span className={iosMuted}>Address:</span><span className="truncate max-w-[220px] text-right">{b.venueAddress || 'Not Provided'}</span></div>
+                            </>
+                          );
+                        })()}
+
                         {b.rejectionReason && (
                           <div className="p-2.5 rounded-[10px] bg-rose-500/15 text-rose-700 text-[11px]">
                             <strong>Rejection Note:</strong> {b.rejectionReason}
                           </div>
                         )}
-                        <div className="flex justify-between pt-1 font-bold text-sm"><span>Total Amount:</span><span className={`${adminThemeStyle.accentText} font-mono`}>₹{b.totalAmount?.toLocaleString('en-IN')}</span></div>
                       </div>
 
                       <div className="space-y-2 pt-1">
