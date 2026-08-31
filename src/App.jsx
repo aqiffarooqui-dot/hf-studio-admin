@@ -1782,24 +1782,23 @@ export default function App() {
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {popupToast && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-md w-full rounded-[32px] p-7 text-center space-y-4 shadow-2xl relative ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[81] pointer-events-auto animate-fade-in">
+          <div
+            role="status"
+            aria-live="polite"
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full border shadow-xl backdrop-blur-xl text-xs font-bold ${isAdminDarkMode ? 'bg-[#18181b]/95 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-800'}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.7)]" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{popupToast.title}</span>
+            <span className={`font-normal ${iosMuted}`}>• {popupToast.desc}</span>
             <button
+              type="button"
+              aria-label="Close notification"
               onClick={() => setPopupToast(null)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-500/20 flex items-center justify-center text-slate-400 hover:text-white transition"
+              className="ml-1 p-0.5 rounded-full opacity-60 hover:opacity-100 transition"
             >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="w-16 h-16 rounded-[24px] bg-gradient-to-tr from-emerald-400 to-cyan-500 text-neutral-950 flex items-center justify-center mx-auto shadow-lg animate-bounce">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <h3 className="text-[20px] font-bold tracking-tight">{popupToast.title}</h3>
-            <p className={`text-[13px] leading-relaxed ${iosMuted}`}>{popupToast.desc}</p>
-            <button
-              onClick={() => setPopupToast(null)}
-              className={`w-full py-3.5 ${adminThemeStyle.btnPrimary} text-[14px]`}
-            >
-              Okay, Close
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
