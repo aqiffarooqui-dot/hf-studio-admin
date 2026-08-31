@@ -10,7 +10,7 @@ import {
   Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
   Home, Building2, Navigation, Compass, MapPinned
 } from 'lucide-react';
-import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
+import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';
 
 const DEFAULT_REJECTION_REASONS = [
@@ -631,6 +631,35 @@ export default function App() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
+  // Single backend-save gateway: every Firestore config save now gets the same
+  // small live-progress indicator, regardless of which settings section triggers it.
+  const backendSaveDepthRef = useRef(0);
+  const saveBackendConfig = async (payload, label = 'Saving settings…') => {
+    backendSaveDepthRef.current += 1;
+    setSavingSection(label);
+    try {
+      return await firebaseUpdateLiveConfig(payload);
+    } finally {
+      backendSaveDepthRef.current -= 1;
+      if (backendSaveDepthRef.current <= 0) {
+        backendSaveDepthRef.current = 0;
+        setSavingSection('');
+      }
+    }
+  };
+
+  // Calendar values must be derived from the selected calendar date. Keeping
+  // them local prevents undefined month/year values from crashing this screen.
+  const calendarYear = calendarDate.getFullYear();
+  const calendarMonthIndex = calendarDate.getMonth();
+  const calendarMonthNumber = calendarMonthIndex + 1;
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const firstDayIndex = new Date(calendarYear, calendarMonthIndex, 1).getDay();
+  const totalDaysInMonth = new Date(calendarYear, calendarMonthIndex + 1, 0).getDate();
+
   const canvasRef = useRef(null);
 
   const handleLogoUpload = async (e) => {
@@ -716,9 +745,9 @@ export default function App() {
     }
   };
   const getDayBookingStatus = (day) => {
-    const mStr = String(month + 1).padStart(2, '0');
+    const mStr = String(calendarMonthNumber).padStart(2, '0');
     const dStr = String(day).padStart(2, '0');
-    const fullDateStr = `${year}-${mStr}-${dStr}`;
+    const fullDateStr = `${calendarYear}-${mStr}-${dStr}`;
 
     const matchingBookings = bookingsList.filter(b => b.eventDate === fullDateStr);
     const hasBookings = matchingBookings.length > 0;
@@ -997,7 +1026,7 @@ export default function App() {
       setDraft(updatedDraft);
 
       try {
-        await updateLiveConfig(sanitizeForFirestore(updatedDraft));
+        await saveBackendConfig(sanitizeForFirestore(updatedDraft));
       } catch (e) {
         console.warn("Cloud sync warning for fingerprint:", e);
       }
@@ -1037,7 +1066,7 @@ export default function App() {
     try {
       const updated = { ...currentDraftSafe, adminPin: newPinInput };
       setDraft(updated);
-      await updateLiveConfig(sanitizeForFirestore(updated));
+      await saveBackendConfig(sanitizeForFirestore(updated));
       setPopupToast({ title: "Password Updated", desc: "Admin PIN password successfully changed and synced." });
       setOldPinInput('');
       setNewPinInput('');
@@ -1064,7 +1093,7 @@ export default function App() {
       };
       const history = [historyEntry, ...(currentDraftSafe.changeHistory || [])].slice(0, 20);
       cleanData.changeHistory = history;
-      await updateLiveConfig(cleanData);
+      await saveBackendConfig(cleanData);
       setDraft(mediaReadyPayload);
       setPopupToast({ title: "Changes Saved Successfully!", desc: `"${sectionName}" has been updated and synced live to customer app.` });
     } catch (err) {
@@ -1085,7 +1114,7 @@ export default function App() {
         ...(restored.changeHistory || [])
       ].slice(0, 20);
       const mediaReady = await persistMediaAssets(restored);
-      await updateLiveConfig(sanitizeForFirestore(mediaReady));
+      await saveBackendConfig(sanitizeForFirestore(mediaReady));
       setDraft(mediaReady);
       setPopupToast({ title: 'Rollback Complete', desc: `Restored the changes from ${entry.section}.` });
     } catch (err) {
@@ -1104,7 +1133,7 @@ export default function App() {
     };
     setDraft(updated);
     try {
-      await updateLiveConfig(sanitizeForFirestore(updated));
+      await saveBackendConfig(sanitizeForFirestore(updated));
       setPopupToast({ title: "Theme Applied Instantly", desc: `Admin console theme switched to ${newThemeKey}.` });
     } catch (err) {
       console.warn("Theme instant sync notice:", err);
@@ -1194,7 +1223,7 @@ export default function App() {
     const updated = [...currentReasons, { code: cleanCode, label, message }];
 
     setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    updateLiveConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
+    saveBackendConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
     setPopupToast({ title: "Reason Added", desc: `New rejection reason ${cleanCode} added successfully!` });
   };
 
@@ -1207,7 +1236,7 @@ export default function App() {
     }
     const updated = currentReasons.filter(r => r.code !== codeToRemove);
     setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    updateLiveConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
+    saveBackendConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
 
     if (selectedReasonCode === codeToRemove && updated.length > 0) {
       setSelectedReasonCode(updated[0].code);
@@ -1245,7 +1274,7 @@ export default function App() {
             pricingByKit: updatedPricing
           };
           setDraft(newDraft);
-          await updateLiveConfig(sanitizeForFirestore(newDraft));
+          await saveBackendConfig(sanitizeForFirestore(newDraft));
         }
         setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
       } else if (deleteConfirmModal.type === 'batch') {
@@ -3166,13 +3195,13 @@ export default function App() {
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                <button type="button" onClick={() => setCalendarDate(new Date(calendarYear, calendarMonthIndex - 1, 1))} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <span className={`font-bold text-[14px] font-mono min-w-[130px] text-center ${isAdminDarkMode ? 'text-white' : 'text-slate-900'}`}>
-                  {monthNames[month]} {year}
+                  {monthNames[calendarMonthIndex]} {calendarYear}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                <button type="button" onClick={() => setCalendarDate(new Date(calendarYear, calendarMonthIndex + 1, 1))} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
