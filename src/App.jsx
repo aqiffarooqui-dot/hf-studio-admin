@@ -1140,6 +1140,16 @@ export default function App() {
     }
   };
 
+  // Normalize Indian client numbers for WhatsApp. Users may enter 10 digits (9997210876), +91..., or 919997210876.
+  const normalizeIndianWhatsAppPhone = (value) => {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.length === 10) return `91${digits}`;
+    if (digits.startsWith('0091') && digits.length === 14) return digits.slice(2);
+    if (digits.startsWith('91') && digits.length === 12) return digits;
+    return digits;
+  };
+
   const handleOpenWhatsAppSlip = (b) => {
     const addr = parseBookingAddressDetails(b);
     const status = b.status || 'pending';
@@ -1165,7 +1175,7 @@ export default function App() {
       `💰 Total Amount: ₹${Number(b.totalAmount || 0).toLocaleString('en-IN')}\n\n` +
       `${statusLine}${reason}\n\n` +
       `H&F Makeup Artist`;
-    const phone = String(b.clientPhone || '').replace(/\D/g, '');
+    const phone = normalizeIndianWhatsAppPhone(b.clientPhone);
     if (!phone) { alert('This booking does not have a valid client phone number.'); return; }
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
@@ -1782,22 +1792,20 @@ export default function App() {
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
       {popupToast && (
-        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[81] pointer-events-auto animate-fade-in">
+        <div className="fixed top-4 right-4 z-[81] pointer-events-auto animate-fade-in w-[min(360px,calc(100vw-2rem))]">
           <div
             role="status"
             aria-live="polite"
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full border shadow-xl backdrop-blur-xl text-xs font-bold ${isAdminDarkMode ? 'bg-[#18181b]/95 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-800'}`}
+            className={`flex items-start gap-3 px-3.5 py-3 rounded-[18px] border shadow-2xl backdrop-blur-2xl ${isAdminDarkMode ? 'bg-[#18181b]/95 border-white/15 text-white' : 'bg-white/96 border-slate-200 text-slate-900'}`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.7)]" />
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{popupToast.title}</span>
-            <span className={`font-normal ${iosMuted}`}>• {popupToast.desc}</span>
-            <button
-              type="button"
-              aria-label="Close notification"
-              onClick={() => setPopupToast(null)}
-              className="ml-1 p-0.5 rounded-full opacity-60 hover:opacity-100 transition"
-            >
+            <div className="mt-0.5 w-8 h-8 shrink-0 rounded-[11px] flex items-center justify-center bg-emerald-500/10 border border-emerald-500/20">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[12px] font-bold leading-4 truncate">{popupToast.title}</div>
+              <div className={`text-[11px] font-normal leading-4 mt-0.5 line-clamp-2 ${iosMuted}`}>{popupToast.desc}</div>
+            </div>
+            <button type="button" aria-label="Close notification" onClick={() => setPopupToast(null)} className="shrink-0 p-1 rounded-full opacity-60 hover:opacity-100 transition">
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -3859,11 +3867,11 @@ export default function App() {
                 <select id="broadcastTemplatePicker" className={`p-3 rounded-[14px] text-xs ${iosInputBg}`}>
                   {(currentDraftSafe.broadcastTemplates || []).map((tpl, idx) => <option key={tpl.id || idx} value={idx}>{tpl.name || `Template ${idx + 1}`}</option>)}
                 </select>
-                <input id="broadcastSinglePhone" type="tel" placeholder="Client phone e.g. 919997210876" className={`p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`} />
+                <input id="broadcastSinglePhone" type="tel" placeholder="Client phone e.g. 9997210876" className={`p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`} />
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => {
                     const picker = document.getElementById('broadcastTemplatePicker');
-                    const phone = String(document.getElementById('broadcastSinglePhone')?.value || '').replace(/\D/g, '');
+                    const phone = normalizeIndianWhatsAppPhone(document.getElementById('broadcastSinglePhone')?.value || '');
                     const tpl = (currentDraftSafe.broadcastTemplates || [])[Number(picker?.value || 0)];
                     if (!phone) { alert('Enter the client phone number first.'); return; }
                     if (!tpl?.message) { alert('Select a template with a message first.'); return; }
@@ -3885,7 +3893,7 @@ export default function App() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input value={tpl.name || ''} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,name:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} placeholder="Template name" className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
                     <select value={tpl.type || 'announcement'} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,type:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className={`p-3 rounded-[14px] text-xs ${iosInputBg}`}><option value="offer">Offer</option><option value="announcement">Announcement</option><option value="availability">Availability</option></select>
-                    <div className="flex gap-2"><button type="button" onClick={() => { const phone = window.prompt('Client phone number (with country code, e.g. 919997210876):'); if (!phone) return; const clean=String(phone).replace(/\D/g,''); if(!clean) return; window.location.href=`whatsapp://send?phone=${clean}&text=${encodeURIComponent(tpl.message || '')}`; }} className="flex-1 p-3 rounded-[14px] bg-emerald-600 text-white text-xs font-bold"><Phone className="w-3.5 h-3.5 inline mr-1" /> Single Client</button><button type="button" onClick={() => { if(!tpl.message){alert('Template message is empty.');return;} window.location.href=`whatsapp://send?text=${encodeURIComponent(tpl.message)}`; }} className="flex-1 p-3 rounded-[14px] bg-emerald-700 text-white text-xs font-bold"><Megaphone className="w-3.5 h-3.5 inline mr-1" /> Broadcast / Group</button><button type="button" onClick={() => { const a=(currentDraftSafe.broadcastTemplates||[]).filter((_,i)=>i!==idx); setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className="p-3 rounded-[14px] bg-rose-500/10 text-rose-400"><Trash2 className="w-4 h-4" /></button></div>
+                    <div className="flex gap-2"><button type="button" onClick={() => { const phone = window.prompt('Client phone number (10 digits is enough, e.g. 9997210876):'); if (!phone) return; const clean=normalizeIndianWhatsAppPhone(phone); if(!clean) return; window.location.href=`whatsapp://send?phone=${clean}&text=${encodeURIComponent(tpl.message || '')}`; }} className="flex-1 p-3 rounded-[14px] bg-emerald-600 text-white text-xs font-bold"><Phone className="w-3.5 h-3.5 inline mr-1" /> Single Client</button><button type="button" onClick={() => { if(!tpl.message){alert('Template message is empty.');return;} window.location.href=`whatsapp://send?text=${encodeURIComponent(tpl.message)}`; }} className="flex-1 p-3 rounded-[14px] bg-emerald-700 text-white text-xs font-bold"><Megaphone className="w-3.5 h-3.5 inline mr-1" /> Broadcast / Group</button><button type="button" onClick={() => { const a=(currentDraftSafe.broadcastTemplates||[]).filter((_,i)=>i!==idx); setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className="p-3 rounded-[14px] bg-rose-500/10 text-rose-400"><Trash2 className="w-4 h-4" /></button></div>
                   </div>
                   <textarea rows={5} value={tpl.message || ''} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,message:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} placeholder="Write your WhatsApp offer / announcement..." className={`w-full p-3.5 rounded-[16px] text-xs leading-relaxed ${iosInputBg}`} />
                 </div>
@@ -4077,6 +4085,7 @@ export default function App() {
                     onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), colorTheme: e.target.value } })} 
                     className={`w-full p-3.5 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg} focus:outline-none`}
                   >
+                    <option value="default" className="bg-white text-slate-900 py-2">◻️ Default / Raw (No Theme)</option>
                     <option value="real_glass_lens" className="bg-[#18181b] text-white py-2">🔮 Real Glass Lens (Translucent Mirror)</option>
                     <option value="real_ios_glass" className="bg-[#18181b] text-white py-2">🍎 Real iOS Liquid Glass</option>
                     <option value="liquid_glass" className="bg-[#18181b] text-white py-2">💎 Liquid Glass iOS</option>
