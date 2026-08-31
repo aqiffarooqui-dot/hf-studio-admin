@@ -11,7 +11,7 @@ import {
   Home, Building2, Navigation, Compass, MapPinned
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig, db } from './firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';
 
 const DEFAULT_REJECTION_REASONS = [
   {
@@ -60,6 +60,13 @@ const DEFAULT_CONFIG = {
   ],
 
   rejectionReasons: DEFAULT_REJECTION_REASONS,
+
+  broadcastTemplates: [
+    { id: 'offer_1', name: 'Wedding Season Offer', type: 'offer', message: '✨ H&F Makeup Artist — Wedding Season Special ✨\n\nBook your signature makeover and enjoy our latest seasonal offer.\n\nReply BOOK to check availability.', enabled: true },
+    { id: 'announce_1', name: 'Studio Announcement', type: 'announcement', message: '📢 H&F Makeup Artist Studio Update\n\nWe have a new studio announcement for our clients.\n\nStay tuned for booking updates and availability.', enabled: true },
+    { id: 'bridal_1', name: 'Bridal Availability', type: 'offer', message: '👑 Bridal slots are now open!\n\nReserve your H&F signature bridal makeover early for your preferred date.\n\nReply BOOK for availability.', enabled: true }
+  ],
+  changeHistory: [],
 
   theme: {
     fontFamily: "sans",
@@ -246,17 +253,134 @@ const THEME_STYLES = {
   }
 };
 
+const FONT_OPTIONS = [
+  { id: 'plus_jakarta_sans', name: 'Plus Jakarta Sans' },
+  { id: 'outfit', name: 'Outfit' },
+  { id: 'inter', name: 'Inter' },
+  { id: 'poppins', name: 'Poppins' },
+  { id: 'montserrat', name: 'Montserrat' },
+  { id: 'roboto', name: 'Roboto' },
+  { id: 'open_sans', name: 'Open Sans' },
+  { id: 'lato', name: 'Lato' },
+  { id: 'nunito', name: 'Nunito' },
+  { id: 'raleway', name: 'Raleway' },
+  { id: 'work_sans', name: 'Work Sans' },
+  { id: 'dm_sans', name: 'DM Sans' },
+  { id: 'manrope', name: 'Manrope' },
+  { id: 'rubik', name: 'Rubik' },
+  { id: 'mulish', name: 'Mulish' },
+  { id: 'quicksand', name: 'Quicksand' },
+  { id: 'urbanist', name: 'Urbanist' },
+  { id: 'space_grotesk', name: 'Space Grotesk' },
+  { id: 'sora', name: 'Sora' },
+  { id: 'bebas_neue', name: 'Bebas Neue' },
+  { id: 'oswald', name: 'Oswald' },
+  { id: 'barlow', name: 'Barlow' },
+  { id: 'barlow_condensed', name: 'Barlow Condensed' },
+  { id: 'archivo', name: 'Archivo' },
+  { id: 'archivo_narrow', name: 'Archivo Narrow' },
+  { id: 'merriweather', name: 'Merriweather' },
+  { id: 'playfair_display', name: 'Playfair Display' },
+  { id: 'cormorant_garamond', name: 'Cormorant Garamond' },
+  { id: 'cinzel', name: 'Cinzel' },
+  { id: 'libre_baskerville', name: 'Libre Baskerville' },
+  { id: 'bodoni_moda', name: 'Bodoni Moda' },
+  { id: 'dm_serif_display', name: 'DM Serif Display' },
+  { id: 'abril_fatface', name: 'Abril Fatface' },
+  { id: 'prata', name: 'Prata' },
+  { id: 'lora', name: 'Lora' },
+  { id: 'cardo', name: 'Cardo' },
+  { id: 'spectral', name: 'Spectral' },
+  { id: 'eb_garamond', name: 'EB Garamond' },
+  { id: 'cormorant_infant', name: 'Cormorant Infant' },
+  { id: 'josefin_sans', name: 'Josefin Sans' },
+  { id: 'josefin_slab', name: 'Josefin Slab' },
+  { id: 'karla', name: 'Karla' },
+  { id: 'cabin', name: 'Cabin' },
+  { id: 'dosis', name: 'Dosis' },
+  { id: 'exo_2', name: 'Exo 2' },
+  { id: 'figtree', name: 'Figtree' },
+  { id: 'lexend', name: 'Lexend' },
+  { id: 'league_spartan', name: 'League Spartan' },
+  { id: 'kanit', name: 'Kanit' },
+  { id: 'teko', name: 'Teko' },
+  { id: 'marcellus', name: 'Marcellus' },
+  { id: 'yeseva_one', name: 'Yeseva One' },
+  { id: 'great_vibes', name: 'Great Vibes' },
+  { id: 'dancing_script', name: 'Dancing Script' },
+  { id: 'pacifico', name: 'Pacifico' },
+  { id: 'caveat', name: 'Caveat' },
+  { id: 'comfortaa', name: 'Comfortaa' },
+  { id: 'maven_pro', name: 'Maven Pro' },
+  { id: 'alata', name: 'Alata' },
+  { id: 'asap', name: 'Asap' },
+  { id: 'heebo', name: 'Heebo' },
+  { id: 'titillium_web', name: 'Titillium Web' },
+];
 const FONT_MAP = {
-  sans: "'Plus Jakarta Sans', sans-serif",
+  plus_jakarta_sans: "'Plus Jakarta Sans', sans-serif",
   outfit: "'Outfit', sans-serif",
-  comic: "'Comic Neue', 'Comic Sans MS', cursive, sans-serif",
-  serif: "'Playfair Display', serif",
-  cormorant: "'Cormorant Garamond', serif",
-  cinzel: "'Cinzel', serif",
-  montserrat: "'Montserrat', sans-serif",
   inter: "'Inter', sans-serif",
   poppins: "'Poppins', sans-serif",
-  roboto: "'Roboto', sans-serif"
+  montserrat: "'Montserrat', sans-serif",
+  roboto: "'Roboto', sans-serif",
+  open_sans: "'Open Sans', sans-serif",
+  lato: "'Lato', sans-serif",
+  nunito: "'Nunito', sans-serif",
+  raleway: "'Raleway', sans-serif",
+  work_sans: "'Work Sans', sans-serif",
+  dm_sans: "'DM Sans', sans-serif",
+  manrope: "'Manrope', sans-serif",
+  rubik: "'Rubik', sans-serif",
+  mulish: "'Mulish', sans-serif",
+  quicksand: "'Quicksand', sans-serif",
+  urbanist: "'Urbanist', sans-serif",
+  space_grotesk: "'Space Grotesk', sans-serif",
+  sora: "'Sora', sans-serif",
+  bebas_neue: "'Bebas Neue', sans-serif",
+  oswald: "'Oswald', sans-serif",
+  barlow: "'Barlow', sans-serif",
+  barlow_condensed: "'Barlow Condensed', sans-serif",
+  archivo: "'Archivo', sans-serif",
+  archivo_narrow: "'Archivo Narrow', sans-serif",
+  merriweather: "'Merriweather', sans-serif",
+  playfair_display: "'Playfair Display', sans-serif",
+  cormorant_garamond: "'Cormorant Garamond', sans-serif",
+  cinzel: "'Cinzel', sans-serif",
+  libre_baskerville: "'Libre Baskerville', sans-serif",
+  bodoni_moda: "'Bodoni Moda', sans-serif",
+  dm_serif_display: "'DM Serif Display', sans-serif",
+  abril_fatface: "'Abril Fatface', sans-serif",
+  prata: "'Prata', sans-serif",
+  lora: "'Lora', sans-serif",
+  cardo: "'Cardo', sans-serif",
+  spectral: "'Spectral', sans-serif",
+  eb_garamond: "'EB Garamond', sans-serif",
+  cormorant_infant: "'Cormorant Infant', sans-serif",
+  josefin_sans: "'Josefin Sans', sans-serif",
+  josefin_slab: "'Josefin Slab', sans-serif",
+  karla: "'Karla', sans-serif",
+  cabin: "'Cabin', sans-serif",
+  dosis: "'Dosis', sans-serif",
+  exo_2: "'Exo 2', sans-serif",
+  figtree: "'Figtree', sans-serif",
+  lexend: "'Lexend', sans-serif",
+  league_spartan: "'League Spartan', sans-serif",
+  kanit: "'Kanit', sans-serif",
+  teko: "'Teko', sans-serif",
+  marcellus: "'Marcellus', sans-serif",
+  yeseva_one: "'Yeseva One', sans-serif",
+  great_vibes: "'Great Vibes', sans-serif",
+  dancing_script: "'Dancing Script', sans-serif",
+  pacifico: "'Pacifico', sans-serif",
+  caveat: "'Caveat', sans-serif",
+  comfortaa: "'Comfortaa', sans-serif",
+  maven_pro: "'Maven Pro', sans-serif",
+  alata: "'Alata', sans-serif",
+  asap: "'Asap', sans-serif",
+  heebo: "'Heebo', sans-serif",
+  titillium_web: "'Titillium Web', sans-serif",
+  sans: "'Plus Jakarta Sans', sans-serif"
 };
 
 const INITIAL_FOLDERS = [
@@ -295,31 +419,91 @@ const sanitizeForFirestore = (obj) => {
   return cleaned;
 };
 
-const compressImageFile = (file, maxWidth = 800, quality = 0.85) => {
+const compressImageFile = (file, maxWidth = 1400, quality = 0.88, maxBytes = 650 * 1024) => {
   return new Promise((resolve, reject) => {
+    if (!file || !file.type?.startsWith('image/')) return reject(new Error('Please select a valid image file.'));
     const reader = new FileReader();
-    reader.readAsDataURL(file);
     reader.onload = (event) => {
       const img = new Image();
-      img.src = event.target.result;
       img.onload = () => {
-        const elem = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
+        const scale = Math.min(1, maxWidth / Math.max(width, height));
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let q = quality;
+        let dataUrl = '';
+        for (let i = 0; i < 8; i++) {
+          canvas.width = width; canvas.height = height;
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          dataUrl = canvas.toDataURL('image/jpeg', q);
+          const bytes = Math.ceil((dataUrl.length * 3) / 4);
+          if (bytes <= maxBytes) break;
+          q = Math.max(0.45, q - 0.07);
+          if (i >= 4) { width = Math.max(480, Math.round(width * 0.82)); height = Math.max(480, Math.round(height * 0.82)); }
         }
-        elem.width = width;
-        elem.height = height;
-        const ctx = elem.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(elem.toDataURL('image/jpeg', quality));
+        resolve(dataUrl);
       };
-      img.onerror = (error) => reject(error);
+      img.onerror = () => reject(new Error('Image could not be decoded.'));
+      img.src = event.target.result;
     };
-    reader.onerror = (error) => reject(error);
+    reader.onerror = () => reject(new Error('Image file could not be read.'));
+    reader.readAsDataURL(file);
   });
+};
+
+const MEDIA_COLLECTION = 'studio_media';
+const isDataUrl = (value) => typeof value === 'string' && value.startsWith('data:');
+const mediaKeyForPath = (path) => path.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
+
+const persistMediaAssets = async (config) => {
+  const next = JSON.parse(JSON.stringify(config || {}));
+  const writes = [];
+  const saveAsset = (path, value, type = 'image') => {
+    if (!isDataUrl(value)) return value;
+    const key = mediaKeyForPath(path);
+    writes.push(setDoc(doc(db, MEDIA_COLLECTION, key), { dataUrl: value, type, updatedAt: Date.now() }, { merge: true }));
+    return `media://${key}`;
+  };
+  if (isDataUrl(next.studioLogo)) next.studioLogo = saveAsset('studioLogo', next.studioLogo);
+  if (isDataUrl(next.profileImage)) next.profileImage = saveAsset('profileImage', next.profileImage);
+  Object.entries(next.kitImages || {}).forEach(([kit, images]) => Object.entries(images || {}).forEach(([pkg, url]) => {
+    if (isDataUrl(url)) next.kitImages[kit][pkg] = saveAsset(`kitImages_${kit}_${pkg}`, url);
+  }));
+  (next.galleryPhotos || []).forEach((item, idx) => {
+    if (isDataUrl(item?.url)) next.galleryPhotos[idx].url = saveAsset(`gallery_${idx}_${item.type || 'media'}`, item.url, item.type || 'image');
+  });
+  await Promise.all(writes);
+  return next;
+};
+
+const getChangedPaths = (before, after, prefix = '', out = []) => {
+  if (out.length > 120) return out;
+  if (JSON.stringify(before) === JSON.stringify(after)) return out;
+  if (isDataUrl(before) || isDataUrl(after)) return out;
+  const beforeObj = before && typeof before === 'object';
+  const afterObj = after && typeof after === 'object';
+  if (!beforeObj || !afterObj || Array.isArray(before) || Array.isArray(after)) {
+    if (prefix && !String(after).startsWith('data:') && !String(before).startsWith('data:')) out.push({ path: prefix, before, after });
+    return out;
+  }
+  const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+  for (const key of keys) getChangedPaths(before?.[key], after?.[key], prefix ? `${prefix}.${key}` : key, out);
+  return out;
+};
+
+const setNestedValue = (obj, path, value) => {
+  const parts = path.split('.');
+  const copy = JSON.parse(JSON.stringify(obj));
+  let cursor = copy;
+  parts.forEach((part, i) => {
+    if (i === parts.length - 1) cursor[part] = value;
+    else { if (!cursor[part] || typeof cursor[part] !== 'object') cursor[part] = {}; cursor = cursor[part]; }
+  });
+  return copy;
 };
 
 const getCleanInstagramHandle = (handle) => {
@@ -390,6 +574,7 @@ export default function App() {
   const [bookingsList, setBookingsList] = useState([]);
   const [feedbacksList, setFeedbacksList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
+  const [mediaAssets, setMediaAssets] = useState({});
   const [savingSection, setSavingSection] = useState('');
   
   const [popupToast, setPopupToast] = useState(null);
@@ -422,7 +607,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 400, 0.9);
+      const compressed = await compressImageFile(file, 1000, 0.9, 500 * 1024);
       setDraft(prev => ({ ...prev, studioLogo: compressed }));
       setPopupToast({ title: "Logo Ready", desc: "Studio Logo uploaded and compressed. Save to persist." });
     } catch (err) {
@@ -434,7 +619,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 400, 0.9);
+      const compressed = await compressImageFile(file, 1000, 0.9, 500 * 1024);
       setDraft(prev => ({ ...prev, profileImage: compressed }));
       setPopupToast({ title: "Profile Image Ready", desc: "Artist profile photo compressed. Save to persist." });
     } catch (err) {
@@ -446,7 +631,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 800, 0.85);
+      const compressed = await compressImageFile(file, 1400, 0.9, 650 * 1024);
       setDraft(prev => ({
         ...prev,
         kitImages: {
@@ -467,33 +652,39 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      if (file.type.startsWith('image/')) {
-        const compressed = await compressImageFile(file, 900, 0.85);
-        const copy = [...(draft.galleryPhotos || [])];
-        copy[idx] = { ...copy[idx], url: compressed, type: 'image' };
-        setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-        setPopupToast({ title: "Image Uploaded", desc: "Photo uploaded to transformations gallery." });
-      } else {
+      const copy = [...(draft.galleryPhotos || [])];
+      if (file.type === 'image/gif') {
+        if (file.size > 650 * 1024) throw new Error('Animated GIFs must be 650KB or smaller because the media is stored in Firestore. Use a hosted GIF URL for larger files.');
         const reader = new FileReader();
-        reader.onload = (event) => {
-          const copy = [...(draft.galleryPhotos || [])];
-          copy[idx] = { ...copy[idx], url: event.target.result, type: 'video' };
+        reader.onload = () => {
+          copy[idx] = { ...copy[idx], url: reader.result, type: 'image' };
           setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-          setPopupToast({ title: "Video Uploaded", desc: "Video data loaded to gallery card." });
+          setPopupToast({ title: 'GIF Uploaded', desc: 'Animated GIF kept in its original format and ready to save.' });
         };
         reader.readAsDataURL(file);
+      } else if (file.type.startsWith('image/')) {
+        const compressed = await compressImageFile(file, 1600, 0.9, 650 * 1024);
+        copy[idx] = { ...copy[idx], url: compressed, type: 'image' };
+        setDraft(prev => ({ ...prev, galleryPhotos: copy }));
+        setPopupToast({ title: 'Image Uploaded', desc: 'Photo optimized and ready to save.' });
+      } else if (file.type.startsWith('video/')) {
+        if (file.size > 850 * 1024) throw new Error('Video files larger than 850KB cannot be stored directly in Firestore. Paste a hosted .mp4/.webm URL instead, or connect Firebase Storage for large video uploads.');
+        const reader = new FileReader();
+        reader.onload = () => {
+          copy[idx] = { ...copy[idx], url: reader.result, type: 'video' };
+          setDraft(prev => ({ ...prev, galleryPhotos: copy }));
+          setPopupToast({ title: 'Video Uploaded', desc: 'Small video loaded and ready to save.' });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        throw new Error('Unsupported media type. Use an image, GIF, MP4 or WEBM.');
       }
     } catch (err) {
-      alert("Media upload error: " + err.message);
+      alert('Media upload error: ' + err.message);
+    } finally {
+      e.target.value = '';
     }
   };
-
-  const year = calendarDate.getFullYear();
-  const month = calendarDate.getMonth();
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
-
   const getDayBookingStatus = (day) => {
     const mStr = String(month + 1).padStart(2, '0');
     const dStr = String(day).padStart(2, '0');
@@ -597,6 +788,26 @@ export default function App() {
 
   useEffect(() => {
     try {
+      const unsubscribe = onSnapshot(collection(db, MEDIA_COLLECTION), (snapshot) => {
+        const map = {};
+        snapshot.docs.forEach(d => { map[d.id] = d.data()?.dataUrl || ''; });
+        setMediaAssets(map);
+        setDraft(prev => {
+          const next = JSON.parse(JSON.stringify(prev || DEFAULT_CONFIG));
+          const resolve = (v) => typeof v === 'string' && v.startsWith('media://') ? (map[v.slice(8)] || v) : v;
+          next.studioLogo = resolve(next.studioLogo);
+          next.profileImage = resolve(next.profileImage);
+          Object.entries(next.kitImages || {}).forEach(([kit, imgs]) => Object.entries(imgs || {}).forEach(([pkg, url]) => { next.kitImages[kit][pkg] = resolve(url); }));
+          (next.galleryPhotos || []).forEach(item => { if (item?.url) item.url = resolve(item.url); });
+          return next;
+        });
+      });
+      return () => unsubscribe();
+    } catch (e) { console.warn('Media listener unavailable:', e); }
+  }, []);
+
+  useEffect(() => {
+    try {
       const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setBookingsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -643,7 +854,13 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const SAVE_SECTION_BY_FOLDER = {
+    packages_master: 'Packages & Rates Master', brands_master: 'Vanity Brands', versions_master: 'App Versions', general: 'General Settings',
+    gallery: 'Gallery Media', app_maintenance: 'Maintenance Mode', floating: 'Floating Banner', coupons: 'Coupons & Offers',
+    toggles_master: 'Master Toggles', promotions: 'Broadcast Studio', announcements: 'Announcements', convenience: 'Travel Fees', theme: 'Theme & Styles', profile: 'Studio Profile'
+  };
+
+  const currentDraftSafe = draft || DEFAULT_CONFIG;
     const correctPin = currentDraftSafe.adminPin || "8760";
     if (pinInput === correctPin) {
       setIsAuthenticated(true);
@@ -811,23 +1028,44 @@ export default function App() {
     setSavingSection(sectionName);
     try {
       const currentDraftSafe = draft || DEFAULT_CONFIG;
-      const payload = {
-        ...currentDraftSafe,
-        adminFoldersOrder: adminFolders.map(f => f.id)
+      const payload = { ...currentDraftSafe, adminFoldersOrder: adminFolders.map(f => f.id) };
+      const mediaReadyPayload = await persistMediaAssets(payload);
+      const cleanData = sanitizeForFirestore(mediaReadyPayload);
+      const previous = JSON.parse(JSON.stringify(currentDraftSafe));
+      const changes = getChangedPaths(previous, mediaReadyPayload).slice(0, 80);
+      const historyEntry = {
+        id: `chg_${Date.now()}`, section: sectionName, timestamp: Date.now(),
+        summary: changes.slice(0, 8).map(c => c.path).join(', ') || 'No field-level changes detected',
+        changes
       };
-      
-      const cleanData = sanitizeForFirestore(payload);
+      const history = [historyEntry, ...(currentDraftSafe.changeHistory || [])].slice(0, 20);
+      cleanData.changeHistory = history;
       await updateLiveConfig(cleanData);
-      
-      setPopupToast({
-        title: "Changes Saved Successfully!",
-        desc: `"${sectionName}" has been updated and synced live to customer app.`
-      });
+      setDraft(mediaReadyPayload);
+      setPopupToast({ title: "Changes Saved Successfully!", desc: `"${sectionName}" has been updated and synced live to customer app.` });
     } catch (err) {
       console.error(`Error saving ${sectionName}:`, err);
       alert(`Error saving ${sectionName}: ${err.message}`);
     } finally {
       setSavingSection('');
+    }
+  };
+
+  const handleRollbackChange = async (entry) => {
+    if (!entry?.changes?.length) return;
+    try {
+      let restored = JSON.parse(JSON.stringify(draft || DEFAULT_CONFIG));
+      [...entry.changes].reverse().forEach(change => { restored = setNestedValue(restored, change.path, change.before); });
+      restored.changeHistory = [
+        { id: `rollback_${Date.now()}`, section: `Rollback: ${entry.section}`, timestamp: Date.now(), summary: `Reverted ${entry.changes.length} field change(s)`, changes: [] },
+        ...(restored.changeHistory || [])
+      ].slice(0, 20);
+      const mediaReady = await persistMediaAssets(restored);
+      await updateLiveConfig(sanitizeForFirestore(mediaReady));
+      setDraft(mediaReady);
+      setPopupToast({ title: 'Rollback Complete', desc: `Restored the changes from ${entry.section}.` });
+    } catch (err) {
+      alert(`Rollback failed: ${err.message}`);
     }
   };
 
@@ -849,42 +1087,34 @@ export default function App() {
     }
   };
 
-  const handleAcceptBookingWhatsApp = async (b) => {
-    setPopupToast({ title: "Dispatching Slip", desc: `Sending final confirmation slip to ${b.clientName}...` });
-    try {
-      const addr = parseBookingAddressDetails(b);
-      const confirmSlipMessage = 
-        `🎉 *OFFICIAL FINAL CONFIRMED BOOKING SLIP - H&F MAKEUP ARTIST* 🎉\n\n` +
-        `Dear *${b.clientName}*,\n` +
-        `Your appointment is officially confirmed in our master schedule!\n\n` +
-        `🔢 *Booking Number:* ${b.bookingNumber || '#HF-CONFIRMED'}\n` +
-        `📅 *Confirmed Event Date:* ${b.eventDate}\n` +
-        `💄 *Main Look:* ${b.packageName}\n` +
-        `💎 *Vanity Tier:* ${b.kitType}\n` +
-        `👥 *Extra Family Guests:* ${b.extraGuestsCount || 0} Person(s)\n` +
-        `📍 *Venue Zone:* ${b.zoneName}\n` +
-        `🏠 *Flat / House / Building:* ${addr.flatHouse}\n` +
-        `🛣️ *Street / Sector / Locality:* ${addr.streetLocality}\n` +
-        `🚩 *Landmark:* ${addr.landmark}\n` +
-        `🌆 *Town / City & State:* ${addr.townCityState}\n` +
-        `📮 *Postal PIN Code:* ${addr.pincode}\n` +
-        `🏷️ *Address Type:* ${addr.addressType}\n` +
-        `💰 *Total Amount:* ₹${b.totalAmount?.toLocaleString('en-IN')}\n\n` +
-        `_Status: CONFIRMED & OFFICIALLY SCHEDULED_\n` +
-        `Our artist team will coordinate final timings with you prior to the date.`;
-
-      await fetch(`${WA_SERVER_URL}/api/send-message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: b.clientPhone, message: confirmSlipMessage })
-      });
-
-      await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
-      setPopupToast({ title: "Slip Dispatched", desc: `Confirmation WhatsApp sent to ${b.clientName}!` });
-    } catch (err) {
-      setPopupToast({ title: "Status Updated", desc: `Marked booking as confirmed.` });
-      await updateDoc(doc(db, "bookings", b.id), { status: "confirmed" });
-    }
+  const handleOpenWhatsAppSlip = (b) => {
+    const addr = parseBookingAddressDetails(b);
+    const status = b.status || 'pending';
+    const statusLine = status === 'confirmed'
+      ? '✅ STATUS: CONFIRMED / ACCEPTED'
+      : status === 'rejected'
+        ? '❌ STATUS: REJECTED / CANCELLED'
+        : '⏳ STATUS: PENDING / UNDER REVIEW';
+    const reason = status === 'rejected' && b.rejectionReason ? `\n\nReason: ${b.rejectionReason}` : '';
+    const message =
+      `💄 *H&F MAKEUP ARTIST — BOOKING SLIP*\n\n` +
+      `Dear *${b.clientName || 'Client'}*,\n\n` +
+      `🔢 Booking Number: ${b.bookingNumber || '#HF-RECORD'}\n` +
+      `📅 Event Date: ${b.eventDate || 'Not Provided'}\n` +
+      `💄 Main Look: ${b.packageName || 'Makeover'}\n` +
+      `💎 Vanity Tier: ${b.kitType || 'Not Provided'}\n` +
+      `👥 Extra Guests: ${b.extraGuestsCount || 0}\n` +
+      `📍 Venue Zone: ${b.zoneName || 'Not Provided'}\n` +
+      `🏠 Address: ${addr.flatHouse}, ${addr.streetLocality}\n` +
+      `🚩 Landmark: ${addr.landmark}\n` +
+      `🌆 City & State: ${addr.townCityState}\n` +
+      `📮 PIN: ${addr.pincode}\n` +
+      `💰 Total Amount: ₹${Number(b.totalAmount || 0).toLocaleString('en-IN')}\n\n` +
+      `${statusLine}${reason}\n\n` +
+      `H&F Makeup Artist`;
+    const phone = String(b.clientPhone || '').replace(/\D/g, '');
+    if (!phone) { alert('This booking does not have a valid client phone number.'); return; }
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleManualStatusChange = async (bookingId, newStatus) => {
@@ -1629,6 +1859,9 @@ export default function App() {
           </div>
 
           <div className="flex sm:hidden items-center gap-2">
+            {activeFolderId && SAVE_SECTION_BY_FOLDER[activeFolderId] && (
+              <button type="button" onClick={() => handleSaveSpecificCard(SAVE_SECTION_BY_FOLDER[activeFolderId])} disabled={!!savingSection} className={`px-3 py-2 ${adminThemeStyle.btnPrimary} text-[10px] font-bold flex items-center gap-1`}><Save className="w-3 h-3" /> Save</button>
+            )}
             <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2 rounded-[12px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-slate-100 text-slate-800'}`}>
               {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-purple-600" />}
             </button>
@@ -1663,6 +1896,11 @@ export default function App() {
             </select>
           </div>
 
+          {activeFolderId && SAVE_SECTION_BY_FOLDER[activeFolderId] && (
+            <button type="button" onClick={() => handleSaveSpecificCard(SAVE_SECTION_BY_FOLDER[activeFolderId])} disabled={!!savingSection} className={`px-3.5 py-2.5 ${adminThemeStyle.btnPrimary} text-[11px] font-bold flex items-center gap-1.5 active:scale-95 transition`} title="Save current settings">
+              <Save className="w-3.5 h-3.5" /> {savingSection ? 'Saving...' : 'Save Changes'}
+            </button>
+          )}
           <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-slate-100 text-slate-800 shadow-sm'}`} title="Toggle Day/Night">
             {isAdminDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4 text-purple-600" />}
           </button>
@@ -1865,7 +2103,7 @@ export default function App() {
                           className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
                         />
                         <label className={`block text-center py-2.5 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-[11px] font-bold cursor-pointer hover:opacity-80 transition`}>
-                          Upload Photo (&lt;20MB)
+                          Upload Photo (up to 20MB source • auto-optimized)
                           <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
                         </label>
                       </div>
@@ -2230,6 +2468,30 @@ export default function App() {
               })}
             </div>
 
+            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-bold text-[14px] flex items-center gap-2"><GitBranch className="w-4 h-4" /> Detailed Change History & Rollback</h4>
+                  <p className={`text-[11px] ${iosMuted}`}>Every saved setting change is listed here with its changed fields. Roll back one saved change without deleting the rest of the configuration.</p>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {(currentDraftSafe.changeHistory || []).map(entry => (
+                  <div key={entry.id} className={`p-3.5 rounded-[16px] border ${isAdminDarkMode ? 'bg-black/20 border-white/10' : 'bg-white border-slate-200'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-bold">{entry.section}</div>
+                        <div className={`text-[10px] ${iosMuted}`}>{new Date(entry.timestamp || Date.now()).toLocaleString()}</div>
+                      </div>
+                      {entry.changes?.length > 0 && <button type="button" onClick={() => handleRollbackChange(entry)} className="px-3 py-1.5 rounded-[12px] bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold"><RotateCcw className="w-3 h-3 inline mr-1" />Rollback</button>}
+                    </div>
+                    <p className={`text-[10px] mt-2 ${iosMuted}`}>{entry.summary || 'Saved configuration update'}</p>
+                  </div>
+                ))}
+                {(currentDraftSafe.changeHistory || []).length === 0 && <p className={`text-xs text-center py-5 ${iosMuted}`}>No detailed changes recorded yet. Save a setting to start the history.</p>}
+              </div>
+            </div>
+
             <button
               type="button"
               disabled={savingSection === 'App Versions'}
@@ -2281,6 +2543,17 @@ export default function App() {
                   />
                 </div>
               </div>
+              <button type="button" onClick={async () => {
+                try {
+                  const token = currentDraftSafe.telegramBotToken; const chatId = currentDraftSafe.telegramChatId;
+                  if (!token || !chatId) throw new Error('Bot Token and Chat ID are required.');
+                  const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: '✅ H&F Makeup Artist Telegram test notification — connection is working.' }) });
+                  const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) throw new Error(j.description || `HTTP ${r.status}`);
+                  setPopupToast({ title: 'Telegram Test Successful', desc: 'The bot successfully delivered a test message to the configured Chat ID.' });
+                } catch (err) { setPopupToast({ title: 'Telegram Test Failed', desc: err.message + ' Make sure the bot is started in Telegram and the Chat ID is correct.' }); }
+              }} className="w-full py-3 rounded-[16px] bg-sky-500/15 text-sky-300 border border-sky-500/30 text-xs font-bold flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" /> Test Telegram Notification
+              </button>
             </div>
 
             <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
@@ -2692,11 +2965,11 @@ export default function App() {
                       <div className="space-y-2 pt-1">
                         <button
                           type="button"
-                          onClick={() => handleAcceptBookingWhatsApp(b)}
+                          onClick={() => handleOpenWhatsAppSlip(b)}
                           className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[14px] shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          <span>{b.status === 'confirmed' ? 'Resend WhatsApp Confirmed Slip' : 'Accept & Send WhatsApp Slip'}</span>
+                          <span>{b.status === 'confirmed' ? 'Send on WhatsApp' : 'Send on WhatsApp'}</span>
                         </button>
 
                         <div className="grid grid-cols-3 gap-2">
@@ -2976,7 +3249,7 @@ export default function App() {
                   </div>
 
                   <label className={`block text-center py-3 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer hover:opacity-80 transition shadow-sm`}>
-                    Upload Video / GIF / Image (&lt;20MB)
+                    Upload Video / GIF / Image (up to 20MB source)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
                 </div>
@@ -3460,31 +3733,32 @@ export default function App() {
 
         {/* 14. PROMOTIONS & BROADCAST */}
         {activeFolderId === 'promotions' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-              <Megaphone className="w-5 h-5" /> WhatsApp Broadcast Studio
-            </h3>
-            <textarea
-              rows={6}
-              value={currentDraftSafe?.announcements?.[0] || ""}
-              onChange={e => {
-                const updated = [...(currentDraftSafe.announcements || [])];
-                updated[0] = e.target.value;
-                setDraft({...currentDraftSafe, announcements: updated});
-              }}
-              className={`w-full p-4 rounded-[18px] text-[13px] font-mono ${iosInputBg}`}
-            />
-            <button
-              type="button"
-              onClick={() => handleSaveSpecificCard('Broadcast Studio')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2 transition`}
-            >
-              <Send className="w-4 h-4" />
-              <span>Save Broadcast Settings</span>
-            </button>
+          <div className={`p-6 sm:p-8 space-y-5 ${iosGroupCard}`}>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}><Megaphone className="w-5 h-5" /> WhatsApp Broadcast Studio</h3>
+                <p className={`text-[13px] ${iosMuted}`}>Create, edit and save multiple offer/announcement templates. The Open WhatsApp buttons launch WhatsApp Web so you can continue with your client broadcast list.</p>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => window.open('https://web.whatsapp.com/', '_blank', 'noopener,noreferrer')} className="px-4 py-2.5 rounded-[14px] bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5"><ExternalLink className="w-3.5 h-3.5" /> Open WhatsApp</button>
+                <button type="button" onClick={() => setDraft({ ...currentDraftSafe, broadcastTemplates: [...(currentDraftSafe.broadcastTemplates || []), { id: `tpl_${Date.now()}`, name: 'New Broadcast Template', type: 'announcement', message: '', enabled: true }] })} className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-xs font-bold flex items-center gap-1.5`}><Plus className="w-3.5 h-3.5" /> Add Template</button>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {(currentDraftSafe.broadcastTemplates || []).map((tpl, idx) => (
+                <div key={tpl.id || idx} className={`p-4 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input value={tpl.name || ''} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,name:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} placeholder="Template name" className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
+                    <select value={tpl.type || 'announcement'} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,type:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className={`p-3 rounded-[14px] text-xs ${iosInputBg}`}><option value="offer">Offer</option><option value="announcement">Announcement</option><option value="availability">Availability</option></select>
+                    <div className="flex gap-2"><button type="button" onClick={() => window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(tpl.message || '')}`, '_blank', 'noopener,noreferrer')} className="flex-1 p-3 rounded-[14px] bg-emerald-600 text-white text-xs font-bold"><Send className="w-3.5 h-3.5 inline mr-1" />Send on WhatsApp</button><button type="button" onClick={() => { const a=(currentDraftSafe.broadcastTemplates||[]).filter((_,i)=>i!==idx); setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className="p-3 rounded-[14px] bg-rose-500/10 text-rose-400"><Trash2 className="w-4 h-4" /></button></div>
+                  </div>
+                  <textarea rows={5} value={tpl.message || ''} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,message:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} placeholder="Write your WhatsApp offer / announcement..." className={`w-full p-3.5 rounded-[16px] text-xs leading-relaxed ${iosInputBg}`} />
+                </div>
+              ))}
+            </div>
+            <button type="button" disabled={savingSection === 'Broadcast Studio'} onClick={() => handleSaveSpecificCard('Broadcast Studio')} className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}><Save className="w-4 h-4" />{savingSection === 'Broadcast Studio' ? 'Saving...' : 'Save Broadcast Templates'}</button>
           </div>
         )}
-
         {/* 15. ANNOUNCEMENTS TICKER */}
         {activeFolderId === 'announcements' && (
           <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
@@ -3688,15 +3962,7 @@ export default function App() {
                     onChange={e => setDraft({ ...currentDraftSafe, theme: { ...(currentDraftSafe.theme || {}), fontFamily: e.target.value } })} 
                     className={`w-full p-3.5 rounded-[14px] text-[13px] font-bold ${adminThemeStyle.accentText} ${iosInputBg} focus:outline-none`}
                   >
-                    <option value="sans" className="bg-[#18181b] text-white py-2">Plus Jakarta Sans</option>
-                    <option value="outfit" className="bg-[#18181b] text-white py-2">Outfit (iOS Glass Minimal)</option>
-                    <option value="serif" className="bg-[#18181b] text-white py-2">Playfair Display (Royal)</option>
-                    <option value="cormorant" className="bg-[#18181b] text-white py-2">Cormorant Garamond</option>
-                    <option value="cinzel" className="bg-[#18181b] text-white py-2">Cinzel</option>
-                    <option value="montserrat" className="bg-[#18181b] text-white py-2">Montserrat</option>
-                    <option value="inter" className="bg-[#18181b] text-white py-2">Inter</option>
-                    <option value="poppins" className="bg-[#18181b] text-white py-2">Poppins</option>
-                    <option value="roboto" className="bg-[#18181b] text-white py-2">Roboto</option>
+                    {FONT_OPTIONS.map(font => <option key={font.id} value={font.id} className="bg-[#18181b] text-white py-2">{font.name}</option>)}
                   </select>
                 </div>
               </div>
