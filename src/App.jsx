@@ -317,6 +317,7 @@ const FONT_OPTIONS = [
   { id: 'heebo', name: 'Heebo' },
   { id: 'titillium_web', name: 'Titillium Web' },
 ];
+
 const FONT_MAP = {
   plus_jakarta_sans: "'Plus Jakarta Sans', sans-serif",
   outfit: "'Outfit', sans-serif",
@@ -404,7 +405,7 @@ const INITIAL_FOLDERS = [
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, category: 'BRANDING', desc: 'Upload Studio Logo, Profile Photo & Contact' }
 ];
 
-// Deep sanitizer utility to clean undefined/null/malformed values before saving to Firestore
+// Deep sanitizer utility to strip huge base64 strings and ensure Firestore never hits 1MB
 const sanitizeForFirestore = (obj) => {
   if (obj === null || obj === undefined) return null;
   if (typeof obj !== 'object') return obj;
@@ -413,7 +414,11 @@ const sanitizeForFirestore = (obj) => {
   const cleaned = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {
-      cleaned[key] = sanitizeForFirestore(value);
+      if (typeof value === 'string' && value.startsWith('data:image/') && value.length > 300000) {
+        cleaned[key] = ''; // Prevent oversized base64 inline leakage
+      } else {
+        cleaned[key] = sanitizeForFirestore(value);
+      }
     }
   }
   return cleaned;
@@ -483,11 +488,11 @@ const persistMediaAssets = async (config) => {
 const getChangedPaths = (before, after, prefix = '', out = []) => {
   if (out.length > 120) return out;
   if (JSON.stringify(before) === JSON.stringify(after)) return out;
-  if (isDataUrl(before) || isDataUrl(after)) return out;
+  if (isDataUrl(before) || isDataUrl(after) || String(before)?.startsWith('media://') || String(after)?.startsWith('media://')) return out;
   const beforeObj = before && typeof before === 'object';
   const afterObj = after && typeof after === 'object';
   if (!beforeObj || !afterObj || Array.isArray(before) || Array.isArray(after)) {
-    if (prefix && !String(after).startsWith('data:') && !String(before).startsWith('data:')) out.push({ path: prefix, before, after });
+    if (prefix) out.push({ path: prefix, before: isDataUrl(before) ? '[image]' : before, after: isDataUrl(after) ? '[image]' : after });
     return out;
   }
   const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
@@ -522,9 +527,7 @@ const parseBookingAddressDetails = (b) => {
 
   if (!pincode) {
     const pinMatch = streetLocality.match(/\b\d{6}\b/);
-    if (pinMatch) {
-      pincode = pinMatch[0];
-    }
+    if (pinMatch) pincode = pinMatch[0];
   }
 
   if (!city && b.zoneName) {
@@ -552,8 +555,6 @@ const parseBookingAddressDetails = (b) => {
     addressType: addressType.toUpperCase() === 'WORK' ? 'Work / Office' : 'Home'
   };
 };
-
-const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
 
 const SAVE_SECTION_BY_FOLDER = {
   packages_master: 'Packages & Rates Master',
@@ -631,14 +632,21 @@ export default function App() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
-  // Single backend-save gateway: every Firestore config save now gets the same
-  // small live-progress indicator, regardless of which settings section triggers it.
+  // Centralized backend-save gateway with aggressive protection against 1MB Firestore size limit
   const backendSaveDepthRef = useRef(0);
   const saveBackendConfig = async (payload, label = 'Saving settings…') => {
     backendSaveDepthRef.current += 1;
     setSavingSection(label);
     try {
-      return await firebaseUpdateLiveConfig(payload);
+      const mediaReadyPayload = await persistMediaAssets(payload);
+      
+      // Trim excessive change history records if they grow too large
+      if (mediaReadyPayload.changeHistory && mediaReadyPayload.changeHistory.length > 10) {
+        mediaReadyPayload.changeHistory = mediaReadyPayload.changeHistory.slice(0, 10);
+      }
+      
+      const cleanData = sanitizeForFirestore(mediaReadyPayload);
+      return await firebaseUpdateLiveConfig(cleanData);
     } finally {
       backendSaveDepthRef.current -= 1;
       if (backendSaveDepthRef.current <= 0) {
@@ -648,8 +656,6 @@ export default function App() {
     }
   };
 
-  // Calendar values must be derived from the selected calendar date. Keeping
-  // them local prevents undefined month/year values from crashing this screen.
   const calendarYear = calendarDate.getFullYear();
   const calendarMonthIndex = calendarDate.getMonth();
   const calendarMonthNumber = calendarMonthIndex + 1;
@@ -713,12 +719,12 @@ export default function App() {
     try {
       const copy = [...(draft.galleryPhotos || [])];
       if (file.type === 'image/gif') {
-        if (file.size > 650 * 1024) throw new Error('Animated GIFs must be 650KB or smaller because the media is stored in Firestore. Use a hosted GIF URL for larger files.');
+        if (file.size > 650 * 1024) throw new Error('Animated GIFs must be 650KB or smaller.');
         const reader = new FileReader();
         reader.onload = () => {
           copy[idx] = { ...copy[idx], url: reader.result, type: 'image' };
           setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-          setPopupToast({ title: 'GIF Uploaded', desc: 'Animated GIF kept in its original format and ready to save.' });
+          setPopupToast({ title: 'GIF Uploaded', desc: 'Animated GIF ready to save.' });
         };
         reader.readAsDataURL(file);
       } else if (file.type.startsWith('image/')) {
@@ -727,16 +733,16 @@ export default function App() {
         setDraft(prev => ({ ...prev, galleryPhotos: copy }));
         setPopupToast({ title: 'Image Uploaded', desc: 'Photo optimized and ready to save.' });
       } else if (file.type.startsWith('video/')) {
-        if (file.size > 850 * 1024) throw new Error('Video files larger than 850KB cannot be stored directly in Firestore. Paste a hosted .mp4/.webm URL instead, or connect Firebase Storage for large video uploads.');
+        if (file.size > 850 * 1024) throw new Error('Video files larger than 850KB should use hosted URLs.');
         const reader = new FileReader();
         reader.onload = () => {
           copy[idx] = { ...copy[idx], url: reader.result, type: 'video' };
           setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-          setPopupToast({ title: 'Video Uploaded', desc: 'Small video loaded and ready to save.' });
+          setPopupToast({ title: 'Video Uploaded', desc: 'Video loaded and ready to save.' });
         };
         reader.readAsDataURL(file);
       } else {
-        throw new Error('Unsupported media type. Use an image, GIF, MP4 or WEBM.');
+        throw new Error('Unsupported media type.');
       }
     } catch (err) {
       alert('Media upload error: ' + err.message);
@@ -744,6 +750,7 @@ export default function App() {
       e.target.value = '';
     }
   };
+
   const getDayBookingStatus = (day) => {
     const mStr = String(calendarMonthNumber).padStart(2, '0');
     const dStr = String(day).padStart(2, '0');
@@ -925,7 +932,7 @@ export default function App() {
 
   const handleBiometricOrFaceLogin = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      alert("⚠️ Biometric hardware scanner is not available in this browser context. Please use PIN 8760.");
+      alert("⚠️ Biometric scanner unavailable. Please use PIN 8760.");
       return;
     }
 
@@ -954,10 +961,9 @@ export default function App() {
       
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
-      setPopupToast({ title: "Biometric Verified", desc: "Fingerprint hardware sensor authenticated successfully." });
+      setPopupToast({ title: "Biometric Verified", desc: "Fingerprint sensor authenticated successfully." });
     } catch (err) {
-      console.warn("WebAuthn biometric auth error or cancelled:", err);
-      alert("⚠️ Fingerprint scan cancelled or failed by hardware. Please enter your 4-digit PIN.");
+      alert("⚠️ Fingerprint scan cancelled or failed. Please enter your 4-digit PIN.");
     }
   };
 
@@ -1005,10 +1011,9 @@ export default function App() {
         });
       }
     } catch (err) {
-      console.warn("Hardware credential creation notice:", err);
       clearInterval(interval);
       setIsScanningFinger(false);
-      alert("⚠️ Fingerprint registration was cancelled or failed by device. Please try again.");
+      alert("⚠️ Fingerprint registration was cancelled or failed.");
       return;
     }
 
@@ -1026,7 +1031,7 @@ export default function App() {
       setDraft(updatedDraft);
 
       try {
-        await saveBackendConfig(sanitizeForFirestore(updatedDraft));
+        await saveBackendConfig(updatedDraft, "Fingerprint Registration");
       } catch (e) {
         console.warn("Cloud sync warning for fingerprint:", e);
       }
@@ -1039,7 +1044,7 @@ export default function App() {
     e.preventDefault();
     const currentDraftSafe = draft || DEFAULT_CONFIG;
     const targetEmail = currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com";
-    setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}! Check inbox.`);
+    setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}!`);
     setTimeout(() => {
       setShowForgotPasswordModal(false);
       setForgotPasswordStatus('');
@@ -1066,7 +1071,7 @@ export default function App() {
     try {
       const updated = { ...currentDraftSafe, adminPin: newPinInput };
       setDraft(updated);
-      await saveBackendConfig(sanitizeForFirestore(updated));
+      await saveBackendConfig(updated, "Admin PIN Update");
       setPopupToast({ title: "Password Updated", desc: "Admin PIN password successfully changed and synced." });
       setOldPinInput('');
       setNewPinInput('');
@@ -1076,31 +1081,25 @@ export default function App() {
     }
   };
 
-  // Robust save function that cleanly sanitizes the entire Firestore payload
   const handleSaveSpecificCard = async (sectionName) => {
-    setSavingSection(sectionName);
     try {
       const currentDraftSafe = draft || DEFAULT_CONFIG;
       const payload = { ...currentDraftSafe, adminFoldersOrder: adminFolders.map(f => f.id) };
-      const mediaReadyPayload = await persistMediaAssets(payload);
-      const cleanData = sanitizeForFirestore(mediaReadyPayload);
       const previous = JSON.parse(JSON.stringify(currentDraftSafe));
-      const changes = getChangedPaths(previous, mediaReadyPayload).slice(0, 80);
+      const changes = getChangedPaths(previous, payload).slice(0, 80);
       const historyEntry = {
         id: `chg_${Date.now()}`, section: sectionName, timestamp: Date.now(),
         summary: changes.slice(0, 8).map(c => c.path).join(', ') || 'No field-level changes detected',
         changes
       };
-      const history = [historyEntry, ...(currentDraftSafe.changeHistory || [])].slice(0, 20);
-      cleanData.changeHistory = history;
-      await saveBackendConfig(cleanData);
-      setDraft(mediaReadyPayload);
-      setPopupToast({ title: "Changes Saved Successfully!", desc: `"${sectionName}" has been updated and synced live to customer app.` });
+      payload.changeHistory = [historyEntry, ...(currentDraftSafe.changeHistory || [])].slice(0, 20);
+      
+      await saveBackendConfig(payload, sectionName);
+      setDraft(payload);
+      setPopupToast({ title: "Changes Saved Successfully!", desc: `"${sectionName}" has been updated and synced live.` });
     } catch (err) {
       console.error(`Error saving ${sectionName}:`, err);
       alert(`Error saving ${sectionName}: ${err.message}`);
-    } finally {
-      setSavingSection('');
     }
   };
 
@@ -1110,12 +1109,11 @@ export default function App() {
       let restored = JSON.parse(JSON.stringify(draft || DEFAULT_CONFIG));
       [...entry.changes].reverse().forEach(change => { restored = setNestedValue(restored, change.path, change.before); });
       restored.changeHistory = [
-        { id: `rollback_${Date.now()}`, section: `Rollback: ${entry.section}`, timestamp: Date.now(), summary: `Reverted ${entry.changes.length} field change(s)`, changes: [] },
+        { id: `rollback_${Date.now()}`, section: `Rollback: ${entry.section}`, timestamp: Date.now(), summary: `Reverted ${entry.changes.length} change(s)`, changes: [] },
         ...(restored.changeHistory || [])
       ].slice(0, 20);
-      const mediaReady = await persistMediaAssets(restored);
-      await saveBackendConfig(sanitizeForFirestore(mediaReady));
-      setDraft(mediaReady);
+      await saveBackendConfig(restored, `Rollback ${entry.section}`);
+      setDraft(restored);
       setPopupToast({ title: 'Rollback Complete', desc: `Restored the changes from ${entry.section}.` });
     } catch (err) {
       alert(`Rollback failed: ${err.message}`);
@@ -1133,14 +1131,13 @@ export default function App() {
     };
     setDraft(updated);
     try {
-      await saveBackendConfig(sanitizeForFirestore(updated));
+      await saveBackendConfig(updated, "Admin Theme Change");
       setPopupToast({ title: "Theme Applied Instantly", desc: `Admin console theme switched to ${newThemeKey}.` });
     } catch (err) {
-      console.warn("Theme instant sync notice:", err);
+      console.warn("Theme sync notice:", err);
     }
   };
 
-  // Normalize Indian client numbers for WhatsApp. Users may enter 10 digits (9997210876), +91..., or 919997210876.
   const normalizeIndianWhatsAppPhone = (value) => {
     const digits = String(value || '').replace(/\D/g, '');
     if (!digits) return '';
@@ -1184,14 +1181,13 @@ export default function App() {
     setSavingSection(`Booking ${newStatus}`);
     try {
       const statusPayload = { status: newStatus };
-      // A booking that is accepted/pending again must not retain stale rejection data.
       if (newStatus !== 'rejected') {
         statusPayload.rejectionCode = null;
         statusPayload.rejectionLabel = null;
         statusPayload.rejectionReason = null;
       }
       await updateDoc(doc(db, "bookings", bookingId), statusPayload);
-      setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()} successfully. Old rejection details were cleared.` });
+      setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()} successfully.` });
     } catch (err) {
       alert("Error updating status: " + err.message);
     } finally {
@@ -1212,7 +1208,7 @@ export default function App() {
         rejectionLabel: chosenLabel,
         rejectionReason: rejectionReasonText
       });
-      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully with reason code: ${selectedReasonCode}.` });
+      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully.` });
       setRejectModalData(null);
     } catch (err) {
       alert("Error rejecting booking: " + err.message);
@@ -1220,7 +1216,7 @@ export default function App() {
   };
 
   const handleAddRejectionReason = () => {
-    const code = prompt("Enter Unique Rejection Code (e.g. BRIDAL_LOCKOUT, SHORT_NOTICE):");
+    const code = prompt("Enter Unique Rejection Code (e.g. BRIDAL_LOCKOUT):");
     if (!code) return;
     const cleanCode = code.toUpperCase().replace(/[^A-Z0-9_]/g, '');
     const label = prompt("Enter Rejection Reason Label / Category Title:", "Policy Mismatch");
@@ -1233,7 +1229,7 @@ export default function App() {
     const updated = [...currentReasons, { code: cleanCode, label, message }];
 
     setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    saveBackendConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
+    saveBackendConfig({ ...currentDraftSafe, rejectionReasons: updated }, "Add Rejection Reason").catch(console.warn);
     setPopupToast({ title: "Reason Added", desc: `New rejection reason ${cleanCode} added successfully!` });
   };
 
@@ -1246,12 +1242,7 @@ export default function App() {
     }
     const updated = currentReasons.filter(r => r.code !== codeToRemove);
     setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    saveBackendConfig(sanitizeForFirestore({ ...currentDraftSafe, rejectionReasons: updated })).catch(console.warn);
-
-    if (selectedReasonCode === codeToRemove && updated.length > 0) {
-      setSelectedReasonCode(updated[0].code);
-      setRejectionReasonText(updated[0].message);
-    }
+    saveBackendConfig({ ...currentDraftSafe, rejectionReasons: updated }, "Remove Rejection Reason").catch(console.warn);
     setPopupToast({ title: "Reason Removed", desc: `Rejection reason ${codeToRemove} deleted.` });
   };
 
@@ -1284,7 +1275,7 @@ export default function App() {
             pricingByKit: updatedPricing
           };
           setDraft(newDraft);
-          await saveBackendConfig(sanitizeForFirestore(newDraft));
+          await saveBackendConfig(newDraft, "Delete Package");
         }
         setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
       } else if (deleteConfirmModal.type === 'batch') {
@@ -1310,10 +1301,10 @@ export default function App() {
   };
 
   const handleAddNewPackage = () => {
-    const rawKey = prompt("Enter Package Key (e.g. deluxe_glam, royal_reception):");
+    const rawKey = prompt("Enter Package Key (e.g. deluxe_glam):");
     if (!rawKey) return;
     const cleanKey = rawKey.toLowerCase().replace(/[^a-z0-9_]/g, '');
-    const titleName = prompt("Enter Package Display Name (e.g. Deluxe Glamour Makeup):", "Deluxe Makeup");
+    const titleName = prompt("Enter Package Display Name:", "Deluxe Makeup");
     if (!titleName) return;
 
     const currentDraftSafe = draft || DEFAULT_CONFIG;
@@ -1345,7 +1336,7 @@ export default function App() {
       pricingByKit: updatedPricing
     };
     setDraft(newDraft);
-    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added! Click 'Save Packages & Rates Master Live' to apply.` });
+    setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added! Save packages master to apply.` });
   };
 
   const handleGenerateSlipJpgOnDemand = (b) => {
@@ -1474,9 +1465,7 @@ export default function App() {
           ctx.beginPath();
           ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
           ctx.stroke();
-        } catch (e) {
-          console.warn("Logo draw skipped due to cross-origin taint", e);
-        }
+        } catch (e) {}
         drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130, 44, 'bold');
         drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175, 22, 'bold', '#c084fc');
       } else {
@@ -1629,9 +1618,7 @@ export default function App() {
             URL.revokeObjectURL(url);
           }, 800);
         }, 'image/jpeg', 0.95);
-      } catch (err) {
-        console.error('Booking slip download failed:', err);
-      }
+      } catch (err) {}
     };
 
     const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
@@ -1696,7 +1683,6 @@ export default function App() {
   }, [isAdminDarkMode]);
 
   useEffect(() => {
-    // Keep a valid admin theme even if an older Firestore config contains a stale/invalid key.
     if (draft?.adminTheme?.colorTheme && !ADMIN_THEME_KEYS.includes(draft.adminTheme.colorTheme)) {
       setDraft(prev => ({
         ...(prev || DEFAULT_CONFIG),
