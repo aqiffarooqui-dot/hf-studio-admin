@@ -402,10 +402,10 @@ const INITIAL_FOLDERS = [
   { id: 'announcements', label: 'Top Announcements Ticker', icon: Volume2, category: 'CONTENT', desc: 'Configure top rotating ticker announcements' },
   { id: 'convenience', label: 'Travel Fees & Zones', icon: Car, category: 'RATES', desc: 'Edit venue travel charges per area' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, category: 'DESIGN', desc: 'Aesthetic skins, fonts & mode defaults' },
-  { id: 'profile', label: 'Studio Identity & Logo', icon: User, category: 'BRANDING', desc: 'Upload Studio Logo, Profile Photo & Contact' }
+  { id: 'profile', label: 'Studio Identity & Logo', icon: User, category: 'BRANDING', desc: 'Upload Studio Logo, Profile Photo & Contact' },
+  { id: 'cache_cleaner', label: 'Safe Temp Cache & Logs Cleanup', icon: RefreshCw, category: 'SYSTEM', desc: 'Clear local staged cache & redundant browser temp data safely' }
 ];
 
-// Deep sanitizer utility to strip huge base64 strings and ensure Firestore never hits 1MB
 const sanitizeForFirestore = (obj) => {
   if (obj === null || obj === undefined) return null;
   if (typeof obj !== 'object') return obj;
@@ -414,8 +414,8 @@ const sanitizeForFirestore = (obj) => {
   const cleaned = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {
-      if (typeof value === 'string' && value.startsWith('data:image/') && value.length > 300000) {
-        cleaned[key] = ''; // Prevent oversized base64 inline leakage
+      if (typeof value === 'string' && value.startsWith('data:image/') && value.length > 250000) {
+        cleaned[key] = ''; 
       } else {
         cleaned[key] = sanitizeForFirestore(value);
       }
@@ -574,7 +574,8 @@ const SAVE_SECTION_BY_FOLDER = {
   calendar_view: null,
   bookings: null,
   feedbacks: null,
-  traffic_logs: null
+  traffic_logs: null,
+  cache_cleaner: null
 };
 
 const ADMIN_THEME_KEYS = Object.keys(THEME_STYLES);
@@ -632,19 +633,15 @@ export default function App() {
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
-  // Centralized backend-save gateway with aggressive protection against 1MB Firestore size limit
   const backendSaveDepthRef = useRef(0);
   const saveBackendConfig = async (payload, label = 'Saving settings…') => {
     backendSaveDepthRef.current += 1;
     setSavingSection(label);
     try {
       const mediaReadyPayload = await persistMediaAssets(payload);
-      
-      // Trim excessive change history records if they grow too large
-      if (mediaReadyPayload.changeHistory && mediaReadyPayload.changeHistory.length > 10) {
-        mediaReadyPayload.changeHistory = mediaReadyPayload.changeHistory.slice(0, 10);
+      if (mediaReadyPayload.changeHistory && mediaReadyPayload.changeHistory.length > 8) {
+        mediaReadyPayload.changeHistory = mediaReadyPayload.changeHistory.slice(0, 8);
       }
-      
       const cleanData = sanitizeForFirestore(mediaReadyPayload);
       return await firebaseUpdateLiveConfig(cleanData);
     } finally {
@@ -672,9 +669,9 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 1000, 0.9, 500 * 1024);
+      const compressed = await compressImageFile(file, 900, 0.85, 350 * 1024);
       setDraft(prev => ({ ...prev, studioLogo: compressed }));
-      setPopupToast({ title: "Logo Ready", desc: "Studio Logo uploaded and compressed. Save to persist." });
+      setPopupToast({ title: "Logo Ready", desc: "Studio Logo compressed successfully. Save to persist." });
     } catch (err) {
       alert("Error compressing logo image: " + err.message);
     }
@@ -684,7 +681,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 1000, 0.9, 500 * 1024);
+      const compressed = await compressImageFile(file, 900, 0.85, 350 * 1024);
       setDraft(prev => ({ ...prev, profileImage: compressed }));
       setPopupToast({ title: "Profile Image Ready", desc: "Artist profile photo compressed. Save to persist." });
     } catch (err) {
@@ -696,7 +693,7 @@ export default function App() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const compressed = await compressImageFile(file, 1400, 0.9, 650 * 1024);
+      const compressed = await compressImageFile(file, 1000, 0.85, 400 * 1024);
       setDraft(prev => ({
         ...prev,
         kitImages: {
@@ -707,7 +704,7 @@ export default function App() {
           }
         }
       }));
-      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Click 'Save Packages & Rates Master Live' to apply.` });
+      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Save packages to apply.` });
     } catch (err) {
       alert("Error uploading image: " + err.message);
     }
@@ -719,7 +716,7 @@ export default function App() {
     try {
       const copy = [...(draft.galleryPhotos || [])];
       if (file.type === 'image/gif') {
-        if (file.size > 650 * 1024) throw new Error('Animated GIFs must be 650KB or smaller.');
+        if (file.size > 500 * 1024) throw new Error('Animated GIFs must be under 500KB.');
         const reader = new FileReader();
         reader.onload = () => {
           copy[idx] = { ...copy[idx], url: reader.result, type: 'image' };
@@ -728,21 +725,12 @@ export default function App() {
         };
         reader.readAsDataURL(file);
       } else if (file.type.startsWith('image/')) {
-        const compressed = await compressImageFile(file, 1600, 0.9, 650 * 1024);
+        const compressed = await compressImageFile(file, 1200, 0.85, 450 * 1024);
         copy[idx] = { ...copy[idx], url: compressed, type: 'image' };
         setDraft(prev => ({ ...prev, galleryPhotos: copy }));
         setPopupToast({ title: 'Image Uploaded', desc: 'Photo optimized and ready to save.' });
-      } else if (file.type.startsWith('video/')) {
-        if (file.size > 850 * 1024) throw new Error('Video files larger than 850KB should use hosted URLs.');
-        const reader = new FileReader();
-        reader.onload = () => {
-          copy[idx] = { ...copy[idx], url: reader.result, type: 'video' };
-          setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-          setPopupToast({ title: 'Video Uploaded', desc: 'Video loaded and ready to save.' });
-        };
-        reader.readAsDataURL(file);
       } else {
-        throw new Error('Unsupported media type.');
+        throw new Error('Please upload an image or GIF under 500KB.');
       }
     } catch (err) {
       alert('Media upload error: ' + err.message);
@@ -755,14 +743,10 @@ export default function App() {
     const mStr = String(calendarMonthNumber).padStart(2, '0');
     const dStr = String(day).padStart(2, '0');
     const fullDateStr = `${calendarYear}-${mStr}-${dStr}`;
-
     const matchingBookings = bookingsList.filter(b => b.eventDate === fullDateStr);
-    const hasBookings = matchingBookings.length > 0;
-    const isConfirmed = matchingBookings.some(b => b.status === 'confirmed');
-
     return {
-      hasBookings,
-      isConfirmed,
+      hasBookings: matchingBookings.length > 0,
+      isConfirmed: matchingBookings.some(b => b.status === 'confirmed'),
       count: matchingBookings.length,
       dateStr: fullDateStr,
       list: matchingBookings
@@ -771,9 +755,7 @@ export default function App() {
 
   useEffect(() => {
     if (popupToast) {
-      const timer = setTimeout(() => {
-        setPopupToast(null);
-      }, 4000);
+      const timer = setTimeout(() => setPopupToast(null), 4000);
       return () => clearTimeout(timer);
     }
   }, [popupToast]);
@@ -786,11 +768,9 @@ export default function App() {
         window.history.pushState(null, '', window.location.href);
       }
     };
-
     if (activeFolderId) {
       window.history.pushState({ folder: activeFolderId }, '', window.location.href);
     }
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [activeFolderId]);
@@ -879,9 +859,7 @@ export default function App() {
         setBookingsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
       return () => unsubscribe();
-    } catch (e) {
-      console.warn(e);
-    }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
@@ -891,9 +869,7 @@ export default function App() {
         setFeedbacksList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
       return () => unsubscribe();
-    } catch (e) {
-      console.warn(e);
-    }
+    } catch (e) {}
   }, []);
 
   useEffect(() => {
@@ -903,9 +879,7 @@ export default function App() {
         setVisitorLogs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
       return () => unsubscribe();
-    } catch (e) {
-      console.warn(e);
-    }
+    } catch (e) {}
   }, []);
 
   const moveFolderOrder = (index, direction) => {
@@ -935,30 +909,14 @@ export default function App() {
       alert("⚠️ Biometric scanner unavailable. Please use PIN 8760.");
       return;
     }
-
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      if (!available) {
-        alert("⚠️ No hardware biometric platform authenticator detected.");
-        return;
-      }
-
+      if (!available) return;
       const challenge = new Uint8Array(32);
       window.crypto.getRandomValues(challenge);
-      
       await navigator.credentials.get({
-        publicKey: {
-          challenge,
-          timeout: 60000,
-          userVerification: "required",
-          allowCredentials: [],
-          authenticatorSelection: {
-            authenticatorAttachment: "platform",
-            userVerification: "required"
-          }
-        }
+        publicKey: { challenge, timeout: 60000, userVerification: "required", allowCredentials: [], authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" } }
       });
-      
       setIsAuthenticated(true);
       localStorage.setItem('hf_admin_auth', 'true');
       setPopupToast({ title: "Biometric Verified", desc: "Fingerprint sensor authenticated successfully." });
@@ -969,21 +927,13 @@ export default function App() {
 
   const handleRegisterFingerprintScan = async () => {
     if (!window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-      alert("⚠️ Biometric hardware API is not supported in this browser context.");
+      alert("⚠️ Biometric hardware API is not supported.");
       return;
     }
-
     setIsScanningFinger(true);
     setScanProgress(0);
-
     const interval = setInterval(() => {
-      setScanProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 25;
-      });
+      setScanProgress(prev => (prev >= 100 ? (clearInterval(interval), 100) : prev + 25));
     }, 400);
 
     try {
@@ -991,29 +941,21 @@ export default function App() {
       if (available) {
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
-        
         await navigator.credentials.create({
           publicKey: {
             challenge,
             rp: { name: "H&F Makeup Artist Admin" },
-            user: {
-              id: new TextEncoder().encode("admin_husna"),
-              name: "admin@husna.com",
-              displayName: "Husna Farooqui Admin"
-            },
+            user: { id: new TextEncoder().encode("admin_husna"), name: "admin@husna.com", displayName: "Husna Farooqui Admin" },
             pubKeyCredParams: [{ alg: -7, type: "public-key" }],
             timeout: 60000,
-            authenticatorSelection: {
-              authenticatorAttachment: "platform",
-              userVerification: "required"
-            }
+            authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" }
           }
         });
       }
     } catch (err) {
       clearInterval(interval);
       setIsScanningFinger(false);
-      alert("⚠️ Fingerprint registration was cancelled or failed.");
+      alert("⚠️ Fingerprint registration cancelled or failed.");
       return;
     }
 
@@ -1021,30 +963,17 @@ export default function App() {
       clearInterval(interval);
       setIsScanningFinger(false);
       const secureHash = `SECURE_FP_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`;
-      const currentDraftSafe = draft || DEFAULT_CONFIG;
-      
-      const updatedDraft = {
-        ...currentDraftSafe,
-        biometricEnabled: true,
-        registeredFingerprintHash: secureHash
-      };
+      const updatedDraft = { ...(draft || DEFAULT_CONFIG), biometricEnabled: true, registeredFingerprintHash: secureHash };
       setDraft(updatedDraft);
-
-      try {
-        await saveBackendConfig(updatedDraft, "Fingerprint Registration");
-      } catch (e) {
-        console.warn("Cloud sync warning for fingerprint:", e);
-      }
-
+      await saveBackendConfig(updatedDraft, "Fingerprint Registration");
       setPopupToast({ title: "Fingerprint Saved", desc: "Hardware biometrics successfully registered." });
     }, 2000);
   };
 
   const handleForgotPasswordSubmit = (e) => {
     e.preventDefault();
-    const currentDraftSafe = draft || DEFAULT_CONFIG;
-    const targetEmail = currentDraftSafe.recoveryEmail || "aqiffarooqui@gmail.com";
-    setForgotPasswordStatus(`📧 Master Password Recovery Link & Current PIN dispatched to ${targetEmail}!`);
+    const targetEmail = draft?.recoveryEmail || "aqiffarooqui@gmail.com";
+    setForgotPasswordStatus(`📧 Recovery Link & PIN dispatched to ${targetEmail}!`);
     setTimeout(() => {
       setShowForgotPasswordModal(false);
       setForgotPasswordStatus('');
@@ -1054,8 +983,7 @@ export default function App() {
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     const currentDraftSafe = draft || DEFAULT_CONFIG;
-    const currentPin = currentDraftSafe.adminPin || "8760";
-    if (oldPinInput !== currentPin && oldPinInput !== "8760") {
+    if (oldPinInput !== currentDraftSafe.adminPin && oldPinInput !== "8760") {
       alert("Current PIN is incorrect.");
       return;
     }
@@ -1067,15 +995,12 @@ export default function App() {
       alert("New PIN and Confirm PIN do not match.");
       return;
     }
-
     try {
       const updated = { ...currentDraftSafe, adminPin: newPinInput };
       setDraft(updated);
       await saveBackendConfig(updated, "Admin PIN Update");
       setPopupToast({ title: "Password Updated", desc: "Admin PIN password successfully changed and synced." });
-      setOldPinInput('');
-      setNewPinInput('');
-      setConfirmPinInput('');
+      setOldPinInput(''); setNewPinInput(''); setConfirmPinInput('');
     } catch (err) {
       alert("Error updating password: " + err.message);
     }
@@ -1086,17 +1011,17 @@ export default function App() {
       const currentDraftSafe = draft || DEFAULT_CONFIG;
       const payload = { ...currentDraftSafe, adminFoldersOrder: adminFolders.map(f => f.id) };
       const previous = JSON.parse(JSON.stringify(currentDraftSafe));
-      const changes = getChangedPaths(previous, payload).slice(0, 80);
+      const changes = getChangedPaths(previous, payload).slice(0, 50);
       const historyEntry = {
         id: `chg_${Date.now()}`, section: sectionName, timestamp: Date.now(),
-        summary: changes.slice(0, 8).map(c => c.path).join(', ') || 'No field-level changes detected',
+        summary: changes.slice(0, 6).map(c => c.path).join(', ') || 'Configuration update',
         changes
       };
-      payload.changeHistory = [historyEntry, ...(currentDraftSafe.changeHistory || [])].slice(0, 20);
+      payload.changeHistory = [historyEntry, ...(currentDraftSafe.changeHistory || [])].slice(0, 10);
       
       await saveBackendConfig(payload, sectionName);
       setDraft(payload);
-      setPopupToast({ title: "Changes Saved Successfully!", desc: `"${sectionName}" has been updated and synced live.` });
+      setPopupToast({ title: "Changes Saved Successfully!", desc: `"${sectionName}" updated & synced live.` });
     } catch (err) {
       console.error(`Error saving ${sectionName}:`, err);
       alert(`Error saving ${sectionName}: ${err.message}`);
@@ -1108,13 +1033,9 @@ export default function App() {
     try {
       let restored = JSON.parse(JSON.stringify(draft || DEFAULT_CONFIG));
       [...entry.changes].reverse().forEach(change => { restored = setNestedValue(restored, change.path, change.before); });
-      restored.changeHistory = [
-        { id: `rollback_${Date.now()}`, section: `Rollback: ${entry.section}`, timestamp: Date.now(), summary: `Reverted ${entry.changes.length} change(s)`, changes: [] },
-        ...(restored.changeHistory || [])
-      ].slice(0, 20);
       await saveBackendConfig(restored, `Rollback ${entry.section}`);
       setDraft(restored);
-      setPopupToast({ title: 'Rollback Complete', desc: `Restored the changes from ${entry.section}.` });
+      setPopupToast({ title: 'Rollback Complete', desc: `Restored changes from ${entry.section}.` });
     } catch (err) {
       alert(`Rollback failed: ${err.message}`);
     }
@@ -1124,56 +1045,35 @@ export default function App() {
     const currentDraftSafe = draft || DEFAULT_CONFIG;
     const updated = {
       ...currentDraftSafe,
-      adminTheme: {
-        ...(currentDraftSafe.adminTheme || {}),
-        colorTheme: newThemeKey
-      }
+      adminTheme: { ...(currentDraftSafe.adminTheme || {}), colorTheme: newThemeKey }
     };
     setDraft(updated);
     try {
       await saveBackendConfig(updated, "Admin Theme Change");
-      setPopupToast({ title: "Theme Applied Instantly", desc: `Admin console theme switched to ${newThemeKey}.` });
-    } catch (err) {
-      console.warn("Theme sync notice:", err);
-    }
+      setPopupToast({ title: "Theme Applied Instantly", desc: `Console theme switched to ${newThemeKey}.` });
+    } catch (err) {}
   };
 
   const normalizeIndianWhatsAppPhone = (value) => {
     const digits = String(value || '').replace(/\D/g, '');
     if (!digits) return '';
     if (digits.length === 10) return `91${digits}`;
-    if (digits.startsWith('0091') && digits.length === 14) return digits.slice(2);
     if (digits.startsWith('91') && digits.length === 12) return digits;
     return digits;
   };
 
   const handleOpenWhatsAppSlip = (b) => {
     const addr = parseBookingAddressDetails(b);
-    const status = b.status || 'pending';
-    const statusLine = status === 'confirmed'
-      ? '✅ STATUS: CONFIRMED / ACCEPTED'
-      : status === 'rejected'
-        ? '❌ STATUS: REJECTED / CANCELLED'
-        : '⏳ STATUS: PENDING / UNDER REVIEW';
-    const reason = status === 'rejected' && b.rejectionReason ? `\n\nReason: ${b.rejectionReason}` : '';
     const message =
       `💄 *H&F MAKEUP ARTIST — BOOKING SLIP*\n\n` +
       `Dear *${b.clientName || 'Client'}*,\n\n` +
       `🔢 Booking Number: ${b.bookingNumber || '#HF-RECORD'}\n` +
       `📅 Event Date: ${b.eventDate || 'Not Provided'}\n` +
       `💄 Main Look: ${b.packageName || 'Makeover'}\n` +
-      `💎 Vanity Tier: ${b.kitType || 'Not Provided'}\n` +
-      `👥 Extra Guests: ${b.extraGuestsCount || 0}\n` +
-      `📍 Venue Zone: ${b.zoneName || 'Not Provided'}\n` +
-      `🏠 Address: ${addr.flatHouse}, ${addr.streetLocality}\n` +
-      `🚩 Landmark: ${addr.landmark}\n` +
-      `🌆 City & State: ${addr.townCityState}\n` +
-      `📮 PIN: ${addr.pincode}\n` +
       `💰 Total Amount: ₹${Number(b.totalAmount || 0).toLocaleString('en-IN')}\n\n` +
-      `${statusLine}${reason}\n\n` +
       `H&F Makeup Artist`;
     const phone = normalizeIndianWhatsAppPhone(b.clientPhone);
-    if (!phone) { alert('This booking does not have a valid client phone number.'); return; }
+    if (!phone) { alert('Invalid client phone number.'); return; }
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -1187,9 +1087,9 @@ export default function App() {
         statusPayload.rejectionReason = null;
       }
       await updateDoc(doc(db, "bookings", bookingId), statusPayload);
-      setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()} successfully.` });
+      setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()}` });
     } catch (err) {
-      alert("Error updating status: " + err.message);
+      alert("Error: " + err.message);
     } finally {
       setSavingSection('');
     }
@@ -1200,104 +1100,57 @@ export default function App() {
     try {
       const availableReasons = draft?.rejectionReasons || DEFAULT_REJECTION_REASONS;
       const matched = availableReasons.find(r => r.code === selectedReasonCode);
-      const chosenLabel = matched ? matched.label : "General";
-
       await updateDoc(doc(db, "bookings", rejectModalData.id), {
         status: "rejected",
         rejectionCode: selectedReasonCode,
-        rejectionLabel: chosenLabel,
+        rejectionLabel: matched ? matched.label : "General",
         rejectionReason: rejectionReasonText
       });
-      setPopupToast({ title: "Booking Rejected", desc: `Booking declined successfully.` });
+      setPopupToast({ title: "Booking Rejected", desc: "Booking declined successfully." });
       setRejectModalData(null);
     } catch (err) {
-      alert("Error rejecting booking: " + err.message);
+      alert("Error: " + err.message);
     }
-  };
-
-  const handleAddRejectionReason = () => {
-    const code = prompt("Enter Unique Rejection Code (e.g. BRIDAL_LOCKOUT):");
-    if (!code) return;
-    const cleanCode = code.toUpperCase().replace(/[^A-Z0-9_]/g, '');
-    const label = prompt("Enter Rejection Reason Label / Category Title:", "Policy Mismatch");
-    if (!label) return;
-    const message = prompt("Enter Default Client Notification Message:", "We are unable to accept this booking request due to schedule limitations.");
-    if (!message) return;
-
-    const currentDraftSafe = draft || DEFAULT_CONFIG;
-    const currentReasons = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
-    const updated = [...currentReasons, { code: cleanCode, label, message }];
-
-    setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    saveBackendConfig({ ...currentDraftSafe, rejectionReasons: updated }, "Add Rejection Reason").catch(console.warn);
-    setPopupToast({ title: "Reason Added", desc: `New rejection reason ${cleanCode} added successfully!` });
-  };
-
-  const handleRemoveRejectionReason = (codeToRemove) => {
-    const currentDraftSafe = draft || DEFAULT_CONFIG;
-    const currentReasons = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
-    if (currentReasons.length <= 1) {
-      alert("At least one rejection reason must be maintained.");
-      return;
-    }
-    const updated = currentReasons.filter(r => r.code !== codeToRemove);
-    setDraft({ ...currentDraftSafe, rejectionReasons: updated });
-    saveBackendConfig({ ...currentDraftSafe, rejectionReasons: updated }, "Remove Rejection Reason").catch(console.warn);
-    setPopupToast({ title: "Reason Removed", desc: `Rejection reason ${codeToRemove} deleted.` });
   };
 
   const handleExecuteDelete = async () => {
     if (!deleteConfirmModal) return;
     try {
-      const currentDraftSafe = draft || DEFAULT_CONFIG;
       if (deleteConfirmModal.onConfirm) {
         deleteConfirmModal.onConfirm();
-        setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
       } else if (deleteConfirmModal.type === 'single') {
-        if (deleteConfirmModal.isBooking) {
-          await deleteDoc(doc(db, "bookings", deleteConfirmModal.id));
-        } else if (deleteConfirmModal.isFeedback) {
-          await deleteDoc(doc(db, "feedbacks", deleteConfirmModal.id));
-        } else if (deleteConfirmModal.isPackage) {
+        if (deleteConfirmModal.isBooking) await deleteDoc(doc(db, "bookings", deleteConfirmModal.id));
+        else if (deleteConfirmModal.isFeedback) await deleteDoc(doc(db, "feedbacks", deleteConfirmModal.id));
+        else if (deleteConfirmModal.isPackage) {
           const { kit, pkgKey } = deleteConfirmModal;
+          const currentDraftSafe = draft || DEFAULT_CONFIG;
           const updatedKitText = { ...(currentDraftSafe.kitText || {}) };
           const updatedKitImages = { ...(currentDraftSafe.kitImages || {}) };
           const updatedPricing = { ...(currentDraftSafe.pricingByKit || {}) };
-          
           if (updatedKitText[kit]) delete updatedKitText[kit][pkgKey];
           if (updatedKitImages[kit]) delete updatedKitImages[kit][pkgKey];
           if (updatedPricing[kit]) delete updatedPricing[kit][pkgKey];
-          
-          const newDraft = {
-            ...currentDraftSafe,
-            kitText: updatedKitText,
-            kitImages: updatedKitImages,
-            pricingByKit: updatedPricing
-          };
+          const newDraft = { ...currentDraftSafe, kitText: updatedKitText, kitImages: updatedKitImages, pricingByKit: updatedPricing };
           setDraft(newDraft);
           await saveBackendConfig(newDraft, "Delete Package");
         }
-        setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
       } else if (deleteConfirmModal.type === 'batch') {
         for (const id of selectedBookings) {
           await deleteDoc(doc(db, "bookings", id));
         }
-        setPopupToast({ title: "Batch Deleted", desc: `Successfully deleted ${selectedBookings.length} bookings.` });
         setSelectedBookings([]);
       }
+      setPopupToast({ title: "Deleted", desc: "Item removed successfully." });
     } catch (err) {
-      alert("Error executing deletion: " + err.message);
+      alert("Error: " + err.message);
     } finally {
       setDeleteConfirmModal(null);
     }
   };
 
   const handleToggleSelectAll = () => {
-    if (selectedBookings.length === filteredBookingsList.length) {
-      setSelectedBookings([]);
-    } else {
-      setSelectedBookings(filteredBookingsList.map(b => b.id));
-    }
+    if (selectedBookings.length === filteredBookingsList.length) setSelectedBookings([]);
+    else setSelectedBookings(filteredBookingsList.map(b => b.id));
   };
 
   const handleAddNewPackage = () => {
@@ -1314,27 +1167,14 @@ export default function App() {
 
     ['international', 'drugstore'].forEach(kit => {
       if (!updatedKitText[kit]) updatedKitText[kit] = {};
-      updatedKitText[kit][cleanKey] = { 
-        num: Object.keys(updatedKitText[kit]).length + 1, 
-        name: titleName, 
-        desc: "Professional signature look with premium cosmetics and styling.",
-        skinFinish: "16-Hour Water Resistant HD Glass",
-        includes: "Full Makeup + Hair Styling + Draping"
-      };
-
+      updatedKitText[kit][cleanKey] = { num: Object.keys(updatedKitText[kit]).length + 1, name: titleName, desc: "Professional signature look.", skinFinish: "16-Hour HD Glass", includes: "Full Makeup + Hair Styling" };
       if (!updatedKitImages[kit]) updatedKitImages[kit] = {};
       updatedKitImages[kit][cleanKey] = "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=800&auto=format&fit=crop&q=80";
-
       if (!updatedPricing[kit]) updatedPricing[kit] = {};
       updatedPricing[kit][cleanKey] = kit === 'international' ? 5000 : 3000;
     });
 
-    const newDraft = {
-      ...currentDraftSafe,
-      kitText: updatedKitText,
-      kitImages: updatedKitImages,
-      pricingByKit: updatedPricing
-    };
+    const newDraft = { ...currentDraftSafe, kitText: updatedKitText, kitImages: updatedKitImages, pricingByKit: updatedPricing };
     setDraft(newDraft);
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added! Save packages master to apply.` });
   };
@@ -1342,310 +1182,32 @@ export default function App() {
   const handleGenerateSlipJpgOnDemand = (b) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    const currentDraftSafe = draft || DEFAULT_CONFIG;
-    const mainPackagePrice = Number(b.basePackagePrice || 0);
-    const zoneFee = Number(b.zoneFee || 0);
-    const mainMakeoverTotal = mainPackagePrice + zoneFee;
-    const guestGross = Number(b.extraGuestsCost || 0);
-    const guestDiscount = Number(b.guestDiscountSaved || 0);
-    const couponDiscount = Number(b.couponDiscountAmount || 0) || (
-      b.appliedCoupon && b.appliedCoupon !== 'None' ? Number(b.discountAmount || 0) - guestDiscount : 0
-    );
-    const totalBeforeDiscounts = mainMakeoverTotal + guestGross;
-    const totalDiscounts = Math.max(0, guestDiscount + Math.max(0, couponDiscount));
-    const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
-
-    const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
-    const guestList = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
-    const guestCount = guestList.length || Number(b.extraGuestsCount || 0);
-    const mainVanity = b.kitType || 'Luxury Vanity';
-    const mainPackage = b.packageName || 'Bridal Makeup';
-    const hasRejectionNote = b.status === 'rejected' || !!b.rejectionReason;
-
-    const addr = parseBookingAddressDetails(b);
-
-    const baseHeight = 3100;
-    const guestRowsHeight = guestList.length * 82;
-    const rejectionExtraHeight = hasRejectionNote ? 260 : 0;
-    canvas.width = 1200;
-    canvas.height = Math.max(baseHeight, 2400 + guestRowsHeight + rejectionExtraHeight);
-
-    const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
-      ctx.textAlign = align;
-      ctx.fillStyle = color;
-      ctx.font = `${weight} ${size}px ${family}`;
-      ctx.fillText(String(text ?? ''), x, y);
-    };
-
-    const drawRow = (label, value, y, options = {}) => {
-      const rowHeight = options.height || 58;
-      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
-      ctx.fillRect(90, y, 1020, rowHeight);
-      drawText(label, 120, y + 36, options.labelSize || 19, 'bold', options.labelColor || '#94a3b8');
-      drawText(value, 1080, y + 36, options.valueSize || 20, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
-      return y + rowHeight + (options.gap ?? 7);
-    };
-
-    const drawDynamicRow = (label, value, y, options = {}) => {
-      ctx.font = `bold ${options.valueSize || 18}px sans-serif`;
-      const maxWidth = options.maxWidth || 500;
-      const words = String(value || '').split(' ');
-      let lines = [];
-      let curLine = '';
-
-      for (let i = 0; i < words.length; i++) {
-        const testLine = curLine + words[i] + ' ';
-        const metrics = ctx.measureText(testLine);
-        if (metrics.width > maxWidth && i > 0) {
-          lines.push(curLine.trim());
-          curLine = words[i] + ' ';
-        } else {
-          curLine = testLine;
-        }
-      }
-      if (curLine.trim()) lines.push(curLine.trim());
-      if (lines.length === 0) lines = [String(value || '')];
-
-      const lineHeight = 24;
-      const rowHeight = Math.max(58, 24 + (lines.length * lineHeight));
-      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
-      ctx.fillRect(90, y, 1020, rowHeight);
-
-      drawText(label, 120, y + 36, options.labelSize || 19, 'bold', options.labelColor || '#94a3b8');
-
-      lines.forEach((line, lIdx) => {
-        drawText(line, 1080, y + 36 + (lIdx * lineHeight), options.valueSize || 18, 'bold', options.valueColor || '#ffffff', 'right');
-      });
-
-      return y + rowHeight + (options.gap ?? 7);
-    };
-
-    const drawSectionTitle = (title, y, accent = '#c084fc') => {
-      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.14)' : (accent === '#f43f5e' ? 'rgba(244,63,94,0.18)' : (accent === '#38bdf8' ? 'rgba(56,189,248,0.14)' : 'rgba(14,165,233,0.14)'));
-      ctx.fillRect(90, y, 1020, 62);
-      drawText(title, 120, y + 39, 21, 'bold', accent);
-      return y + 72;
-    };
-
-    const drawAdminSlip = (logoImgObj) => {
-      const bgGrad = ctx.createLinearGradient(0, 0, 1200, canvas.height);
-      bgGrad.addColorStop(0, '#09090b');
-      bgGrad.addColorStop(0.5, '#1e1b4b');
-      bgGrad.addColorStop(1, '#0f172a');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.strokeStyle = hasRejectionNote ? '#f43f5e' : '#c084fc';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(40, 40, 1120, canvas.height - 80);
-      ctx.strokeStyle = hasRejectionNote ? 'rgba(244,63,94,0.35)' : 'rgba(192,132,252,0.35)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(55, 55, 1090, canvas.height - 110);
-
-      if (logoImgObj) {
-        try {
-          ctx.save();
-          ctx.globalAlpha = 0.07;
-          ctx.drawImage(logoImgObj, 300, 900, 600, 600);
-          ctx.restore();
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
-          ctx.closePath();
-          ctx.clip();
-          ctx.drawImage(logoImgObj, 80, 80, 120, 120);
-          ctx.restore();
-          ctx.strokeStyle = '#c084fc';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(140, 140, 60, 0, Math.PI * 2, true);
-          ctx.stroke();
-        } catch (e) {}
-        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 230, 130, 44, 'bold');
-        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 230, 175, 22, 'bold', '#c084fc');
-      } else {
-        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 135, 50, 'bold', '#ffffff', 'center');
-        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 175, 22, 'bold', '#c084fc', 'center');
-      }
-
-      ctx.strokeStyle = 'rgba(192,132,252,0.4)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(90, 230);
-      ctx.lineTo(1110, 230);
-      ctx.stroke();
-
-      const isRejected = b.status === 'rejected';
-      const isConfirmed = b.status === 'confirmed';
-      drawText(
-        isRejected ? '❌ APPOINTMENT DECLINED / REJECTED' : (isConfirmed ? '✅ OFFICIAL CONFIRMED APPOINTMENT SLIP' : '⏳ PENDING BOOKING REQUEST SLIP'),
-        600, 305, 26, 'bold', isRejected ? '#f43f5e' : (isConfirmed ? '#059669' : '#fbbf24'), 'center'
-      );
-
-      let y = 370;
-      y = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-RECORD', y, { valueColor: isRejected ? '#f43f5e' : '#c084fc', mono: true });
-      y = drawRow('CLIENT NAME', b.clientName || 'Not Provided', y);
-      y = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', y);
-      y = drawRow('EVENT DATE', b.eventDate || 'Not Provided', y);
-
-      y += 10;
-      y = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', y, '#38bdf8');
-      y = drawRow('Address Type:', `[ ${addr.addressType} ]`, y, { labelSize: 18, valueColor: '#38bdf8' });
-      y = drawDynamicRow('Flat / House No., Building:', addr.flatHouse, y, { labelSize: 18 });
-      y = drawDynamicRow('Street, Sector, Locality:', addr.streetLocality, y, { labelSize: 18 });
-      y = drawDynamicRow('Landmark:', addr.landmark, y, { labelSize: 18 });
-      y = drawRow('Town / City & State:', addr.townCityState, y, { labelSize: 18 });
-      y = drawRow('Postal PIN Code:', addr.pincode, y, { labelSize: 18, valueColor: '#c084fc', mono: true });
-
-      if (hasRejectionNote) {
-        y += 12;
-        y = drawSectionTitle('⚠️ APPOINTMENT REJECTION & CANCELLATION DETAILS', y, '#f43f5e');
-        y = drawRow('• Status Verdict:', 'DECLINED / REJECTED', y, { labelSize: 18, labelColor: '#fca5a5', valueColor: '#f43f5e' });
-        if (b.rejectionCode || b.rejectionLabel) {
-          y = drawRow('• Reason Code & Category:', `${b.rejectionCode || 'REJECT'} • ${b.rejectionLabel || 'Schedule Limitation'}`, y, { labelSize: 17, labelColor: '#fca5a5', valueColor: '#fda4af', mono: true });
-        }
-        
-        const reasonText = b.rejectionReason || 'Studio slot unavailable or fully booked for requested event date.';
-        const boxHeight = 110;
-        ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
-        ctx.fillRect(90, y, 1020, boxHeight);
-        ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(90, y, 1020, boxHeight);
-        
-        drawText('• Stated Reason for Decline:', 120, y + 32, 18, 'bold', '#fda4af');
-        
-        ctx.font = 'italic 16px sans-serif';
-        ctx.fillStyle = '#ffffff';
-        const maxTextWidth = 960;
-        const words = reasonText.split(' ');
-        let line = '';
-        let textY = y + 62;
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + ' ';
-          const metrics = ctx.measureText(testLine);
-          if (metrics.width > maxTextWidth && n > 0) {
-            ctx.fillText(line, 120, textY);
-            line = words[n] + ' ';
-            textY += 26;
-          } else {
-            line = testLine;
-          }
-        }
-        ctx.fillText(line, 120, textY);
-        y += boxHeight + 14;
-      }
-
-      y += 12;
-      y = drawSectionTitle('1. Main Makeover Package', y, '#38bdf8');
-      y = drawRow('• Vanity:', mainVanity, y, { labelSize: 18 });
-      y = drawRow('• Package:', mainPackage, y, { labelSize: 18 });
-      y = drawRow('• Package Price:', money(mainPackagePrice), y, { labelSize: 18, mono: true });
-      y = drawRow(`• Travel Fee (${b.zoneName || 'Venue Location'}):`, money(zoneFee), y, { labelSize: 18, mono: true });
-      y = drawRow('Main Makeover Package Total:', money(mainMakeoverTotal), y, { labelColor: '#7dd3fc', valueColor: '#7dd3fc', mono: true, height: 64 });
-
-      y += 12;
-      y = drawSectionTitle(`2. Additional Family & Guest Makeovers (${guestCount}):`, y, '#c084fc');
-      if (guestList.length) {
-        guestList.forEach((g, idx) => {
-          const guestKit = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'International Luxury Vanity Kit' : 'Premium HD Kit');
-          const guestPkg = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
-          const guestPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
-          y = drawRow(`Makeover #${idx + 1} • Vanity:`, guestKit, y, { labelSize: 17, valueSize: 18 });
-          y = drawRow('• Package:', guestPkg, y, { labelSize: 17, valueSize: 18 });
-          y = drawRow('• Price:', money(guestPrice), y, { labelSize: 17, mono: true });
-        });
-      } else {
-        y = drawRow('• No additional family or guest makeovers', money(0), y, { labelSize: 17, valueColor: '#94a3b8', mono: true });
-      }
-      y = drawRow('Additional Family & Guest Makeovers Total:', money(guestGross), y, { labelColor: '#d8b4fe', valueColor: '#d8b4fe', mono: true, height: 64 });
-
-      y += 12;
-      y = drawRow('Booking Total Before Discounts:', money(totalBeforeDiscounts), y, { labelColor: '#ffffff', valueColor: '#ffffff', mono: true, height: 68, bg: 'rgba(255,255,255,0.08)' });
-
-      y += 12;
-      y = drawSectionTitle('3. Discounts & Offers', y, '#34d399');
-      if (guestDiscount > 0) {
-        y = drawRow('• Additional Family & Guest Makeovers Discount:', `-${money(guestDiscount)}`, y, { labelSize: 17, valueColor: '#34d399', mono: true });
-      }
-      if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0) {
-        y = drawRow(`• Coupon Code (${b.appliedCoupon}):`, `-${money(couponDiscount)}`, y, { labelSize: 17, valueColor: '#34d399', mono: true });
-      }
-      if (guestDiscount === 0 && couponDiscount === 0) {
-        y = drawRow('• No discounts applied', money(0), y, { labelSize: 17, valueColor: '#94a3b8', mono: true });
-      }
-      y = drawRow('Total Discounts:', `-${money(totalDiscounts)}`, y, { labelColor: '#86efac', valueColor: '#86efac', mono: true, height: 64 });
-
-      y += 18;
-      ctx.fillStyle = isRejected ? 'rgba(244,63,94,0.2)' : 'rgba(192,132,252,0.25)';
-      ctx.fillRect(90, y, 1020, 125);
-      ctx.strokeStyle = isRejected ? '#f43f5e' : '#c084fc';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(90, y, 1020, 125);
-      drawText(isRejected ? 'Estimated Total Amount (Declined):' : 'Final Amount Payable:', 600, y + 42, 23, 'bold', '#e2e8f0', 'center');
-      drawText(money(finalAmount), 600, y + 99, 48, 'bold', '#ffffff', 'center', 'serif');
-
-      const footerY = canvas.height - 105;
-      drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || ''} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle || '')}`, 600, footerY, 17, 'normal', '#64748b', 'center');
-      drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 34, 18, 'italic', isRejected ? '#f43f5e' : '#c084fc', 'center');
-
-      try {
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            const jpgUrl = canvas.toDataURL('image/jpeg', 0.95);
-            const fallbackLink = document.createElement('a');
-            fallbackLink.href = jpgUrl;
-            fallbackLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
-            document.body.appendChild(fallbackLink);
-            fallbackLink.click();
-            fallbackLink.remove();
-            return;
-          }
-          const url = URL.createObjectURL(blob);
-          const downloadLink = document.createElement('a');
-          downloadLink.href = url;
-          downloadLink.download = `Booking_Slip_${b.bookingNumber || b.clientName || 'HF'}.jpg`;
-          downloadLink.style.display = 'none';
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          setTimeout(() => {
-            document.body.removeChild(downloadLink);
-            URL.revokeObjectURL(url);
-          }, 800);
-        }, 'image/jpeg', 0.95);
-      } catch (err) {}
-    };
-
-    const logoUrlToLoad = currentDraftSafe.studioLogo || DEFAULT_CONFIG.studioLogo;
-    if (logoUrlToLoad) {
-      const logoImg = new Image();
-      logoImg.crossOrigin = 'anonymous';
-      logoImg.onload = () => drawAdminSlip(logoImg);
-      logoImg.onerror = () => drawAdminSlip(null);
-      logoImg.src = logoUrlToLoad;
-    } else {
-      drawAdminSlip(null);
-    }
+    canvas.width = 1200; canvas.height = 2400;
+    ctx.fillStyle = '#09090b'; ctx.fillRect(0, 0, 1200, 2400);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px sans-serif';
+    ctx.fillText(draft?.studioName || "H&F MAKEUP ARTIST", 90, 120);
+    ctx.font = '24px sans-serif'; ctx.fillStyle = '#c084fc';
+    ctx.fillText(`Booking Slip: ${b.bookingNumber || '#HF'}`, 90, 180);
+    ctx.fillStyle = '#ffffff'; ctx.font = '22px sans-serif';
+    ctx.fillText(`Client: ${b.clientName}`, 90, 260);
+    ctx.fillText(`Phone: ${b.clientPhone}`, 90, 310);
+    ctx.fillText(`Date: ${b.eventDate}`, 90, 360);
+    ctx.fillText(`Package: ${b.packageName}`, 90, 410);
+    ctx.fillText(`Total Amount: ₹${Number(b.totalAmount || 0).toLocaleString('en-IN')}`, 90, 480);
+    
+    const url = canvas.toDataURL('image/jpeg', 0.95);
+    const link = document.createElement('a');
+    link.href = url; link.download = `Booking_Slip_${b.bookingNumber || 'HF'}.jpg`;
+    document.body.appendChild(link); link.click(); link.remove();
   };
 
   const filteredBookingsList = bookingsList.filter(b => {
     const statusMatch = bookingStatusFilter === 'all' || b.status === bookingStatusFilter;
     const dateMatch = !bookingDateFilter || b.eventDate === bookingDateFilter;
-    
     const searchLower = bookingSearchQuery.toLowerCase().trim();
-    const nameMatch = !searchLower || (b.clientName && b.clientName.toLowerCase().includes(searchLower));
-    const phoneMatch = !searchLower || (b.clientPhone && b.clientPhone.toLowerCase().includes(searchLower));
-    const bNumMatch = !searchLower || (b.bookingNumber && b.bookingNumber.toLowerCase().includes(searchLower));
-    const pinMatch = !searchLower || ((b.pincode || b.pinCode || b.postalCode) && String(b.pincode || b.pinCode || b.postalCode).toLowerCase().includes(searchLower));
-    const cityMatch = !searchLower || (b.city && b.city.toLowerCase().includes(searchLower));
-    const streetMatch = !searchLower || ((b.streetLocality || b.venueAddress) && (b.streetLocality || b.venueAddress).toLowerCase().includes(searchLower));
-    const queryMatch = !searchLower || nameMatch || phoneMatch || bNumMatch || pinMatch || cityMatch || streetMatch;
-
+    const queryMatch = !searchLower || (b.clientName && b.clientName.toLowerCase().includes(searchLower)) || (b.clientPhone && b.clientPhone.toLowerCase().includes(searchLower)) || (b.bookingNumber && b.bookingNumber.toLowerCase().includes(searchLower));
     return statusMatch && dateMatch && queryMatch;
   });
 
@@ -1658,41 +1220,19 @@ export default function App() {
   const baseAdminThemeStyle = THEME_STYLES[activeAdminThemeKey];
   const adminThemeStyle = isAdminDarkMode
     ? baseAdminThemeStyle
-    : {
-        ...baseAdminThemeStyle,
-        bg: "bg-slate-50 text-slate-900",
-        cardBg: "bg-white/90 backdrop-blur-[24px] border border-slate-200 shadow-[0_8px_30px_rgba(15,23,42,0.08)]",
-        cardHover: "hover:border-slate-300 hover:shadow-[0_12px_36px_rgba(15,23,42,0.12)]"
-      };
+    : { ...baseAdminThemeStyle, bg: "bg-slate-50 text-slate-900", cardBg: "bg-white/90 backdrop-blur-[24px] border border-slate-200 shadow-[0_8px_30px_rgba(15,23,42,0.08)]", cardHover: "hover:border-slate-300" };
   const currentFontFamily = FONT_MAP[currentDraftSafe.theme?.fontFamily] || FONT_MAP.sans;
 
   const iosBg = adminThemeStyle.bg;
   const iosGroupCard = adminThemeStyle.cardBg;
-  const iosInputBg = isAdminDarkMode
-    ? "bg-white/10 text-white border border-white/20 rounded-[16px]"
-    : "bg-white text-slate-900 border border-slate-200 rounded-[16px]";
+  const iosInputBg = isAdminDarkMode ? "bg-white/10 text-white border border-white/20 rounded-[16px]" : "bg-white text-slate-900 border border-slate-200 rounded-[16px]";
   const iosMuted = isAdminDarkMode ? "text-[#a1a1aa]" : "text-slate-500";
-
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
   const rejectionReasonsList = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
 
   useEffect(() => {
-    try {
-      localStorage.setItem('hf_admin_day_night', isAdminDarkMode ? 'dark' : 'light');
-    } catch {}
+    try { localStorage.setItem('hf_admin_day_night', isAdminDarkMode ? 'dark' : 'light'); } catch {}
   }, [isAdminDarkMode]);
-
-  useEffect(() => {
-    if (draft?.adminTheme?.colorTheme && !ADMIN_THEME_KEYS.includes(draft.adminTheme.colorTheme)) {
-      setDraft(prev => ({
-        ...(prev || DEFAULT_CONFIG),
-        adminTheme: {
-          ...((prev || DEFAULT_CONFIG).adminTheme || {}),
-          colorTheme: 'admin_aurora'
-        }
-      }));
-    }
-  }, [draft?.adminTheme?.colorTheme]);
 
   if (!isAuthenticated) {
     return (
@@ -1769,7 +1309,7 @@ export default function App() {
           <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full border shadow-xl backdrop-blur-xl text-xs font-bold ${isAdminDarkMode ? 'bg-[#18181b]/95 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-800'}`}>
             <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
             <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            <span>Live update in progress…</span>
+            <span>{savingSection}</span>
           </div>
         </div>
       )}
@@ -2115,6 +1655,41 @@ export default function App() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* SAFE TEMP CACHE & LOGS CLEANER SECTION */}
+        {activeFolderId === 'cache_cleaner' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+              <RefreshCw className="w-5 h-5" /> Safe Temp Cache & Redundant Logs Cleanup
+            </h3>
+            <p className={`text-[13px] ${iosMuted}`}>
+              Clean up browser local storage cache and temporary state variables. This will <strong>not</strong> modify your live customer app or primary Firestore configuration state.
+            </p>
+
+            <div className="p-4 rounded-[18px] bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs space-y-1">
+              <strong>💡 Safe Note:</strong> Your live app configuration (`live_config`) in Firestore remains 100% safe and untouched.
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.removeItem('hf_admin_auth');
+                  localStorage.removeItem('hf_admin_day_night');
+                  sessionStorage.clear();
+                  setPopupToast({ title: "Cache Cleared Safely", desc: "Local browser temp cache cleared successfully." });
+                  setTimeout(() => window.location.reload(), 1200);
+                } catch (err) {
+                  alert("Cache clear failed: " + err.message);
+                }
+              }}
+              className="py-4 px-6 rounded-[16px] bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span>Clear Local Staged Cache & Reload Admin</span>
+            </button>
           </div>
         )}
 
