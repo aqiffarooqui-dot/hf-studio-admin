@@ -555,11 +555,37 @@ const parseBookingAddressDetails = (b) => {
 
 const WA_SERVER_URL = "https://simple-holidays-enable-ranger.trycloudflare.com";
 
+const SAVE_SECTION_BY_FOLDER = {
+  packages_master: 'Packages & Rates Master',
+  brands_master: 'Vanity Brands',
+  versions_master: 'App Versions',
+  general: 'General Settings',
+  gallery: 'Gallery Media',
+  app_maintenance: 'Maintenance Mode',
+  floating: 'Floating Banner',
+  coupons: 'Coupons & Offers',
+  toggles_master: 'Master Toggles',
+  promotions: 'Broadcast Studio',
+  announcements: 'Announcements',
+  convenience: 'Travel Fees',
+  theme: 'Theme & Styles',
+  profile: 'Studio Profile'
+};
+
+const ADMIN_THEME_KEYS = Object.keys(THEME_STYLES);
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('hf_admin_auth') === 'true';
   });
-  const [isAdminDarkMode, setIsAdminDarkMode] = useState(true);
+  const [isAdminDarkMode, setIsAdminDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hf_admin_day_night');
+      return saved === null ? true : saved === 'dark';
+    } catch {
+      return true;
+    }
+  });
   const [pinInput, setPinInput] = useState('');
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [forgotPasswordStatus, setForgotPasswordStatus] = useState('');
@@ -854,13 +880,7 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    const SAVE_SECTION_BY_FOLDER = {
-    packages_master: 'Packages & Rates Master', brands_master: 'Vanity Brands', versions_master: 'App Versions', general: 'General Settings',
-    gallery: 'Gallery Media', app_maintenance: 'Maintenance Mode', floating: 'Floating Banner', coupons: 'Coupons & Offers',
-    toggles_master: 'Master Toggles', promotions: 'Broadcast Studio', announcements: 'Announcements', convenience: 'Travel Fees', theme: 'Theme & Styles', profile: 'Studio Profile'
-  };
-
-  const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
     const correctPin = currentDraftSafe.adminPin || "8760";
     if (pinInput === correctPin) {
       setIsAuthenticated(true);
@@ -1593,17 +1613,47 @@ export default function App() {
   const pendingBookingsCount = bookingsList.filter(b => b.status === 'pending').length;
 
   const currentDraftSafe = draft || DEFAULT_CONFIG;
-  const activeAdminThemeKey = currentDraftSafe.adminTheme?.colorTheme || 'admin_aurora';
-  const adminThemeStyle = THEME_STYLES[activeAdminThemeKey] || THEME_STYLES.admin_aurora;
+  const storedAdminTheme = currentDraftSafe.adminTheme?.colorTheme;
+  const activeAdminThemeKey = ADMIN_THEME_KEYS.includes(storedAdminTheme) ? storedAdminTheme : 'admin_aurora';
+  const baseAdminThemeStyle = THEME_STYLES[activeAdminThemeKey];
+  const adminThemeStyle = isAdminDarkMode
+    ? baseAdminThemeStyle
+    : {
+        ...baseAdminThemeStyle,
+        bg: "bg-slate-50 text-slate-900",
+        cardBg: "bg-white/90 backdrop-blur-[24px] border border-slate-200 shadow-[0_8px_30px_rgba(15,23,42,0.08)]",
+        cardHover: "hover:border-slate-300 hover:shadow-[0_12px_36px_rgba(15,23,42,0.12)]"
+      };
   const currentFontFamily = FONT_MAP[currentDraftSafe.theme?.fontFamily] || FONT_MAP.sans;
 
   const iosBg = adminThemeStyle.bg;
   const iosGroupCard = adminThemeStyle.cardBg;
-  const iosInputBg = "bg-white/10 text-white border border-white/20 rounded-[16px]";
-  const iosMuted = "text-[#a1a1aa]";
+  const iosInputBg = isAdminDarkMode
+    ? "bg-white/10 text-white border border-white/20 rounded-[16px]"
+    : "bg-white text-slate-900 border border-slate-200 rounded-[16px]";
+  const iosMuted = isAdminDarkMode ? "text-[#a1a1aa]" : "text-slate-500";
 
   const activeFolderObj = adminFolders.find(f => f.id === activeFolderId);
   const rejectionReasonsList = currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS;
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('hf_admin_day_night', isAdminDarkMode ? 'dark' : 'light');
+    } catch {}
+  }, [isAdminDarkMode]);
+
+  useEffect(() => {
+    // Keep a valid admin theme even if an older Firestore config contains a stale/invalid key.
+    if (draft?.adminTheme?.colorTheme && !ADMIN_THEME_KEYS.includes(draft.adminTheme.colorTheme)) {
+      setDraft(prev => ({
+        ...(prev || DEFAULT_CONFIG),
+        adminTheme: {
+          ...((prev || DEFAULT_CONFIG).adminTheme || {}),
+          colorTheme: 'admin_aurora'
+        }
+      }));
+    }
+  }, [draft?.adminTheme?.colorTheme]);
 
   if (!isAuthenticated) {
     return (
@@ -1665,7 +1715,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`min-h-screen ${iosBg} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden`}>
+    <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`hf-admin-shell min-h-screen ${iosBg} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden ${isAdminDarkMode ? "hf-admin-dark" : "hf-admin-light"}`}>
       <div className={`absolute top-0 left-1/3 w-[650px] h-[650px] bg-gradient-to-br ${adminThemeStyle.glowOrb} rounded-full blur-3xl pointer-events-none animate-pulse`} />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
