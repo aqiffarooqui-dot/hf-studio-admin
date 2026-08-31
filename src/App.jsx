@@ -569,7 +569,11 @@ const SAVE_SECTION_BY_FOLDER = {
   announcements: 'Announcements',
   convenience: 'Travel Fees',
   theme: 'Theme & Styles',
-  profile: 'Studio Profile'
+  profile: 'Studio Profile',
+  calendar_view: null,
+  bookings: null,
+  feedbacks: null,
+  traffic_logs: null
 };
 
 const ADMIN_THEME_KEYS = Object.keys(THEME_STYLES);
@@ -1138,11 +1142,21 @@ export default function App() {
   };
 
   const handleManualStatusChange = async (bookingId, newStatus) => {
+    setSavingSection(`Booking ${newStatus}`);
     try {
-      await updateDoc(doc(db, "bookings", bookingId), { status: newStatus });
-      setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()} successfully!` });
+      const statusPayload = { status: newStatus };
+      // A booking that is accepted/pending again must not retain stale rejection data.
+      if (newStatus !== 'rejected') {
+        statusPayload.rejectionCode = null;
+        statusPayload.rejectionLabel = null;
+        statusPayload.rejectionReason = null;
+      }
+      await updateDoc(doc(db, "bookings", bookingId), statusPayload);
+      setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()} successfully. Old rejection details were cleared.` });
     } catch (err) {
       alert("Error updating status: " + err.message);
+    } finally {
+      setSavingSection('');
     }
   };
 
@@ -1716,6 +1730,24 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`hf-admin-shell min-h-screen ${iosBg} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden ${isAdminDarkMode ? "hf-admin-dark" : "hf-admin-light"}`}>
+      <style>{`
+        .hf-admin-light .text-white { color: #0f172a !important; }
+        .hf-admin-light .bg-white\/10 { background-color: rgba(15,23,42,.05) !important; }
+        .hf-admin-light .bg-white\/5 { background-color: rgba(15,23,42,.035) !important; }
+        .hf-admin-light .border-white\/10 { border-color: rgba(15,23,42,.10) !important; }
+        .hf-admin-light .border-white\/20 { border-color: rgba(15,23,42,.14) !important; }
+        .hf-admin-light select option { background:#fff !important; color:#0f172a !important; }
+        .hf-admin-dark, .hf-admin-light { color-scheme: ${isAdminDarkMode ? 'dark' : 'light'}; }
+      `}</style>
+      {savingSection && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[80] pointer-events-none">
+          <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full border shadow-xl backdrop-blur-xl text-xs font-bold ${isAdminDarkMode ? 'bg-[#18181b]/95 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-800'}`}>
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            <span>Live update in progress…</span>
+          </div>
+        </div>
+      )}
       <div className={`absolute top-0 left-1/3 w-[650px] h-[650px] bg-gradient-to-br ${adminThemeStyle.glowOrb} rounded-full blur-3xl pointer-events-none animate-pulse`} />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -1948,7 +1980,7 @@ export default function App() {
 
           {activeFolderId && SAVE_SECTION_BY_FOLDER[activeFolderId] && (
             <button type="button" onClick={() => handleSaveSpecificCard(SAVE_SECTION_BY_FOLDER[activeFolderId])} disabled={!!savingSection} className={`px-3.5 py-2.5 ${adminThemeStyle.btnPrimary} text-[11px] font-bold flex items-center gap-1.5 active:scale-95 transition`} title="Save current settings">
-              <Save className="w-3.5 h-3.5" /> {savingSection ? 'Saving...' : 'Save Changes'}
+              <Save className="w-3.5 h-3.5" /> {savingSection ? 'Saving…' : 'Save Changes'}
             </button>
           )}
           <button onClick={() => setIsAdminDarkMode(!isAdminDarkMode)} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-amber-400' : 'bg-slate-100 text-slate-800 shadow-sm'}`} title="Toggle Day/Night">
@@ -3134,13 +3166,13 @@ export default function App() {
               </div>
 
               <div className="flex items-center gap-2.5">
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className="p-2.5 rounded-[14px] bg-white/10 text-white hover:bg-white/20">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month - 1, 1))} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="font-bold text-[14px] font-mono min-w-[130px] text-center">
+                <span className={`font-bold text-[14px] font-mono min-w-[130px] text-center ${isAdminDarkMode ? 'text-white' : 'text-slate-900'}`}>
                   {monthNames[month]} {year}
                 </span>
-                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className="p-2.5 rounded-[14px] bg-white/10 text-white hover:bg-white/20">
+                <button type="button" onClick={() => setCalendarDate(new Date(year, month + 1, 1))} className={`p-2.5 rounded-[14px] ${isAdminDarkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -3170,7 +3202,7 @@ export default function App() {
                         : (isAdminDarkMode ? 'bg-white/5 border-white/10 opacity-75' : 'bg-slate-100 border-slate-200 opacity-75')
                     }`}
                   >
-                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : ''}`}>
+                    <span className={`text-xs font-bold font-mono ${status.hasBookings ? (status.isConfirmed ? 'text-emerald-400' : 'text-amber-400') : (isAdminDarkMode ? 'text-slate-200' : 'text-slate-700')}`}>
                       {day}
                     </span>
 
@@ -3787,20 +3819,45 @@ export default function App() {
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}><Megaphone className="w-5 h-5" /> WhatsApp Broadcast Studio</h3>
-                <p className={`text-[13px] ${iosMuted}`}>Create, edit and save multiple offer/announcement templates. The Open WhatsApp buttons launch WhatsApp Web so you can continue with your client broadcast list.</p>
+                <p className={`text-[13px] ${iosMuted}`}>Create multiple templates and send them through the WhatsApp app only. No WhatsApp Desktop/Web option is used here.</p>
               </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => window.open('https://web.whatsapp.com/', '_blank', 'noopener,noreferrer')} className="px-4 py-2.5 rounded-[14px] bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5"><ExternalLink className="w-3.5 h-3.5" /> Open WhatsApp</button>
-                <button type="button" onClick={() => setDraft({ ...currentDraftSafe, broadcastTemplates: [...(currentDraftSafe.broadcastTemplates || []), { id: `tpl_${Date.now()}`, name: 'New Broadcast Template', type: 'announcement', message: '', enabled: true }] })} className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-xs font-bold flex items-center gap-1.5`}><Plus className="w-3.5 h-3.5" /> Add Template</button>
+              <button type="button" onClick={() => setDraft({ ...currentDraftSafe, broadcastTemplates: [...(currentDraftSafe.broadcastTemplates || []), { id: `tpl_${Date.now()}`, name: 'New Broadcast Template', type: 'announcement', message: '', enabled: true }] })} className={`px-4 py-2.5 ${adminThemeStyle.btnPrimary} text-xs font-bold flex items-center gap-1.5`}><Plus className="w-3.5 h-3.5" /> Add Template</button>
+            </div>
+
+            <div className={`p-4 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-sm">Send a Template</h4>
+              <p className={`text-[11px] ${iosMuted}`}>Choose a template, then send either to one client or open the WhatsApp app to choose a broadcast/group chat.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                <select id="broadcastTemplatePicker" className={`p-3 rounded-[14px] text-xs ${iosInputBg}`}>
+                  {(currentDraftSafe.broadcastTemplates || []).map((tpl, idx) => <option key={tpl.id || idx} value={idx}>{tpl.name || `Template ${idx + 1}`}</option>)}
+                </select>
+                <input id="broadcastSinglePhone" type="tel" placeholder="Client phone e.g. 919997210876" className={`p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`} />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => {
+                    const picker = document.getElementById('broadcastTemplatePicker');
+                    const phone = String(document.getElementById('broadcastSinglePhone')?.value || '').replace(/\D/g, '');
+                    const tpl = (currentDraftSafe.broadcastTemplates || [])[Number(picker?.value || 0)];
+                    if (!phone) { alert('Enter the client phone number first.'); return; }
+                    if (!tpl?.message) { alert('Select a template with a message first.'); return; }
+                    window.location.href = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(tpl.message)}`;
+                  }} className="p-3 rounded-[14px] bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"><Phone className="w-3.5 h-3.5 inline mr-1" /> Single Client</button>
+                  <button type="button" onClick={() => {
+                    const picker = document.getElementById('broadcastTemplatePicker');
+                    const tpl = (currentDraftSafe.broadcastTemplates || [])[Number(picker?.value || 0)];
+                    if (!tpl?.message) { alert('Select a template with a message first.'); return; }
+                    window.location.href = `whatsapp://send?text=${encodeURIComponent(tpl.message)}`;
+                  }} className="p-3 rounded-[14px] bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold"><Megaphone className="w-3.5 h-3.5 inline mr-1" /> Broadcast / Group</button>
+                </div>
               </div>
             </div>
+
             <div className="space-y-3">
               {(currentDraftSafe.broadcastTemplates || []).map((tpl, idx) => (
                 <div key={tpl.id || idx} className={`p-4 rounded-[20px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <input value={tpl.name || ''} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,name:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} placeholder="Template name" className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`} />
                     <select value={tpl.type || 'announcement'} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,type:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className={`p-3 rounded-[14px] text-xs ${iosInputBg}`}><option value="offer">Offer</option><option value="announcement">Announcement</option><option value="availability">Availability</option></select>
-                    <div className="flex gap-2"><button type="button" onClick={() => window.open(`https://web.whatsapp.com/send?text=${encodeURIComponent(tpl.message || '')}`, '_blank', 'noopener,noreferrer')} className="flex-1 p-3 rounded-[14px] bg-emerald-600 text-white text-xs font-bold"><Send className="w-3.5 h-3.5 inline mr-1" />Send on WhatsApp</button><button type="button" onClick={() => { const a=(currentDraftSafe.broadcastTemplates||[]).filter((_,i)=>i!==idx); setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className="p-3 rounded-[14px] bg-rose-500/10 text-rose-400"><Trash2 className="w-4 h-4" /></button></div>
+                    <div className="flex gap-2"><button type="button" onClick={() => { const phone = window.prompt('Client phone number (with country code, e.g. 919997210876):'); if (!phone) return; const clean=String(phone).replace(/\D/g,''); if(!clean) return; window.location.href=`whatsapp://send?phone=${clean}&text=${encodeURIComponent(tpl.message || '')}`; }} className="flex-1 p-3 rounded-[14px] bg-emerald-600 text-white text-xs font-bold"><Phone className="w-3.5 h-3.5 inline mr-1" /> Single Client</button><button type="button" onClick={() => { if(!tpl.message){alert('Template message is empty.');return;} window.location.href=`whatsapp://send?text=${encodeURIComponent(tpl.message)}`; }} className="flex-1 p-3 rounded-[14px] bg-emerald-700 text-white text-xs font-bold"><Megaphone className="w-3.5 h-3.5 inline mr-1" /> Broadcast / Group</button><button type="button" onClick={() => { const a=(currentDraftSafe.broadcastTemplates||[]).filter((_,i)=>i!==idx); setDraft({...currentDraftSafe,broadcastTemplates:a}); }} className="p-3 rounded-[14px] bg-rose-500/10 text-rose-400"><Trash2 className="w-4 h-4" /></button></div>
                   </div>
                   <textarea rows={5} value={tpl.message || ''} onChange={e => { const a=[...(currentDraftSafe.broadcastTemplates||[])]; a[idx]={...tpl,message:e.target.value}; setDraft({...currentDraftSafe,broadcastTemplates:a}); }} placeholder="Write your WhatsApp offer / announcement..." className={`w-full p-3.5 rounded-[16px] text-xs leading-relaxed ${iosInputBg}`} />
                 </div>
