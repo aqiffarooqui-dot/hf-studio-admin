@@ -581,7 +581,7 @@ const SAVE_SECTION_BY_FOLDER = {
 const ADMIN_THEME_KEYS = Object.keys(THEME_STYLES);
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);[cite: 1]
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(() => {
     try {
       const saved = localStorage.getItem('hf_admin_day_night');
