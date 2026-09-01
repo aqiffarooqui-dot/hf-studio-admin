@@ -813,7 +813,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    const unsubscribe = subscribeToLiveConfig(DEFAULT_CONFIG, (data) => {[cite: 1]
+    const unsubscribe = subscribeToLiveConfig(DEFAULT_CONFIG, (data) => {
       if (data) {
         setDraft(prev => ({
           ...DEFAULT_CONFIG,
