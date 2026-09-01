@@ -10,8 +10,8 @@ import {
   Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
   Home, Building2, Navigation, Compass, MapPinned
 } from 'lucide-react';
-import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db, subscribeToLiveConfig } from './firebase';[cite: 1]
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';[cite: 1]
+import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db, subscribeToLiveConfig } from './firebase';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';
 
 const DEFAULT_REJECTION_REASONS = [
   {
