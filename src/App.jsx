@@ -10,8 +10,8 @@ import {
   Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
   Home, Building2, Navigation, Compass, MapPinned
 } from 'lucide-react';
-import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db } from './firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';
+import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db, subscribeToLiveConfig } from './firebase';[cite: 1]
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';[cite: 1]
 
 const DEFAULT_REJECTION_REASONS = [
   {
@@ -581,9 +581,7 @@ const SAVE_SECTION_BY_FOLDER = {
 const ADMIN_THEME_KEYS = Object.keys(THEME_STYLES);
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('hf_admin_auth') === 'true';
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);[cite: 1]
   const [isAdminDarkMode, setIsAdminDarkMode] = useState(() => {
     try {
       const saved = localStorage.getItem('hf_admin_day_night');
@@ -753,6 +751,36 @@ export default function App() {
     };
   };
 
+  const handleAddRejectionReason = () => {
+    const code = prompt("Enter Unique Rejection Code (e.g., DRESS_CODE):");
+    if (!code) return;
+    const cleanCode = code.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+    const label = prompt("Enter Rejection Label:", "Schedule Conflict");
+    if (!label) return;
+    const message = prompt("Enter Rejection Message:", "We cannot accommodate this time slot.");
+    if (!message) return;
+
+    const currentDraftSafe = draft || DEFAULT_CONFIG;
+    const updatedReasons = [...(currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS), { code: cleanCode, label, message }];
+    const newDraft = { ...currentDraftSafe, rejectionReasons: updatedReasons };
+    setDraft(newDraft);
+    setPopupToast({ title: "Reason Added", desc: `Rejection code ${cleanCode} added successfully.` });
+  };
+
+  const handleRemoveRejectionReason = (codeToRemove) => {
+    setDeleteConfirmModal({
+      type: 'single',
+      message: `Are you sure you want to delete rejection reason code "${codeToRemove}"?`,
+      onConfirm: () => {
+        const currentDraftSafe = draft || DEFAULT_CONFIG;
+        const updatedReasons = (currentDraftSafe.rejectionReasons || DEFAULT_REJECTION_REASONS).filter(r => r.code !== codeToRemove);
+        const newDraft = { ...currentDraftSafe, rejectionReasons: updatedReasons };
+        setDraft(newDraft);
+        setPopupToast({ title: "Reason Removed", desc: `Rejection code ${codeToRemove} deleted.` });
+      }
+    });
+  };
+
   useEffect(() => {
     if (popupToast) {
       const timer = setTimeout(() => setPopupToast(null), 4000);
@@ -785,51 +813,49 @@ export default function App() {
   };
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = await fetchLiveConfig(DEFAULT_CONFIG);
-        if (data) {
-          setDraft(prev => ({
-            ...DEFAULT_CONFIG,
-            ...data,
-            telegramBotToken: data.telegramBotToken || DEFAULT_CONFIG.telegramBotToken,
-            telegramChatId: data.telegramChatId || DEFAULT_CONFIG.telegramChatId,
-            activeAppVersion: data.activeAppVersion || DEFAULT_CONFIG.activeAppVersion,
-            appVersionsList: (data.appVersionsList && data.appVersionsList.length > 0) ? data.appVersionsList : DEFAULT_CONFIG.appVersionsList,
-            rejectionReasons: (data.rejectionReasons && data.rejectionReasons.length > 0) ? data.rejectionReasons : DEFAULT_REJECTION_REASONS,
-            recoveryEmail: data.recoveryEmail || DEFAULT_CONFIG.recoveryEmail,
-            kitText: {
-              international: { ...DEFAULT_CONFIG.kitText.international, ...(data.kitText?.international || {}) },
-              drugstore: { ...DEFAULT_CONFIG.kitText.drugstore, ...(data.kitText?.drugstore || {}) }
-            },
-            kitImages: {
-              international: { ...DEFAULT_CONFIG.kitImages.international, ...(data.kitImages?.international || {}) },
-              drugstore: { ...DEFAULT_CONFIG.kitImages.drugstore, ...(data.kitImages?.drugstore || {}) }
-            },
-            pricingByKit: {
-              international: { ...DEFAULT_CONFIG.pricingByKit.international, ...(data.pricingByKit?.international || {}) },
-              drugstore: { ...DEFAULT_CONFIG.pricingByKit.drugstore, ...(data.pricingByKit?.drugstore || {}) }
-            },
-            internationalBrands: (data.internationalBrands && data.internationalBrands.length > 0) ? data.internationalBrands : DEFAULT_CONFIG.internationalBrands,
-            guestDiscount: { ...DEFAULT_CONFIG.guestDiscount, ...(data.guestDiscount || {}) },
-            theme: { ...DEFAULT_CONFIG.theme, ...(data.theme || {}) },
-            adminTheme: { ...DEFAULT_CONFIG.adminTheme, ...(data.adminTheme || {}) },
-            toggles: { ...DEFAULT_CONFIG.toggles, ...(data.toggles || {}) },
-            floatingBanner: { ...DEFAULT_CONFIG.floatingBanner, ...(data.floatingBanner || {}) }
-          }));
-          if (data.adminFoldersOrder && Array.isArray(data.adminFoldersOrder)) {
-            const reordered = data.adminFoldersOrder.map(id => INITIAL_FOLDERS.find(f => f.id === id)).filter(Boolean);
-            const remaining = INITIAL_FOLDERS.filter(f => !data.adminFoldersOrder.includes(f.id));
-            if (reordered.length > 0) {
-              setAdminFolders([...reordered, ...remaining]);
-            }
+    const unsubscribe = subscribeToLiveConfig(DEFAULT_CONFIG, (data) => {[cite: 1]
+      if (data) {
+        setDraft(prev => ({
+          ...DEFAULT_CONFIG,
+          ...data,
+          telegramBotToken: data.telegramBotToken || DEFAULT_CONFIG.telegramBotToken,
+          telegramChatId: data.telegramChatId || DEFAULT_CONFIG.telegramChatId,
+          activeAppVersion: data.activeAppVersion || DEFAULT_CONFIG.activeAppVersion,
+          appVersionsList: (data.appVersionsList && data.appVersionsList.length > 0) ? data.appVersionsList : DEFAULT_CONFIG.appVersionsList,
+          rejectionReasons: (data.rejectionReasons && data.rejectionReasons.length > 0) ? data.rejectionReasons : DEFAULT_REJECTION_REASONS,
+          recoveryEmail: data.recoveryEmail || DEFAULT_CONFIG.recoveryEmail,
+          kitText: {
+            international: { ...DEFAULT_CONFIG.kitText.international, ...(data.kitText?.international || {}) },
+            drugstore: { ...DEFAULT_CONFIG.kitText.drugstore, ...(data.kitText?.drugstore || {}) }
+          },
+          kitImages: {
+            international: { ...DEFAULT_CONFIG.kitImages.international, ...(data.kitImages?.international || {}) },
+            drugstore: { ...DEFAULT_CONFIG.kitImages.drugstore, ...(data.kitImages?.drugstore || {}) }
+          },
+          pricingByKit: {
+            international: { ...DEFAULT_CONFIG.pricingByKit.international, ...(data.pricingByKit?.international || {}) },
+            drugstore: { ...DEFAULT_CONFIG.pricingByKit.drugstore, ...(data.pricingByKit?.drugstore || {}) }
+          },
+          internationalBrands: (data.internationalBrands && data.internationalBrands.length > 0) ? data.internationalBrands : DEFAULT_CONFIG.internationalBrands,
+          guestDiscount: { ...DEFAULT_CONFIG.guestDiscount, ...(data.guestDiscount || {}) },
+          theme: { ...DEFAULT_CONFIG.theme, ...(data.theme || {}) },
+          adminTheme: { ...DEFAULT_CONFIG.adminTheme, ...(data.adminTheme || {}) },
+          toggles: { ...DEFAULT_CONFIG.toggles, ...(data.toggles || {}) },
+          floatingBanner: { ...DEFAULT_CONFIG.floatingBanner, ...(data.floatingBanner || {}) }
+        }));
+        if (data.adminFoldersOrder && Array.isArray(data.adminFoldersOrder)) {
+          const reordered = data.adminFoldersOrder.map(id => INITIAL_FOLDERS.find(f => f.id === id)).filter(Boolean);
+          const remaining = INITIAL_FOLDERS.filter(f => !data.adminFoldersOrder.includes(f.id));
+          if (reordered.length > 0) {
+            setAdminFolders([...reordered, ...remaining]);
           }
         }
-      } catch (err) {
-        console.error("Config load error:", err);
       }
-    }
-    load();
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -898,7 +924,6 @@ export default function App() {
     const correctPin = currentDraftSafe.adminPin || "8760";
     if (pinInput === correctPin) {
       setIsAuthenticated(true);
-      localStorage.setItem('hf_admin_auth', 'true');
     } else {
       alert("Incorrect PIN. Please enter your correct 4-digit security PIN.");
     }
@@ -918,7 +943,6 @@ export default function App() {
         publicKey: { challenge, timeout: 60000, userVerification: "required", allowCredentials: [], authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" } }
       });
       setIsAuthenticated(true);
-      localStorage.setItem('hf_admin_auth', 'true');
       setPopupToast({ title: "Biometric Verified", desc: "Fingerprint sensor authenticated successfully." });
     } catch (err) {
       alert("⚠️ Fingerprint scan cancelled or failed. Please enter your 4-digit PIN.");
@@ -2042,7 +2066,7 @@ export default function App() {
                   <GitBranch className="w-5 h-5" /> Live App Version Controller & Safe Rollback
                 </h3>
                 <p className={`text-[13px] ${iosMuted} mt-0.5`}>
-                  Control active deployed version of Main App across client devices. Promote staging releases to Live or execute instant fallback rollback.
+                  Control active deployed version of Main App across client devices. Promote staging releases to Live or instant fallback rollback.
                 </p>
               </div>
 
