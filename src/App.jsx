@@ -629,8 +629,11 @@ export default function App() {
   const [showManageReasonsModal, setShowManageReasonsModal] = useState(false);
 
   // Image Cropper / Editor Modal State
-  const [cropperModal, setCropperModal] = useState(null); // { src, onSave, zoom, aspect }
-  const [cropZoom, setCropZoom] = useState(1);
+ const [cropperModal, setCropperModal] = useState(null); // { src, onSave, zoom, aspect }
+ const [cropZoom, setCropZoom] = useState(1);
+ const [cropPan, setCropPan] = useState({ x: 0, y: 0 });
+ const [isDraggingCrop, setIsDraggingCrop] = useState(false);
+ const [cropDragStart, setCropDragStart] = useState({ x: 0, y: 0 });
 
   // WhatsApp Multi-Select Send Modal State
   const [whatsappModalBooking, setWhatsappModalBooking] = useState(null);
@@ -684,18 +687,19 @@ export default function App() {
     }
   };
 
-  const openImageCropperForFile = (file, onSaveCallback) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setCropZoom(1);
-      setCropperModal({
-        src: e.target.result,
-        onSave: (finalUrl) => onSaveCallback(finalUrl)
-      });
-    };
-    reader.readAsDataURL(file);
+const openImageCropperForFile = (file, onSaveCallback) => {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    setCropZoom(1);
+    setCropPan({ x: 0, y: 0 });
+    setCropperModal({
+      src: e.target.result,
+      onSave: (finalUrl) => onSaveCallback(finalUrl)
+    });
   };
+  reader.readAsDataURL(file);
+};
 
   const handleLogoUpload = (e) => {
     const file = e.target.files?.[0];
@@ -1125,7 +1129,7 @@ export default function App() {
     else if (b.status === 'rejected') { statusEmoji = '❌'; statusLabel = 'DECLINED / CANCELLED'; }
 
     let txt = `Hi *${b.clientName || 'Client'}*,\n`;
-    txt += `Please find your updated booking details below:\n\n`;
+    txt += `Hi ${b.clientName || 'Client'}, please find the attached booking details:\n\n`;
     txt += `🔢 *Booking No:* \`${b.bookingNumber || '#HF-RECORD'}\`\n`;
     txt += `📅 *Event Date:* ${b.eventDate || 'Not Provided'}\n`;
     txt += `💄 *Main Look:* ${b.packageName || 'Makeover'} (${b.kitType || 'Luxury Kit'})\n`;
@@ -1377,7 +1381,7 @@ export default function App() {
       window.open(`https://wa.me/${phone}?text=${encodeURIComponent(textPayload)}`, '_blank', 'noopener,noreferrer');
     } else if (waSendSlip) {
       // If only slip was selected, open chat with simple greeting
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(`Hi *${b.clientName || 'Client'}*, please find your attached booking slip below.`)}`, '_blank', 'noopener,noreferrer');
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(`Hi *${b.clientName || 'Client'}*, please find your attached booking slip.`)}`, '_blank', 'noopener,noreferrer');
     }
 
     setWhatsappModalBooking(null);
@@ -1610,68 +1614,142 @@ export default function App() {
         .hf-admin-dark, .hf-admin-light { color-scheme: ${isAdminDarkMode ? 'dark' : 'light'}; }
       `}</style>
 
-      {/* Interactive Image Cropper Modal */}
-      {cropperModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-fade-in">
-          <div className={`max-w-md w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-[17px] flex items-center gap-2"><ZoomIn className="w-5 h-5 text-purple-400" /> Adjust & Preview Image</h3>
-              <button onClick={() => setCropperModal(null)} className="p-1 rounded-full text-slate-400"><X className="w-5 h-5" /></button>
-            </div>
-            
-            <div className="w-full h-64 rounded-[20px] overflow-hidden bg-black flex items-center justify-center relative border border-white/20">
-              <img 
-                src={cropperModal.src} 
-                alt="Preview" 
-                style={{ transform: `scale(${cropZoom})`, transition: 'transform 0.15s ease' }}
-                className="max-w-full max-h-full object-contain pointer-events-none" 
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-              <ZoomOut className="w-4 h-4 text-slate-400" />
-              <input 
-                type="range" 
-                min={0.8} 
-                max={2.5} 
-                step={0.05} 
-                value={cropZoom} 
-                onChange={e => setCropZoom(Number(e.target.value))} 
-                className="flex-1 accent-purple-500 cursor-pointer" 
-              />
-              <ZoomIn className="w-4 h-4 text-slate-400" />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setCropperModal(null)} className={`flex-1 py-3 rounded-[16px] font-bold text-xs ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-800'}`}>Cancel</button>
-              <button 
-                onClick={async () => {
-                  const img = new Image();
-                  img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1000; canvas.height = 1000;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 1000, 1000);
-                    
-                    const w = img.width; const h = img.height;
-                    const size = Math.min(w, h) / cropZoom;
-                    const sx = (w - size) / 2;
-                    const sy = (h - size) / 2;
-                    
-                    ctx.drawImage(img, sx, sy, size, size, 0, 0, 1000, 1000);
-                    const resUrl = canvas.toDataURL('image/jpeg', 0.85);
-                    cropperModal.onSave(resUrl);
-                  };
-                  img.src = cropperModal.src;
-                }} 
-                className={`flex-1 py-3 ${adminThemeStyle.btnPrimary} text-xs shadow-lg`}
-              >
-                Apply & Save Crop
-              </button>
-            </div>
-          </div>
+      {/* Interactive Image Cropper Modal with Pan & Drag Move + Instant Save */}
+{cropperModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-fade-in select-none">
+    <div className={`max-w-md w-full rounded-[28px] p-5 sm:p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-[16px] sm:text-[17px] flex items-center gap-2">
+          <ZoomIn className="w-5 h-5 text-purple-400" /> Adjust & Move Image
+        </h3>
+        <button onClick={() => setCropperModal(null)} className="p-1 rounded-full text-slate-400 hover:text-white">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      
+      {/* Interactive Drag & Pan Viewport */}
+      <div 
+        className="w-full h-64 sm:h-72 rounded-[20px] overflow-hidden bg-black flex items-center justify-center relative border border-white/20 cursor-grab active:cursor-grabbing touch-none"
+        onMouseDown={(e) => {
+          setIsDraggingCrop(true);
+          setCropDragStart({ x: e.clientX - cropPan.x, y: e.clientY - cropPan.y });
+        }}
+        onMouseMove={(e) => {
+          if (!isDraggingCrop) return;
+          setCropPan({ x: e.clientX - cropDragStart.x, y: e.clientY - cropDragStart.y });
+        }}
+        onMouseUp={() => setIsDraggingCrop(false)}
+        onMouseLeave={() => setIsDraggingCrop(false)}
+        onTouchStart={(e) => {
+          if (e.touches.length === 1) {
+            setIsDraggingCrop(true);
+            setCropDragStart({ x: e.touches[0].clientX - cropPan.x, y: e.touches[0].clientY - cropPan.y });
+          }
+        }}
+        onTouchMove={(e) => {
+          if (!isDraggingCrop || e.touches.length !== 1) return;
+          setCropPan({ x: e.touches[0].clientX - cropDragStart.x, y: e.touches[0].clientY - cropDragStart.y });
+        }}
+        onTouchEnd={() => setIsDraggingCrop(false)}
+      >
+        <img 
+          src={cropperModal.src} 
+          alt="Preview" 
+          draggable={false}
+          style={{ 
+            transform: `translate(${cropPan.x}px, ${cropPan.y}px) scale(${cropZoom})`, 
+            transition: isDraggingCrop ? 'none' : 'transform 0.1s ease-out' 
+          }}
+          className="max-w-full max-h-full object-contain pointer-events-none select-none" 
+        />
+        <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] text-white/80 pointer-events-none border border-white/10">
+          💡 Drag photo to position frame
         </div>
-      )}
+      </div>
+
+      <div className="flex items-center gap-3">
+        <ZoomOut className="w-4 h-4 text-slate-400" />
+        <input 
+          type="range" 
+          min={0.8} 
+          max={3.0} 
+          step={0.05} 
+          value={cropZoom} 
+          onChange={e => setCropZoom(Number(e.target.value))} 
+          className="flex-1 accent-purple-500 cursor-pointer" 
+        />
+        <ZoomIn className="w-4 h-4 text-slate-400" />
+        <button 
+          type="button" 
+          onClick={() => { setCropPan({ x: 0, y: 0 }); setCropZoom(1); }}
+          className="text-[11px] font-bold px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300"
+          title="Reset Frame"
+        >
+          Reset
+        </button>
+      </div>
+
+      <div className="flex gap-2 pt-2">
+        <button 
+          type="button" 
+          onClick={() => setCropperModal(null)} 
+          className={`flex-1 py-3 rounded-[16px] font-bold text-xs ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-800'}`}
+        >
+          Cancel
+        </button>
+        
+        {/* Seamless Asynchronous Apply & Save */}
+        <button 
+          type="button"
+          onClick={async () => {
+            const img = new Image();
+            img.onload = () => {
+              try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 1000;
+                canvas.height = 1000;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 1000, 1000);
+                
+                const w = img.width;
+                const h = img.height;
+                const baseSize = Math.min(w, h);
+                const size = baseSize / Math.max(0.1, cropZoom);
+
+                // Calculate pan shift in relation to original natural resolution
+                // 256 is viewport container dimension
+                const scaleRatio = baseSize / 256;
+                const panShiftX = (cropPan.x * scaleRatio) / cropZoom;
+                const panShiftY = (cropPan.y * scaleRatio) / cropZoom;
+
+                const sx = Math.max(0, Math.min(w - size, ((w - size) / 2) - panShiftX));
+                const sy = Math.max(0, Math.min(h - size, ((h - size) / 2) - panShiftY));
+                
+                ctx.drawImage(img, sx, sy, size, size, 0, 0, 1000, 1000);
+                const resUrl = canvas.toDataURL('image/jpeg', 0.88);
+                
+                // Immediately pass result & close modal
+                cropperModal.onSave(resUrl);
+                setCropperModal(null);
+                setPopupToast({ title: "Image Ready", desc: "Cropped & saved successfully." });
+              } catch (err) {
+                alert("Crop processing error: " + err.message);
+              }
+            };
+            img.onerror = () => {
+              alert("Could not load image for cropping.");
+            };
+            img.src = cropperModal.src;
+          }} 
+          className={`flex-1 py-3 ${adminThemeStyle.btnPrimary} text-xs shadow-lg font-bold`}
+        >
+          Apply & Save Crop
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* WhatsApp Multi-Select Send Modal */}
       {whatsappModalBooking && (
@@ -2121,7 +2199,7 @@ export default function App() {
 
         {/* 1. PACKAGES & RATES MANAGER */}
         {activeFolderId === 'packages_master' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 ${iosGroupCard}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
@@ -2160,14 +2238,14 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2">
               {Object.keys(currentDraftSafe.kitText?.[editingKitTab] || {}).map(k => {
                 const pkgText = currentDraftSafe.kitText[editingKitTab][k] || { name: k, desc: '' };
                 const pkgImg = currentDraftSafe.kitImages?.[editingKitTab]?.[k] || '';
                 const pkgPrice = currentDraftSafe.pricingByKit?.[editingKitTab]?.[k] || 0;
 
                 return (
-                  <div key={`${editingKitTab}_${k}`} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={`${editingKitTab}_${k}`} className={`p-4 sm:p-5 rounded-[20px] space-y-3.5 relative ${isAdminDarkMode ? 'bg-black/30 border border-white/5' : 'bg-white/80 border border-black/5 shadow-sm'}`}>
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Key: {k}</span>
                       <div className="flex items-center gap-2">
@@ -2376,7 +2454,7 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {(currentDraftSafe?.internationalBrands || []).map((brand, idx) => (
-                <div key={idx} className={`p-5 rounded-[24px] border space-y-4 relative ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div key={idx} className={`p-4 sm:p-5 rounded-[20px] space-y-3.5 relative ${isAdminDarkMode ? 'bg-black/30 border border-white/5' : 'bg-white/80 border border-black/5 shadow-sm'}`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-bold font-mono uppercase ${adminThemeStyle.accentText}`}>Item #{idx + 1}</span>
                     <button
@@ -2611,7 +2689,7 @@ export default function App() {
 
         {/* 4. GENERAL & SECURITY SETTINGS */}
         {activeFolderId === 'general' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 ${iosGroupCard}`}>
             <div>
               <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
                 <Settings className="w-5 h-5" /> General & Security Settings
@@ -2785,7 +2863,7 @@ export default function App() {
 
         {/* 5. LIVE BOOKINGS QUEUE */}
         {activeFolderId === 'bookings' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className={`font-bold text-[16px] ${adminThemeStyle.accentText}`}>Incoming Customer Bookings Queue</h3>
@@ -3528,7 +3606,7 @@ export default function App() {
 
         {/* 11. PROMO COUPONS, TIMERS & GUEST OFFERS SECTION */}
         {activeFolderId === 'coupons' && (
-          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+          <div className={`p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
