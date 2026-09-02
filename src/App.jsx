@@ -8,7 +8,7 @@ import {
   XCircle, Clock, Gift, AlertCircle, Calendar, Download, FileCheck, 
   Hash, AlertTriangle, Wrench, X, MessageSquare, RotateCcw, Ban, 
   Folder, FolderOpen, ArrowLeft, Star, Fingerprint, ShieldCheck, Key, Mail, Settings, ArrowUp, ArrowDown, Edit3, GitBranch, Search, CheckSquare, Square, ZoomIn, Grid, Sparkle, Brush, Shield, Smartphone,
-  Home, Building2, Navigation, Compass, MapPinned
+  Home, Building2, Navigation, Compass, MapPinned, ZoomOut
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db, subscribeToLiveConfig } from './firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc } from 'firebase/firestore';
@@ -424,7 +424,7 @@ const sanitizeForFirestore = (obj) => {
   return cleaned;
 };
 
-const compressImageFile = (file, maxWidth = 1400, quality = 0.88, maxBytes = 650 * 1024) => {
+const compressImageFile = (file, maxWidth = 1000, quality = 0.85, maxBytes = 280 * 1024) => {
   return new Promise((resolve, reject) => {
     if (!file || !file.type?.startsWith('image/')) return reject(new Error('Please select a valid image file.'));
     const reader = new FileReader();
@@ -447,7 +447,7 @@ const compressImageFile = (file, maxWidth = 1400, quality = 0.88, maxBytes = 650
           dataUrl = canvas.toDataURL('image/jpeg', q);
           const bytes = Math.ceil((dataUrl.length * 3) / 4);
           if (bytes <= maxBytes) break;
-          q = Math.max(0.45, q - 0.07);
+          q = Math.max(0.40, q - 0.07);
           if (i >= 4) { width = Math.max(480, Math.round(width * 0.82)); height = Math.max(480, Math.round(height * 0.82)); }
         }
         resolve(dataUrl);
@@ -628,6 +628,15 @@ export default function App() {
   const [rejectionReasonText, setRejectionReasonText] = useState(DEFAULT_REJECTION_REASONS[0].message);
   const [showManageReasonsModal, setShowManageReasonsModal] = useState(false);
 
+  // Image Cropper / Editor Modal State
+  const [cropperModal, setCropperModal] = useState(null); // { src, onSave, zoom, aspect }
+  const [cropZoom, setCropZoom] = useState(1);
+
+  // WhatsApp Multi-Select Send Modal State
+  const [whatsappModalBooking, setWhatsappModalBooking] = useState(null);
+  const [waSendSlip, setWaSendSlip] = useState(true);
+  const [waSendText, setWaSendText] = useState(true);
+
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(null);
 
@@ -663,78 +672,88 @@ export default function App() {
 
   const canvasRef = useRef(null);
 
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processAndSaveCroppedImage = async (dataUrlOrFile, onSaveCallback) => {
     try {
-      const compressed = await compressImageFile(file, 900, 0.85, 350 * 1024);
-      setDraft(prev => ({ ...prev, studioLogo: compressed }));
-      setPopupToast({ title: "Logo Ready", desc: "Studio Logo compressed successfully. Save to persist." });
+      const file = dataUrlOrFile instanceof File ? dataUrlOrFile : null;
+      let base = file ? await compressImageFile(file, 900, 0.82, 280 * 1024) : dataUrlOrFile;
+      onSaveCallback(base);
+      setCropperModal(null);
+      setPopupToast({ title: "Image Ready", desc: "Cropped & optimized successfully. Save changes to persist." });
     } catch (err) {
-      alert("Error compressing logo image: " + err.message);
+      alert("Image processing error: " + err.message);
     }
   };
 
-  const handleProfileUpload = async (e) => {
-    const file = e.target.files?.[0];
+  const openImageCropperForFile = (file, onSaveCallback) => {
     if (!file) return;
-    try {
-      const compressed = await compressImageFile(file, 900, 0.85, 350 * 1024);
-      setDraft(prev => ({ ...prev, profileImage: compressed }));
-      setPopupToast({ title: "Profile Image Ready", desc: "Artist profile photo compressed. Save to persist." });
-    } catch (err) {
-      alert("Error compressing profile image: " + err.message);
-    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setCropZoom(1);
+      setCropperModal({
+        src: e.target.result,
+        onSave: (finalUrl) => onSaveCallback(finalUrl)
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
-  const handlePackageImageUpload = async (e, kit, pkgKey) => {
+  const handleLogoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const compressed = await compressImageFile(file, 1000, 0.85, 400 * 1024);
+    openImageCropperForFile(file, (res) => {
+      setDraft(prev => ({ ...prev, studioLogo: res }));
+    });
+    e.target.value = '';
+  };
+
+  const handleProfileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    openImageCropperForFile(file, (res) => {
+      setDraft(prev => ({ ...prev, profileImage: res }));
+    });
+    e.target.value = '';
+  };
+
+  const handlePackageImageUpload = (e, kit, pkgKey) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    openImageCropperForFile(file, (res) => {
       setDraft(prev => ({
         ...prev,
         kitImages: {
           ...(prev.kitImages || {}),
           [kit]: {
             ...(prev.kitImages?.[kit] || {}),
-            [pkgKey]: compressed
+            [pkgKey]: res
           }
         }
       }));
-      setPopupToast({ title: "Package Image Set", desc: `Image updated for ${pkgKey}. Save packages to apply.` });
-    } catch (err) {
-      alert("Error uploading image: " + err.message);
-    }
+    });
+    e.target.value = '';
   };
 
-  const handleMediaUpload = async (e, idx) => {
+  const handleMediaUpload = (e, idx) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const copy = [...(draft.galleryPhotos || [])];
-      if (file.type === 'image/gif') {
-        if (file.size > 500 * 1024) throw new Error('Animated GIFs must be under 500KB.');
-        const reader = new FileReader();
-        reader.onload = () => {
-          copy[idx] = { ...copy[idx], url: reader.result, type: 'image' };
-          setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-          setPopupToast({ title: 'GIF Uploaded', desc: 'Animated GIF ready to save.' });
-        };
-        reader.readAsDataURL(file);
-      } else if (file.type.startsWith('image/')) {
-        const compressed = await compressImageFile(file, 1200, 0.85, 450 * 1024);
-        copy[idx] = { ...copy[idx], url: compressed, type: 'image' };
+    if (file.type === 'image/gif') {
+      if (file.size > 500 * 1024) { alert('Animated GIFs must be under 500KB.'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const copy = [...(draft.galleryPhotos || [])];
+        copy[idx] = { ...copy[idx], url: reader.result, type: 'image' };
         setDraft(prev => ({ ...prev, galleryPhotos: copy }));
-        setPopupToast({ title: 'Image Uploaded', desc: 'Photo optimized and ready to save.' });
-      } else {
-        throw new Error('Please upload an image or GIF under 500KB.');
-      }
-    } catch (err) {
-      alert('Media upload error: ' + err.message);
-    } finally {
-      e.target.value = '';
+        setPopupToast({ title: 'GIF Uploaded', desc: 'Animated GIF ready to save.' });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      openImageCropperForFile(file, (res) => {
+        const copy = [...(draft.galleryPhotos || [])];
+        copy[idx] = { ...copy[idx], url: res, type: 'image' };
+        setDraft(prev => ({ ...prev, galleryPhotos: copy }));
+      });
     }
+    e.target.value = '';
   };
 
   const getDayBookingStatus = (day) => {
@@ -1086,19 +1105,282 @@ export default function App() {
     return digits;
   };
 
-  const handleOpenWhatsAppSlip = (b) => {
+  const buildWhatsAppDetailedText = (b) => {
     const addr = parseBookingAddressDetails(b);
-    const message =
-      `💄 *H&F MAKEUP ARTIST — BOOKING SLIP*\n\n` +
-      `Dear *${b.clientName || 'Client'}*,\n\n` +
-      `🔢 Booking Number: ${b.bookingNumber || '#HF-RECORD'}\n` +
-      `📅 Event Date: ${b.eventDate || 'Not Provided'}\n` +
-      `💄 Main Look: ${b.packageName || 'Makeover'}\n` +
-      `💰 Total Amount: ₹${Number(b.totalAmount || 0).toLocaleString('en-IN')}\n\n` +
-      `H&F Makeup Artist`;
+    const mainPkgPrice = Number(b.basePackagePrice || 0);
+    const zoneFee = Number(b.zoneFee || 0);
+    const mainTotal = mainPkgPrice + zoneFee;
+    const extraGuests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
+    const extraGross = Number(b.extraGuestsCost || 0);
+    const gDiscount = Number(b.guestDiscountSaved || 0);
+    const cDiscount = Number(b.couponDiscountAmount || 0) || (b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - gDiscount) : 0);
+    const totalBeforeDisc = mainTotal + extraGross;
+    const totalDisc = Math.max(0, gDiscount + cDiscount);
+    const finalAmt = Number(b.totalAmount ?? Math.max(0, totalBeforeDisc - totalDisc));
+    const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
+
+    let statusEmoji = '⏳';
+    let statusLabel = 'PENDING REVIEW';
+    if (b.status === 'confirmed') { statusEmoji = '✅'; statusLabel = 'CONFIRMED & ACCEPTED'; }
+    else if (b.status === 'rejected') { statusEmoji = '❌'; statusLabel = 'DECLINED / CANCELLED'; }
+
+    let txt = `Hi *${b.clientName || 'Client'}*,\n`;
+    txt += `Please find your updated booking details below:\n\n`;
+    txt += `🔢 *Booking No:* \`${b.bookingNumber || '#HF-RECORD'}\`\n`;
+    txt += `📅 *Event Date:* ${b.eventDate || 'Not Provided'}\n`;
+    txt += `💄 *Main Look:* ${b.packageName || 'Makeover'} (${b.kitType || 'Luxury Kit'})\n`;
+    txt += `📍 *Venue Address:* ${addr.flatHouse !== 'Not Specified' ? addr.flatHouse + ', ' : ''}${addr.streetLocality}, ${addr.townCityState} - ${addr.pincode}\n`;
+    txt += `💰 *Final Amount:* ${money(finalAmt)}\n`;
+    txt += `${statusEmoji} *Current Status:* ${statusLabel}\n\n`;
+    if (b.status === 'rejected' && b.rejectionReason) {
+      txt += `⚠️ *Reason:* ${b.rejectionReason}\n\n`;
+    }
+    txt += `Thank you for choosing H&F Makeup Artist! ✨`;
+    return txt;
+  };
+
+  const generateMainAppStyleSlipJpgDataUrl = (b) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(null); return; }
+
+      const addr = parseBookingAddressDetails(b);
+      const mainPkgPrice = Number(b.basePackagePrice || 0);
+      const zoneFee = Number(b.zoneFee || 0);
+      const mainTotal = mainPkgPrice + zoneFee;
+      const extraGuests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
+      const extraGross = Number(b.extraGuestsCost || 0);
+      const gDiscount = Number(b.guestDiscountSaved || 0);
+      const cDiscount = Number(b.couponDiscountAmount || 0) || (b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - gDiscount) : 0);
+      const totalBeforeDisc = mainTotal + extraGross;
+      const totalDisc = Math.max(0, gDiscount + cDiscount);
+      const finalAmt = Number(b.totalAmount ?? Math.max(0, totalBeforeDisc - totalDisc));
+      const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
+
+      let statusBadgeText = 'PENDING REVIEW';
+      let statusBadgeColor = '#fbbf24'; // amber
+      if (b.status === 'confirmed') { statusBadgeText = 'CONFIRMED & ACCEPTED'; statusBadgeColor = '#10b981'; }
+      else if (b.status === 'rejected') { statusBadgeText = 'DECLINED / CANCELLED'; statusBadgeColor = '#f43f5e'; }
+
+      const cardWidth = 1040;
+      const leftX = 80;
+      const rightX = leftX + cardWidth;
+      const labelX = leftX + 30;
+      const valueX = rightX - 30;
+      const contentMaxWidth = 520;
+
+      const measureDynamicHeight = (text, maxWidth, fontSize) => {
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        const words = String(text || '').split(' ');
+        let lines = [];
+        let curLine = '';
+        for (let i = 0; i < words.length; i++) {
+          const testLine = curLine + words[i] + ' ';
+          if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+            lines.push(curLine.trim());
+            curLine = words[i] + ' ';
+          } else {
+            curLine = testLine;
+          }
+        }
+        if (curLine.trim()) lines.push(curLine.trim());
+        if (lines.length === 0) lines = [''];
+        const lineHeight = fontSize + 6;
+        return { lines, height: Math.max(50, 22 + lines.length * lineHeight) };
+      };
+
+      let estHeight = 420;
+      estHeight += 5 * 56;
+      estHeight += 64 + 54;
+      if (addr.flatHouse !== 'Not Specified') estHeight += measureDynamicHeight(addr.flatHouse, contentMaxWidth, 18).height + 6;
+      estHeight += measureDynamicHeight(addr.streetLocality, contentMaxWidth, 18).height + 6;
+      if (addr.landmark !== 'None') estHeight += measureDynamicHeight(addr.landmark, contentMaxWidth, 18).height + 6;
+      estHeight += 2 * 56;
+
+      estHeight += 64 + 5 * 56;
+      estHeight += 64 + (extraGuests.length > 0 ? extraGuests.length * 3 * 54 : 54) + 54;
+      estHeight += 64 + 4 * 54;
+      if (b.status === 'rejected' && b.rejectionReason) estHeight += 120;
+      estHeight += 155;
+      estHeight += 140;
+
+      canvas.width = 1200;
+      canvas.height = Math.ceil(estHeight);
+
+      const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
+        ctx.textAlign = align; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${family}`; ctx.fillText(String(text ?? ''), x, y);
+      };
+
+      const drawRow = (label, value, y, options = {}) => {
+        const rowHeight = options.height || 50;
+        ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+        ctx.fillRect(leftX, y, cardWidth, rowHeight);
+        drawText(label, labelX, y + rowHeight / 2 + 6, options.labelSize || 18, 'bold', options.labelColor || '#94a3b8');
+        drawText(value, valueX, y + rowHeight / 2 + 6, options.valueSize || 19, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
+        return y + rowHeight + (options.gap ?? 6);
+      };
+
+      const drawDynamicRow = (label, value, y, options = {}) => {
+        const { lines, height } = measureDynamicHeight(value, contentMaxWidth, options.valueSize || 18);
+        ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+        ctx.fillRect(leftX, y, cardWidth, height);
+        drawText(label, labelX, y + 30, options.labelSize || 18, 'bold', options.labelColor || '#94a3b8');
+        const lineHeight = (options.valueSize || 18) + 6;
+        lines.forEach((line, lIdx) => {
+          drawText(line, valueX, y + 30 + lIdx * lineHeight, options.valueSize || 18, 'bold', options.valueColor || '#ffffff', 'right');
+        });
+        return y + height + (options.gap ?? 6);
+      };
+
+      const drawSectionTitle = (title, y, accent = '#7c3aed') => {
+        ctx.fillStyle = accent === '#7c3aed' ? 'rgba(192,132,252,0.12)' : 'rgba(56,189,248,0.10)';
+        ctx.fillRect(leftX, y, cardWidth, 52);
+        drawText(title, labelX, y + 34, 19, 'bold', accent);
+        return y + 58;
+      };
+
+      const logoUrlToLoad = currentDraftSafe.studioLogo;
+      const logoImg = new Image();
+      logoImg.crossOrigin = 'anonymous';
+
+      const renderCanvasContent = (logoObj) => {
+        ctx.fillStyle = '#09090b'; ctx.fillRect(0, 0, 1200, canvas.height);
+        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 4; ctx.strokeRect(30, 30, 1140, canvas.height - 60);
+        ctx.strokeStyle = 'rgba(124, 58, 237, 0.25)'; ctx.lineWidth = 1.5; ctx.strokeRect(42, 42, 1116, canvas.height - 84);
+
+        if (logoObj) {
+          try {
+            ctx.save(); ctx.beginPath(); ctx.arc(140, 130, 50, 0, Math.PI * 2, true); ctx.closePath(); ctx.clip();
+            ctx.drawImage(logoObj, 90, 80, 100, 100); ctx.restore();
+            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(140, 130, 50, 0, Math.PI * 2, true); ctx.stroke();
+          } catch (e) {}
+          drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 220, 125, 40, 'bold', '#ffffff');
+          drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 220, 165, 20, 'bold', '#c084fc');
+        } else {
+          drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 125, 44, 'bold', '#ffffff', 'center');
+          drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 165, 20, 'bold', '#c084fc', 'center');
+        }
+
+        ctx.strokeStyle = 'rgba(124, 58, 237, 0.2)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(leftX, 210); ctx.lineTo(rightX, 210); ctx.stroke();
+        
+        // Status badge header
+        ctx.fillStyle = statusBadgeColor;
+        ctx.fillRect(leftX, 230, cardWidth, 48);
+        drawText(`STATUS: ${statusBadgeText}`, 600, 262, 20, 'bold', '#ffffff', 'center');
+
+        let startY = 295;
+        startY = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-PENDING', startY, { valueColor: '#c084fc', mono: true });
+        startY = drawRow('CLIENT NAME', b.clientName || 'Not Provided', startY);
+        startY = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', startY);
+        startY = drawRow('EVENT DATE', b.eventDate || 'Not Provided', startY);
+
+        if (b.status === 'rejected' && b.rejectionReason) {
+          startY = drawRow('DECLINE REASON', b.rejectionReason, startY, { valueColor: '#f43f5e' });
+        }
+
+        startY += 6;
+        startY = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', startY, '#38bdf8');
+        startY = drawRow('Address Type:', `[ ${addr.addressType} ]`, startY, { valueColor: '#38bdf8' });
+        if (addr.flatHouse !== 'Not Specified') startY = drawDynamicRow('Flat / House No., Building:', addr.flatHouse, startY);
+        startY = drawDynamicRow('Street, Sector, Locality:', addr.streetLocality, startY);
+        if (addr.landmark !== 'None') startY = drawDynamicRow('Landmark:', addr.landmark, startY);
+        startY = drawRow('Town / City & State:', addr.townCityState, startY);
+        startY = drawRow('Postal PIN Code:', addr.pincode, startY, { valueColor: '#c084fc', mono: true });
+
+        startY += 6;
+        startY = drawSectionTitle('1. MAIN MAKEOVER PACKAGE', startY, '#38bdf8');
+        startY = drawRow('• Vanity:', b.kitType || 'Luxury Kit', startY);
+        startY = drawRow('• Package:', b.packageName || 'Makeover', startY);
+        startY = drawRow('• Package Price:', money(mainPkgPrice), startY, { mono: true });
+        startY = drawRow(`• Convenience Fee (${b.zoneName || 'Local'}):`, money(zoneFee), startY, { mono: true });
+        startY = drawRow('Main Makeover Package Total:', money(mainTotal), startY, { labelColor: '#38bdf8', valueColor: '#38bdf8', mono: true });
+
+        startY += 6;
+        startY = drawSectionTitle(`2. ADDITIONAL FAMILY & GUEST MAKEOVERS (${extraGuests.length})`, startY, '#c084fc');
+        if (extraGuests.length > 0) {
+          extraGuests.forEach((g, gIdx) => {
+            const vanityName = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'International Luxury Vanity Kit' : 'Premium HD Kit');
+            const gPkgName = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
+            const gPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
+            startY = drawRow(`Makeover #${gIdx + 1} • Vanity:`, vanityName, startY, { labelSize: 16, valueSize: 17 });
+            startY = drawRow('• Package:', gPkgName, startY, { labelSize: 16, valueSize: 17 });
+            startY = drawRow('• Price:', money(gPrice), startY, { labelSize: 16, mono: true });
+          });
+        } else {
+          startY = drawRow('• No extra family guests selected', '₹0', startY, { valueColor: '#71717a', mono: true });
+        }
+        startY = drawRow('Additional Family & Guest Total:', money(extraGross), startY, { labelColor: '#c084fc', valueColor: '#c084fc', mono: true });
+
+        startY += 6;
+        startY = drawSectionTitle('3. DISCOUNTS & OFFERS', startY, '#4ade80');
+        if (gDiscount > 0) startY = drawRow('• Additional Family & Guest Discount:', `-${money(gDiscount)}`, startY, { valueColor: '#4ade80', mono: true });
+        if (b.appliedCoupon && b.appliedCoupon !== 'None' && cDiscount > 0) startY = drawRow(`• Coupon Code (${b.appliedCoupon}):`, `-${money(cDiscount)}`, startY, { valueColor: '#4ade80', mono: true });
+        if (gDiscount === 0 && cDiscount === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#71717a', mono: true });
+        startY = drawRow('Total Discounts:', `-${money(totalDisc)}`, startY, { labelColor: '#4ade80', valueColor: '#4ade80', mono: true });
+
+        startY += 14;
+        ctx.fillStyle = 'rgba(192,132,252,0.18)'; ctx.fillRect(leftX, startY, cardWidth, 105);
+        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.strokeRect(leftX, startY, cardWidth, 105);
+
+        drawText('FINAL AMOUNT PAYABLE', 600, startY + 36, 20, 'bold', '#e2e8f0', 'center');
+        drawText(money(finalAmt), 600, startY + 84, 44, 'bold', '#ffffff', 'center', 'serif');
+
+        const footerY = canvas.height - 65;
+        drawText(`Studio Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle)}`, 600, footerY, 16, 'normal', '#94a3b8', 'center');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 28, 17, 'italic', '#c084fc', 'center');
+
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+          resolve(dataUrl);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+
+      if (logoUrlToLoad) {
+        logoImg.onload = () => renderCanvasContent(logoImg);
+        logoImg.onerror = () => renderCanvasContent(null);
+        logoImg.src = logoUrlToLoad;
+      } else {
+        renderCanvasContent(null);
+      }
+    });
+  };
+
+  const handleExecuteWhatsAppDispatch = async () => {
+    const b = whatsappModalBooking;
+    if (!b) return;
     const phone = normalizeIndianWhatsAppPhone(b.clientPhone);
     if (!phone) { alert('Invalid client phone number.'); return; }
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+
+    const textPayload = waSendText ? buildWhatsAppDetailedText(b) : '';
+
+    if (waSendSlip) {
+      setSavingSection('Generating Slip JPG...');
+      const slipDataUrl = await generateMainAppStyleSlipJpgDataUrl(b);
+      setSavingSection('');
+
+      if (slipDataUrl) {
+        // Download image locally so user can attach easily in WhatsApp
+        const link = document.createElement('a');
+        link.href = slipDataUrl;
+        link.download = `Booking_Slip_${b.bookingNumber || 'HF'}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+    }
+
+    // Open WhatsApp with text if selected
+    if (textPayload) {
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(textPayload)}`, '_blank', 'noopener,noreferrer');
+    } else if (waSendSlip) {
+      // If only slip was selected, open chat with simple greeting
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(`Hi *${b.clientName || 'Client'}*, please find your attached booking slip below.`)}`, '_blank', 'noopener,noreferrer');
+    }
+
+    setWhatsappModalBooking(null);
   };
 
   const handleManualStatusChange = async (bookingId, newStatus) => {
@@ -1203,28 +1485,17 @@ export default function App() {
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added! Save packages master to apply.` });
   };
 
-  const handleGenerateSlipJpgOnDemand = (b) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    canvas.width = 1200; canvas.height = 2400;
-    ctx.fillStyle = '#09090b'; ctx.fillRect(0, 0, 1200, 2400);
-    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 36px sans-serif';
-    ctx.fillText(draft?.studioName || "H&F MAKEUP ARTIST", 90, 120);
-    ctx.font = '24px sans-serif'; ctx.fillStyle = '#c084fc';
-    ctx.fillText(`Booking Slip: ${b.bookingNumber || '#HF'}`, 90, 180);
-    ctx.fillStyle = '#ffffff'; ctx.font = '22px sans-serif';
-    ctx.fillText(`Client: ${b.clientName}`, 90, 260);
-    ctx.fillText(`Phone: ${b.clientPhone}`, 90, 310);
-    ctx.fillText(`Date: ${b.eventDate}`, 90, 360);
-    ctx.fillText(`Package: ${b.packageName}`, 90, 410);
-    ctx.fillText(`Total Amount: ₹${Number(b.totalAmount || 0).toLocaleString('en-IN')}`, 90, 480);
-    
-    const url = canvas.toDataURL('image/jpeg', 0.95);
+  const handleGenerateSlipJpgOnDemand = async (b) => {
+    setSavingSection('Generating Slip JPG...');
+    const slipDataUrl = await generateMainAppStyleSlipJpgDataUrl(b);
+    setSavingSection('');
+    if (!slipDataUrl) { alert('Could not generate slip.'); return; }
     const link = document.createElement('a');
-    link.href = url; link.download = `Booking_Slip_${b.bookingNumber || 'HF'}.jpg`;
-    document.body.appendChild(link); link.click(); link.remove();
+    link.href = slipDataUrl;
+    link.download = `Booking_Receipt_${b.bookingNumber || 'HF'}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   const filteredBookingsList = bookingsList.filter(b => {
@@ -1289,7 +1560,17 @@ export default function App() {
               <h2 className="text-[24px] font-bold tracking-tight">Admin Portal</h2>
               <p className={`text-[13px] ${iosMuted} mt-1`}>v4.2.0 Production Suite</p>
             </div>
-            <input type="password" placeholder="Enter Admin PIN" value={pinInput} onChange={e => setPinInput(e.target.value)} className={`w-full text-center text-[18px] p-4 font-mono ${adminThemeStyle.accentText} ${iosInputBg}`} />
+            {/* PIN input with inputMode numeric for numpad */}
+            <input 
+              type="password" 
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              placeholder="Enter Admin PIN" 
+              value={pinInput} 
+              onChange={e => setPinInput(e.target.value)} 
+              className={`w-full text-center text-[18px] p-4 font-mono ${adminThemeStyle.accentText} ${iosInputBg}`} 
+            />
             
             <button type="submit" className={`w-full py-4 ${adminThemeStyle.btnPrimary}`}>Unlock Console</button>
             
@@ -1328,6 +1609,127 @@ export default function App() {
         .hf-admin-light select option { background:#fff !important; color:#0f172a !important; }
         .hf-admin-dark, .hf-admin-light { color-scheme: ${isAdminDarkMode ? 'dark' : 'light'}; }
       `}</style>
+
+      {/* Interactive Image Cropper Modal */}
+      {cropperModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-[24px] animate-fade-in">
+          <div className={`max-w-md w-full rounded-[28px] p-6 space-y-4 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[17px] flex items-center gap-2"><ZoomIn className="w-5 h-5 text-purple-400" /> Adjust & Preview Image</h3>
+              <button onClick={() => setCropperModal(null)} className="p-1 rounded-full text-slate-400"><X className="w-5 h-5" /></button>
+            </div>
+            
+            <div className="w-full h-64 rounded-[20px] overflow-hidden bg-black flex items-center justify-center relative border border-white/20">
+              <img 
+                src={cropperModal.src} 
+                alt="Preview" 
+                style={{ transform: `scale(${cropZoom})`, transition: 'transform 0.15s ease' }}
+                className="max-w-full max-h-full object-contain pointer-events-none" 
+              />
+            </div>
+
+            <div className="flex items-center gap-3">
+              <ZoomOut className="w-4 h-4 text-slate-400" />
+              <input 
+                type="range" 
+                min={0.8} 
+                max={2.5} 
+                step={0.05} 
+                value={cropZoom} 
+                onChange={e => setCropZoom(Number(e.target.value))} 
+                className="flex-1 accent-purple-500 cursor-pointer" 
+              />
+              <ZoomIn className="w-4 h-4 text-slate-400" />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setCropperModal(null)} className={`flex-1 py-3 rounded-[16px] font-bold text-xs ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-800'}`}>Cancel</button>
+              <button 
+                onClick={async () => {
+                  const img = new Image();
+                  img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1000; canvas.height = 1000;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 1000, 1000);
+                    
+                    const w = img.width; const h = img.height;
+                    const size = Math.min(w, h) / cropZoom;
+                    const sx = (w - size) / 2;
+                    const sy = (h - size) / 2;
+                    
+                    ctx.drawImage(img, sx, sy, size, size, 0, 0, 1000, 1000);
+                    const resUrl = canvas.toDataURL('image/jpeg', 0.85);
+                    cropperModal.onSave(resUrl);
+                  };
+                  img.src = cropperModal.src;
+                }} 
+                className={`flex-1 py-3 ${adminThemeStyle.btnPrimary} text-xs shadow-lg`}
+              >
+                Apply & Save Crop
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Multi-Select Send Modal */}
+      {whatsappModalBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[24px] animate-fade-in">
+          <div className={`max-w-md w-full rounded-[28px] p-6 space-y-5 shadow-2xl ${isAdminDarkMode ? 'bg-[#18181b] border border-white/20 text-white' : 'bg-white border border-slate-200 text-slate-900'}`}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-[18px] flex items-center gap-2 text-emerald-400">
+                <Send className="w-5 h-5" /> Send WhatsApp to {whatsappModalBooking.clientName}
+              </h3>
+              <button onClick={() => setWhatsappModalBooking(null)} className="p-1 rounded-full text-slate-400"><X className="w-5 h-5" /></button>
+            </div>
+
+            <p className={`text-[12.5px] ${iosMuted}`}>
+              Select what you want to dispatch to client <strong>{whatsappModalBooking.clientPhone}</strong>:
+            </p>
+
+            <div className="space-y-3">
+              <label className={`p-4 rounded-[18px] border flex items-center gap-3.5 cursor-pointer transition ${isAdminDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                <input 
+                  type="checkbox" 
+                  checked={waSendSlip} 
+                  onChange={e => setWaSendSlip(e.target.checked)} 
+                  className="w-5 h-5 accent-emerald-500 rounded cursor-pointer" 
+                />
+                <div className="space-y-0.5">
+                  <div className="font-bold text-sm flex items-center gap-1.5"><Download className="w-4 h-4 text-purple-400" /> Booking Slip (.JPG Image)</div>
+                  <div className={`text-[11px] ${iosMuted}`}>Generates & downloads main-app style professional receipt slip image.</div>
+                </div>
+              </label>
+
+              <label className={`p-4 rounded-[18px] border flex items-center gap-3.5 cursor-pointer transition ${isAdminDarkMode ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
+                <input 
+                  type="checkbox" 
+                  checked={waSendText} 
+                  onChange={e => setWaSendText(e.target.checked)} 
+                  className="w-5 h-5 accent-emerald-500 rounded cursor-pointer" 
+                />
+                <div className="space-y-0.5">
+                  <div className="font-bold text-sm flex items-center gap-1.5"><MessageSquare className="w-4 h-4 text-emerald-400" /> Detailed Text Summary (Hi [Name], get your booking details...)</div>
+                  <div className={`text-[11px] ${iosMuted}`}>Sends clean text with emojis, dates, venue address & status.</div>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button onClick={() => setWhatsappModalBooking(null)} className={`flex-1 py-3.5 rounded-[16px] font-bold text-xs ${isAdminDarkMode ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-800'}`}>Cancel</button>
+              <button 
+                onClick={handleExecuteWhatsAppDispatch} 
+                className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg rounded-[16px] flex items-center justify-center gap-2 active:scale-95 transition"
+              >
+                <Send className="w-4 h-4" />
+                <span>Dispatch to WhatsApp</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {savingSection && (
         <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[80] pointer-events-none">
           <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full border shadow-xl backdrop-blur-xl text-xs font-bold ${isAdminDarkMode ? 'bg-[#18181b]/95 border-white/15 text-white' : 'bg-white/95 border-slate-200 text-slate-800'}`}>
@@ -1806,7 +2208,7 @@ export default function App() {
                           className={`w-full p-3 rounded-[14px] text-xs font-mono ${iosInputBg}`}
                         />
                         <label className={`block text-center py-2.5 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-[11px] font-bold cursor-pointer hover:opacity-80 transition`}>
-                          Upload Photo (up to 20MB source • auto-optimized)
+                          Upload & Crop Photo
                           <input type="file" accept="image/*" onChange={e => handlePackageImageUpload(e, editingKitTab, k)} className="hidden" />
                         </label>
                       </div>
@@ -2318,6 +2720,9 @@ export default function App() {
                   <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Current PIN</label>
                   <input
                     type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
                     required
                     placeholder="Enter current PIN"
                     value={oldPinInput}
@@ -2331,6 +2736,9 @@ export default function App() {
                     <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>New PIN (Min 4 digits)</label>
                     <input
                       type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
                       required
                       placeholder="Enter new PIN"
                       value={newPinInput}
@@ -2342,6 +2750,9 @@ export default function App() {
                     <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Confirm New PIN</label>
                     <input
                       type="password"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
                       required
                       placeholder="Confirm new PIN"
                       value={confirmPinInput}
@@ -2590,7 +3001,7 @@ export default function App() {
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
                                 <div className="font-bold text-emerald-400">3. Discounts & Offers</div>
                                 {guestDiscount > 0 && (
-                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Additional Family & Guest Makeovers Discount:</span><span className="font-mono text-emerald-400">-{money(guestDiscount)}</span></div>
+                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Additional Family & Guest Discount:</span><span className="font-mono text-emerald-400">-{money(guestDiscount)}</span></div>
                                 )}
                                 {b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0 && (
                                   <div className="flex justify-between gap-3"><span className={iosMuted}>• Coupon Code ({b.appliedCoupon}):</span><span className="font-mono text-emerald-400">-{money(couponDiscount)}</span></div>
@@ -2668,11 +3079,11 @@ export default function App() {
                       <div className="space-y-2 pt-1">
                         <button
                           type="button"
-                          onClick={() => handleOpenWhatsAppSlip(b)}
+                          onClick={() => setWhatsappModalBooking(b)}
                           className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[12px] rounded-[14px] shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          <span>{b.status === 'confirmed' ? 'Send on WhatsApp' : 'Send on WhatsApp'}</span>
+                          <span>Send on WhatsApp</span>
                         </button>
 
                         <div className="grid grid-cols-3 gap-2">
@@ -2952,7 +3363,7 @@ export default function App() {
                   </div>
 
                   <label className={`block text-center py-3 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer hover:opacity-80 transition shadow-sm`}>
-                    Upload Video / GIF / Image (up to 20MB source)
+                    Upload & Crop Media (Image / GIF)
                     <input type="file" accept="video/*,image/*,.gif" onChange={e => handleMediaUpload(e, idx)} className="hidden" />
                   </label>
                 </div>
@@ -3778,7 +4189,7 @@ export default function App() {
                     className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
                   <label className={`inline-block px-4 py-2.5 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer hover:opacity-80 transition`}>
-                    Upload & Compress Logo File
+                    Upload & Crop Logo File
                     <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
                   </label>
                 </div>
@@ -3807,7 +4218,7 @@ export default function App() {
                     className={`w-full p-3.5 rounded-[16px] text-[13px] font-mono ${iosInputBg}`}
                   />
                   <label className={`inline-block px-4 py-2.5 rounded-[14px] ${adminThemeStyle.badgeBg} ${adminThemeStyle.accentText} text-xs font-bold cursor-pointer hover:opacity-80 transition`}>
-                    Upload & Compress Profile Photo
+                    Upload & Crop Profile Photo
                     <input type="file" accept="image/*" onChange={handleProfileUpload} className="hidden" />
                   </label>
                 </div>
