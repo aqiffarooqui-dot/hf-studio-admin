@@ -3963,7 +3963,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <h4 className="font-bold text-[14px] flex items-center gap-2">
-                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (?ig= ya ?ref=)
+                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (Instagram / Ref Link)
                   </h4>
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                     {Object.entries(sourceCounts).length === 0 ? (
@@ -4048,29 +4048,6 @@ const openImageCropperForFile = (file, onSaveCallback) => {
             </div>
           );
         })()}
-
-            {visitorLogs.length === 0 ? (
-              <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No visitor traffic recorded yet.</p>
-            ) : (
-              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
-                {visitorLogs.map(log => (
-                  <div key={log.id} className={`p-4 rounded-[18px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[13px] ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className={`font-bold font-mono ${adminThemeStyle.accentText}`}>Source/ID: @{log.instagramIdOrSource || 'Direct'}</span>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">Active Visit</span>
-                      </div>
-                      <p className={`text-[12px] truncate max-w-md ${iosMuted}`}>{log.userAgent}</p>
-                    </div>
-                    <span className={`text-[12px] font-mono font-medium ${adminThemeStyle.accentText}`}>
-                      {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* 14. PROMOTIONS & BROADCAST */}
         {activeFolderId === 'promotions' && (
