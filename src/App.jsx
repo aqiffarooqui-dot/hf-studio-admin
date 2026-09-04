@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { 
   Crown, CalendarCheck, Megaphone, Plus, Trash2, Send, Check, RefreshCw, 
   User, Sparkles, Sun, Moon, Lock, Tag, Layers, Type, Save, Film, Upload, 
@@ -811,23 +812,46 @@ const openImageCropperForFile = (file, onSaveCallback) => {
     }
   }, [popupToast]);
 
+  // Android + Browser back button handling
+  // Folder/section ke andar -> Home/Dashboard
+  // Home/Dashboard par -> Android app exit
   useEffect(() => {
-    const handlePopState = (e) => {
+    const handlePopState = () => {
       if (activeFolderId) {
-        e.preventDefault();
         setActiveFolderId(null);
-        window.history.pushState(null, '', window.location.href);
       }
     };
-    if (activeFolderId) {
-      window.history.pushState({ folder: activeFolderId }, '', window.location.href);
-    }
+
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    let backButtonListener = null;
+
+    const setupNativeBackButton = async () => {
+      try {
+        backButtonListener = await CapacitorApp.addListener('backButton', () => {
+          if (activeFolderId) {
+            setActiveFolderId(null);
+          } else {
+            CapacitorApp.exitApp();
+          }
+        });
+      } catch (error) {
+        // Browser/Vite mode: Capacitor native listener is unavailable.
+        console.debug('Native back button unavailable in browser mode.');
+      }
+    };
+
+    setupNativeBackButton();
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (backButtonListener) {
+        backButtonListener.remove();
+      }
+    };
   }, [activeFolderId]);
 
   const openFolder = (id) => {
-    window.history.pushState({ folder: id }, '', window.location.href);
     setActiveFolderId(id);
   };
 
@@ -1603,8 +1627,47 @@ const openImageCropperForFile = (file, onSaveCallback) => {
   }
 
   return (
-    <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`hf-admin-shell min-h-screen ${iosBg} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden ${isAdminDarkMode ? "hf-admin-dark" : "hf-admin-light"}`}>
+    <div
+      style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }}
+      className={`hf-admin-shell h-[100dvh] w-full ${iosBg} font-sans transition-colors duration-300 relative overflow-hidden flex flex-col ${isAdminDarkMode ? "hf-admin-dark" : "hf-admin-light"}`}
+    >
       <style>{`
+        /* Native-style edge-to-edge layout */
+        html, body, #root {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+
+        html {
+          background: transparent;
+          overscroll-behavior: none;
+        }
+
+        body {
+          min-height: 100dvh;
+          background: transparent;
+          overscroll-behavior: none;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .hf-admin-shell {
+          min-height: 100dvh;
+          height: 100dvh;
+          width: 100%;
+          overflow: hidden;
+          overscroll-behavior: none;
+          touch-action: manipulation;
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .hf-admin-shell button,
+        .hf-admin-shell a {
+          -webkit-tap-highlight-color: transparent;
+        }
+
         .hf-admin-light .text-white { color: #0f172a !important; }
         .hf-admin-light .bg-white\/10 { background-color: rgba(15,23,42,.05) !important; }
         .hf-admin-light .bg-white\/5 { background-color: rgba(15,23,42,.035) !important; }
@@ -1985,7 +2048,10 @@ const openImageCropperForFile = (file, onSaveCallback) => {
         </div>
       )}
 
-      <header className={`sticky top-0 z-40 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}>
+      <header
+        style={{ paddingTop: 'max(0.875rem, env(safe-area-inset-top))' }}
+        className={`sticky top-0 z-40 shrink-0 backdrop-blur-[28px] saturate-[180%] border-b px-4 sm:px-8 pb-3.5 flex flex-col sm:flex-row justify-between items-center gap-3 shadow-sm transition-colors duration-300 ${isAdminDarkMode ? 'bg-[#18181b]/85 border-white/10 text-white' : 'bg-white/85 border-black/10 text-[#1C1C1E]'}`}
+      >
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
           <div className="flex items-center gap-3">
             {currentDraftSafe.studioLogo ? (
@@ -2056,7 +2122,8 @@ const openImageCropperForFile = (file, onSaveCallback) => {
         </div>
       </header>
 
-      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain">
+      <div className="max-w-[1100px] mx-auto px-4 sm:px-6 py-6 space-y-6 pb-32">
         <div className="flex items-center justify-between flex-wrap gap-3">
           {activeFolderId ? (
             <button
@@ -4334,6 +4401,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
           </div>
         )}
 
+      </div>
       </div>
     </div>
   );
