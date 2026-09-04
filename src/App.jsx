@@ -3886,12 +3886,18 @@ const openImageCropperForFile = (file, onSaveCallback) => {
         )}
 
         {/* 13. VISITOR & TRAFFIC LOGS */}
-        {activeFolderId === 'traffic_logs' && (() => {
+      {activeFolderId === 'traffic_logs' && (() => {
           const totalVisits = visitorLogs.length;
           const todayStr = new Date().toISOString().slice(0, 10);
           const todayVisits = visitorLogs.filter(log => {
             const dateObj = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
             return dateObj && !isNaN(dateObj) ? dateObj.toISOString().slice(0, 10) === todayStr : false;
+          }).length;
+
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          const liveSessionsCount = visitorLogs.filter(log => {
+            const timeObj = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
+            return timeObj >= fiveMinutesAgo;
           }).length;
 
           const sourceCounts = {};
@@ -3921,7 +3927,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                   <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
                     <Activity className="w-5 h-5" /> Visitor Logs & Advanced Traffic Analytics
                   </h3>
-                  <p className={`text-[13px] ${iosMuted}`}>Real-time overview of site visits, traffic sources, device tiers, and daily activity.</p>
+                  <p className={`text-[13px] ${iosMuted}`}>Real-time overview of site visits, live active sessions, traffic sources, and device tiers.</p>
                 </div>
                 <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
                   {totalVisits} Total Logged Visits
@@ -3931,9 +3937,12 @@ const openImageCropperForFile = (file, onSaveCallback) => {
               {/* Summary Metric Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Total Site Visits</span>
-                  <div className={`text-2xl font-black font-mono ${adminThemeStyle.accentText}`}>{totalVisits}</div>
-                  <p className={`text-[10px] ${iosMuted}`}>All recorded page loads</p>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Live Active Sessions</span>
+                  <div className="text-2xl font-black font-mono text-purple-400 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                    {liveSessionsCount}
+                  </div>
+                  <p className={`text-[10px] ${iosMuted}`}>Active in last 5 minutes</p>
                 </div>
 
                 <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
