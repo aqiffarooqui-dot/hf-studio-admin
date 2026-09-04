@@ -4482,7 +4482,6 @@ const openImageCropperForFile = (file, onSaveCallback) => {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
