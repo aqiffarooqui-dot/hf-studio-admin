@@ -3963,7 +3963,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <h4 className="font-bold text-[14px] flex items-center gap-2">
-                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (`?ig=` / `?ref=`)
+                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (?ig= ya ?ref=)
                   </h4>
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                     {Object.entries(sourceCounts).length === 0 ? (
