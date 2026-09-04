@@ -923,7 +923,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
 
   useEffect(() => {
     try {
-      const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(60));
+      const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(100));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setVisitorLogs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
@@ -3886,19 +3886,168 @@ const openImageCropperForFile = (file, onSaveCallback) => {
         )}
 
         {/* 13. VISITOR & TRAFFIC LOGS */}
-        {activeFolderId === 'traffic_logs' && (
-          <div className={`p-6 sm:p-8 space-y-4 ${iosGroupCard}`}>
-            <div className="flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <h3 className={`font-bold text-[16px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                  <Activity className="w-5 h-5" /> Live Traffic & Instagram Visitor Logs
-                </h3>
-                <p className={`text-[13px] ${iosMuted}`}>Track visitors arriving from your Instagram bio, links, and direct traffic in real-time.</p>
+        {activeFolderId === 'traffic_logs' && (() => {
+          const totalVisits = visitorLogs.length;
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const todayVisits = visitorLogs.filter(log => {
+            const dateObj = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
+            return dateObj && !isNaN(dateObj) ? dateObj.toISOString().slice(0, 10) === todayStr : false;
+          }).length;
+
+          const sourceCounts = {};
+          const deviceCounts = {};
+          const browserCounts = {};
+
+          visitorLogs.forEach(log => {
+            const src = log.instagramIdOrSource || 'Direct Visit';
+            sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+
+            const plat = log.devicePlatform || 'desktop';
+            deviceCounts[plat] = (deviceCounts[plat] || 0) + 1;
+
+            const ua = log.userAgent || '';
+            let bName = 'Other Browser';
+            if (ua.includes('SamsungBrowser')) bName = 'Samsung Internet';
+            else if (ua.includes('Chrome')) bName = 'Google Chrome';
+            else if (ua.includes('Safari') && !ua.includes('Chrome')) bName = 'Apple Safari';
+            else if (ua.includes('Firefox')) bName = 'Mozilla Firefox';
+            browserCounts[bName] = (browserCounts[bName] || 0) + 1;
+          });
+
+          return (
+            <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <div>
+                  <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                    <Activity className="w-5 h-5" /> Visitor Logs & Advanced Traffic Analytics
+                  </h3>
+                  <p className={`text-[13px] ${iosMuted}`}>Real-time overview of site visits, traffic sources, device tiers, and daily activity.</p>
+                </div>
+                <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
+                  {totalVisits} Total Logged Visits
+                </span>
               </div>
-              <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full`}>
-                {visitorLogs.length} Recent Visits Logged
-              </span>
+
+              {/* Summary Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Total Site Visits</span>
+                  <div className={`text-2xl font-black font-mono ${adminThemeStyle.accentText}`}>{totalVisits}</div>
+                  <p className={`text-[10px] ${iosMuted}`}>All recorded page loads</p>
+                </div>
+
+                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Visits Today</span>
+                  <div className="text-2xl font-black font-mono text-emerald-400">{todayVisits}</div>
+                  <p className={`text-[10px] ${iosMuted}`}>Active traffic for today</p>
+                </div>
+
+                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Top Traffic Source</span>
+                  <div className="text-sm font-bold truncate text-amber-400">
+                    {Object.entries(sourceCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Direct Visit'}
+                  </div>
+                  <p className={`text-[10px] ${iosMuted}`}>Most frequent referral source</p>
+                </div>
+
+                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Primary Device Platform</span>
+                  <div className="text-sm font-bold truncate text-sky-400">
+                    {Object.entries(deviceCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Desktop / Mobile'}
+                  </div>
+                  <p className={`text-[10px] ${iosMuted}`}>Detected user platform</p>
+                </div>
+              </div>
+
+              {/* Traffic Breakdown Visual Tables */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <h4 className="font-bold text-[14px] flex items-center gap-2">
+                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (`?ig=` / `?ref=`)
+                  </h4>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {Object.entries(sourceCounts).length === 0 ? (
+                      <p className={`text-xs ${iosMuted}`}>No traffic sources recorded yet.</p>
+                    ) : (
+                      Object.entries(sourceCounts).map(([src, count], idx) => {
+                        const percent = totalVisits > 0 ? Math.round((count / totalVisits) * 100) : 0;
+                        return (
+                          <div key={idx} className="space-y-1">
+                            <div className="flex justify-between text-xs font-bold">
+                              <span className="truncate">@{src}</span>
+                              <span className="font-mono text-purple-400">{count} visits ({percent}%)</span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: `${percent}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <h4 className="font-bold text-[14px] flex items-center gap-2">
+                    <Smartphone className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Browser & Device Tier Breakdown
+                  </h4>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {Object.entries(browserCounts).length === 0 ? (
+                      <p className={`text-xs ${iosMuted}`}>No browser data recorded yet.</p>
+                    ) : (
+                      Object.entries(browserCounts).map(([bName, count], idx) => {
+                        const percent = totalVisits > 0 ? Math.round((count / totalVisits) * 100) : 0;
+                        return (
+                          <div key={idx} className="space-y-1">
+                            <div className="flex justify-between text-xs font-bold">
+                              <span className="truncate">{bName}</span>
+                              <span className="font-mono text-cyan-400">{count} visits ({percent}%)</span>
+                            </div>
+                            <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 rounded-full" style={{ width: `${percent}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Recent Logs Feed */}
+              <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <h4 className="font-bold text-[14px] flex items-center gap-2">
+                  <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Recent Visitor Activity Stream
+                </h4>
+
+                {visitorLogs.length === 0 ? (
+                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs available.</p>
+                ) : (
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                    {visitorLogs.map(log => (
+                      <div key={log.id} className={`p-3.5 rounded-[16px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[12.5px] ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`font-bold font-mono text-[13px] ${adminThemeStyle.accentText}`}>Source: @{log.instagramIdOrSource || 'Direct Visit'}</span>
+                            {log.devicePlatform && (
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                {log.devicePlatform} {log.deviceTier ? `• ${log.deviceTier}` : ''}
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-[11px] truncate max-w-sm ${iosMuted}`}>{log.userAgent}</p>
+                        </div>
+                        <span className={`text-[11px] font-mono ${iosMuted} shrink-0`}>
+                          {log.visitedAt ? new Date(log.visitedAt.toDate?.() || log.visitedAt).toLocaleString() : 'Just now'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
+          );
+        })()}
 
             {visitorLogs.length === 0 ? (
               <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No visitor traffic recorded yet.</p>
