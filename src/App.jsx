@@ -626,7 +626,6 @@ export default function App() {
   const [feedbacksList, setFeedbacksList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
-  const selectedDateVisits = filteredLogs.length;
   const [mediaAssets, setMediaAssets] = useState({});
   const [savingSection, setSavingSection] = useState('');
   
