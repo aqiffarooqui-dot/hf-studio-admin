@@ -4034,21 +4034,22 @@ const handleLogoUpload = (e) => {
 
           const selectedDateVisits = filteredLogs.length;
 
-          const totalVisits = filteredLogs.length;
-          const todayVisits = filteredLogs.filter(log => getLogDateStr(log) === todayStr).length;              
-          const monthlyVisits = filteredLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
-          const yearlyVisits = filteredLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
+          const totalVisits = allLogs.length;
+          // Today count hamesha aaj ki date ka hi dikhega chahe filter koi bhi ho
+          const todayVisits = allLogs.filter(log => getLogDateStr(log) === todayStr).length;              
+          const monthlyVisits = allLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
+          const yearlyVisits = allLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
 
           const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
-          const liveSessionsCount = filteredLogs.filter(log => {
-            const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
+          const liveSessionsCount = allLogs.filter(log => {
+            const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt) : null);
             return t >= fiveMinsAgo;
           }).length;
 
           const yesterdayObj = new Date();
           yesterdayObj.setDate(now.getDate() - 1);
           const yesterdayStr = `${yesterdayObj.getFullYear()}-${String(yesterdayObj.getMonth() + 1).padStart(2, '0')}-${String(yesterdayObj.getDate()).padStart(2, '0')}`;
-          const yesterdayVisits = filteredLogs.filter(log => getLogDateStr(log) === yesterdayStr).length;
+          const yesterdayVisits = allLogs.filter(log => getLogDateStr(log) === yesterdayStr).length;
           
           let trendPercent = 0;
           if (yesterdayVisits > 0) {
@@ -4069,12 +4070,16 @@ const handleLogoUpload = (e) => {
             dailyTrendMap[dStr] = 0;
           }
 
+          // Graph ke liye hamesha allLogs chalega taaki 7 din ka trend dikhe
           allLogs.forEach(log => { 
             const dStr = getLogDateStr(log);
             if (dailyTrendMap[dStr] !== undefined) {
               dailyTrendMap[dStr]++;
             }
+          });
 
+          // Traffic sources aur breakdowns ab filteredLogs par chalenge taaki date select karne par change hon
+          filteredLogs.forEach(log => {
             const src = log.instagramIdOrSource || 'Direct Visit';
             sourceCounts[src] = (sourceCounts[src] || 0) + 1;
 
@@ -4167,7 +4172,7 @@ const handleLogoUpload = (e) => {
                 
                 {selectedDate && (
                   <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider text-pink-400`}>Selected Date</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider text-pink-400`}>Filtered Date</span>
                     <div className="text-xl font-black font-mono text-pink-400">{selectedDateVisits}</div>
                     <p className={`text-[10px] ${iosMuted}`}>Traffic on {selectedDate}</p>
                   </div>
@@ -4189,21 +4194,28 @@ const handleLogoUpload = (e) => {
                   {Object.entries(dailyTrendMap).map(([dateStr, count], idx) => {
                     const barHeightPct = Math.max(12, Math.round((count / maxChartVal) * 100));
                     const isToday = dateStr === todayStr;
+                    const isSelected = dateStr === selectedDate; // Check if this bar is the selected filtered date
                     const dayLabel = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
                     return (
                       <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group relative">
                         <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all bg-black/95 text-white text-[10px] font-mono py-1 px-2 rounded-lg pointer-events-none whitespace-nowrap z-20 border border-white/20 shadow-xl">
-                          {dayLabel}: {count} visits
+                          {dayLabel}: {count} visits {isSelected ? '(Selected)' : ''}
                         </div>
 
-                        <span className={`text-[10px] font-mono font-bold ${isToday ? 'text-emerald-400' : iosMuted}`}>{count}</span>
+                        <span className={`text-[10px] font-mono font-bold ${isSelected ? 'text-green-400 font-black' : (isToday ? 'text-emerald-400' : iosMuted)}`}>
+                          {count}
+                        </span>
                         
                         <div 
-                          className={`w-full rounded-t-[8px] transition-all duration-500 ${isToday ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-gradient-to-t from-purple-600 to-pink-500 hover:opacity-100 opacity-80'}`}
+                          className={`w-full rounded-t-[8px] transition-all duration-500 ${
+                            isSelected 
+                              ? 'bg-gradient-to-t from-green-600 to-green-400 shadow-[0_0_15px_rgba(74,222,128,0.6)] ring-2 ring-green-300' 
+                              : (isToday ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-gradient-to-t from-purple-600 to-pink-500 hover:opacity-100 opacity-80')
+                          }`}
                           style={{ height: `${barHeightPct}%` }}
                         />
-                        <span className={`text-[9px] font-mono truncate max-w-full ${isToday ? 'text-emerald-400 font-bold' : iosMuted}`}>
+                        <span className={`text-[9px] font-mono truncate max-w-full ${isSelected ? 'text-green-400 font-bold underline' : (isToday ? 'text-emerald-400 font-bold' : iosMuted)}`}>
                           {dateStr.slice(5)}
                         </span>
                       </div>
@@ -4216,14 +4228,14 @@ const handleLogoUpload = (e) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <h4 className="font-bold text-[14px] flex items-center gap-2">
-                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (Instagram / Ref Link)
+                    <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources {selectedDate && `(Filtered: ${selectedDate})`}
                   </h4>
                   <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {Object.entries(sourceCounts).length === 0 ? (
-                      <p className={`text-xs ${iosMuted}`}>No sources recorded yet.</p>
+                      <p className={`text-xs ${iosMuted}`}>No sources recorded for this date.</p>
                     ) : (
                       Object.entries(sourceCounts).map(([src, count], idx) => {
-                        const percent = totalVisits > 0 ? Math.round((count / totalVisits) * 100) : 0;
+                        const percent = selectedDateVisits > 0 ? Math.round((count / selectedDateVisits) * 100) : 0;
                         return (
                           <div key={idx} className="space-y-1">
                             <div className="flex justify-between text-xs font-bold">
@@ -4242,14 +4254,14 @@ const handleLogoUpload = (e) => {
 
                 <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <h4 className="font-bold text-[14px] flex items-center gap-2">
-                    <Smartphone className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Browser & Device Tier Breakdown
+                    <Smartphone className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Browser & Device Tier Breakdown {selectedDate && `(Filtered)`}
                   </h4>
                   <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {Object.entries(browserCounts).length === 0 ? (
-                      <p className={`text-xs ${iosMuted}`}>No browser data recorded yet.</p>
+                      <p className={`text-xs ${iosMuted}`}>No browser data recorded for this date.</p>
                     ) : (
                       Object.entries(browserCounts).map(([bName, count], idx) => {
-                        const percent = totalVisits > 0 ? Math.round((count / totalVisits) * 100) : 0;
+                        const percent = selectedDateVisits > 0 ? Math.round((count / selectedDateVisits) * 100) : 0;
                         return (
                           <div key={idx} className="space-y-1">
                             <div className="flex justify-between text-xs font-bold">
@@ -4301,7 +4313,6 @@ const handleLogoUpload = (e) => {
             </div>
           );
         })()}
-        
 
         {/* 14. PROMOTIONS & BROADCAST */}
         {activeFolderId === 'promotions' && (
