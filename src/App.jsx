@@ -626,6 +626,7 @@ export default function App() {
   const [feedbacksList, setFeedbacksList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
+  const selectedDateVisits = filteredLogs.length;
   const [mediaAssets, setMediaAssets] = useState({});
   const [savingSection, setSavingSection] = useState('');
   
@@ -4066,7 +4067,7 @@ const handleLogoUpload = (e) => {
             dailyTrendMap[dStr] = 0;
           }
 
-         filteredLogs.forEach(log => { 
+        allLogs.forEach(log => { 
             const dStr = getLogDateStr(log);
             if (dailyTrendMap[dStr] !== undefined) {
               dailyTrendMap[dStr]++;
@@ -4124,7 +4125,7 @@ const handleLogoUpload = (e) => {
               </div>
 
               {/* Time-Based Summary Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
                 <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${iosMuted}`}>Live Active Now</span>
                   <div className="text-xl font-black font-mono text-purple-400 flex items-center gap-2">
@@ -4161,6 +4162,13 @@ const handleLogoUpload = (e) => {
                   </div>
                   <p className={`text-[10px] ${iosMuted}`}>Top Instagram / Ref</p>
                 </div>
+              {selectedDate && (
+                  <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider text-pink-400`}>Selected Date</span>
+                    <div className="text-xl font-black font-mono text-pink-400">{selectedDateVisits}</div>
+                    <p className={`text-[10px] ${iosMuted}`}>Traffic on {selectedDate}</p>
+                  </div>
+                )}
               </div>
 
               {/* Live Popularity & Trend Bar Graph (Last 7 Days) */}
