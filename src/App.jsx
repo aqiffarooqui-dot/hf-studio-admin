@@ -4032,13 +4032,12 @@ const handleLogoUpload = (e) => {
             return getLogDateStr(log) === selectedDate;
           });
 
-          const totalVisits = allLogs.length;
-          const todayVisits = allLogs.filter(log => getLogDateStr(log) === todayStr).length;
-          const monthlyVisits = allLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
-          const yearlyVisits = allLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
+          const totalVisits = filteredLogs.length;
+          const todayVisits = filteredLogs.filter(log => getLogDateStr(log) === todayStr).length;              const monthlyVisits = filteredLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
+          const yearlyVisits = filteredLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
 
-          const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
-          const liveSessionsCount = allLogs.filter(log => {
+         const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
+          const liveSessionsCount = filteredLogs.filter(log => { // filteredLogs kiya
             const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
             return t >= fiveMinsAgo;
           }).length;
@@ -4046,7 +4045,7 @@ const handleLogoUpload = (e) => {
           const yesterdayObj = new Date();
           yesterdayObj.setDate(now.getDate() - 1);
           const yesterdayStr = `${yesterdayObj.getFullYear()}-${String(yesterdayObj.getMonth() + 1).padStart(2, '0')}-${String(yesterdayObj.getDate()).padStart(2, '0')}`;
-          const yesterdayVisits = allLogs.filter(log => getLogDateStr(log) === yesterdayStr).length;
+          const yesterdayVisits = filteredLogs.filter(log => getLogDateStr(log) === yesterdayStr).length;
           
           let trendPercent = 0;
           if (yesterdayVisits > 0) {
@@ -4067,7 +4066,7 @@ const handleLogoUpload = (e) => {
             dailyTrendMap[dStr] = 0;
           }
 
-          allLogs.forEach(log => {
+         filteredLogs.forEach(log => { 
             const dStr = getLogDateStr(log);
             if (dailyTrendMap[dStr] !== undefined) {
               dailyTrendMap[dStr]++;
