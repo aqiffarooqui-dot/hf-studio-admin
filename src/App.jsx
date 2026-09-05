@@ -461,6 +461,25 @@ const compressImageFile = (file, maxWidth = 1000, quality = 0.85, maxBytes = 280
   });
 };
 
+const logAdminAction = async (sectionName, summaryText, beforeVal, afterVal, currentDraft, saveBackendFn) => {
+  try {
+    const changeEntry = {
+      id: `act_${Date.now()}`,
+      section: sectionName,
+      timestamp: Date.now(),
+      summary: summaryText,
+      changes: [
+        { path: sectionName, before: String(beforeVal || 'N/A'), after: String(afterVal || 'N/A') }
+      ]
+    };
+    const updatedHistory = [changeEntry, ...(currentDraft.changeHistory || [])].slice(0, 15);
+    const updatedPayload = { ...currentDraft, changeHistory: updatedHistory };
+    await saveBackendFn(updatedPayload, `Audit: ${sectionName}`);
+  } catch (e) {
+    console.error("Audit log error:", e);
+  }
+};
+
 const MEDIA_COLLECTION = 'studio_media';
 const isDataUrl = (value) => typeof value === 'string' && value.startsWith('data:');
 const mediaKeyForPath = (path) => path.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
@@ -606,6 +625,7 @@ export default function App() {
   const [bookingsList, setBookingsList] = useState([]);
   const [feedbacksList, setFeedbacksList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
   const [mediaAssets, setMediaAssets] = useState({});
   const [savingSection, setSavingSection] = useState('');
   
@@ -703,23 +723,45 @@ const openImageCropperForFile = (file, onSaveCallback) => {
   reader.readAsDataURL(file);
 };
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    openImageCropperForFile(file, (res) => {
-      setDraft(prev => ({ ...prev, studioLogo: res }));
-    });
-    e.target.value = '';
-  };
+const handleLogoUpload = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  openImageCropperForFile(file, async (res) => {
+    const prevLogo = draft.studioLogo;
+    setDraft(prev => ({ ...prev, studioLogo: res }));
+    
+    // Audit log for studio logo change
+    await logAdminAction(
+      "Studio Logo Update",
+      "Updated official studio logo image asset",
+      prevLogo ? "Existing Logo" : "None",
+      "New Cropped Logo",
+      draft,
+      saveBackendConfig
+    );
+  });
+  e.target.value = '';
+};
 
-  const handleProfileUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    openImageCropperForFile(file, (res) => {
-      setDraft(prev => ({ ...prev, profileImage: res }));
-    });
-    e.target.value = '';
-  };
+ const handleProfileUpload = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  openImageCropperForFile(file, async (res) => {
+    const prevProfile = draft.profileImage;
+    setDraft(prev => ({ ...prev, profileImage: res }));
+    
+    // Audit log for profile photo change
+    await logAdminAction(
+      "Profile Photo Update",
+      "Updated artist profile picture",
+      prevProfile ? "Existing Profile Image" : "Default",
+      "New Cropped Profile Photo",
+      draft,
+      saveBackendConfig
+    );
+  });
+  e.target.value = '';
+};
 
   const handlePackageImageUpload = (e, kit, pkgKey) => {
     const file = e.target.files?.[0];
@@ -1160,7 +1202,8 @@ const openImageCropperForFile = (file, onSaveCallback) => {
       const gDiscount = Number(b.guestDiscountSaved || 0);
       const cDiscount = Number(b.couponDiscountAmount || 0) || (b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - gDiscount) : 0);
       const totalBeforeDisc = mainTotal + extraGross;
-      const totalDisc = Math.max(0, gDiscount + cDiscount);
+      const manualDisc = Number(b.manualAdminDiscount || 0);
+      const totalDisc = Math.max(0, gDiscount + cDiscount + manualDisc);
       const finalAmt = Number(b.totalAmount ?? Math.max(0, totalBeforeDisc - totalDisc));
       const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
 
@@ -1322,7 +1365,8 @@ const openImageCropperForFile = (file, onSaveCallback) => {
         startY = drawSectionTitle('3. DISCOUNTS & OFFERS', startY, '#4ade80');
         if (gDiscount > 0) startY = drawRow('• Additional Family & Guest Discount:', `-${money(gDiscount)}`, startY, { valueColor: '#4ade80', mono: true });
         if (b.appliedCoupon && b.appliedCoupon !== 'None' && cDiscount > 0) startY = drawRow(`• Coupon Code (${b.appliedCoupon}):`, `-${money(cDiscount)}`, startY, { valueColor: '#4ade80', mono: true });
-        if (gDiscount === 0 && cDiscount === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#71717a', mono: true });
+        if (manualDisc > 0) startY = drawRow('• Custom Offer Applied:', `-${money(manualDisc)}`, startY, { valueColor: '#4ade80', mono: true });
+        if (gDiscount === 0 && cDiscount === 0 && manualDisc === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#71717a', mono: true });
         startY = drawRow('Total Discounts:', `-${money(totalDisc)}`, startY, { labelColor: '#4ade80', valueColor: '#4ade80', mono: true });
 
         startY += 14;
@@ -1399,6 +1443,16 @@ const openImageCropperForFile = (file, onSaveCallback) => {
         statusPayload.rejectionReason = null;
       }
       await updateDoc(doc(db, "bookings", bookingId), statusPayload);
+   // Audit Log for Booking Status Update
+      await logAdminAction(
+        "Booking Status Update",
+        `Marked booking ID ${bookingId} as ${newStatus.toUpperCase()}`,
+        "Previous Status",
+        newStatus.toUpperCase(),
+        currentDraftSafe,
+        saveBackendConfig
+      );
+
       setPopupToast({ title: "Status Updated", desc: `Booking marked as ${newStatus.toUpperCase()}` });
     } catch (err) {
       alert("Error: " + err.message);
@@ -3095,7 +3149,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                               <div className={`p-3.5 rounded-[16px] border space-y-2 ${isAdminDarkMode ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
                                 <div className="flex items-center justify-between">
                                   <span className="font-bold text-xs text-amber-400 flex items-center gap-1.5">
-                                    <Tag className="w-3.5 h-3.5" /> Custom Manual Admin Offer (₹ Flat)
+                                    <Tag className="w-3.5 h-3.5" /> Custom Manual Offer (₹ Flat)
                                   </span>
                                   {manualDisc > 0 && (
                                     <span className="font-mono font-bold text-xs text-emerald-400">-{money(manualDisc)}</span>
@@ -3948,10 +4002,10 @@ const openImageCropperForFile = (file, onSaveCallback) => {
           </div>
         )}
 
-      {/* 13. VISITOR & TRAFFIC LOGS & ADVANCED ANALYTICS */}
+    {/* 13. VISITOR & TRAFFIC LOGS & ADVANCED ANALYTICS */}
         {activeFolderId === 'traffic_logs' && (() => {
           const now = new Date();
-          const todayStr = now.toISOString().slice(0, 10);
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
           const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
           const currentYearStr = String(now.getFullYear());
 
@@ -3959,18 +4013,24 @@ const openImageCropperForFile = (file, onSaveCallback) => {
           
           const getLogDateStr = (log) => {
             const d = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
-            return d && !isNaN(d) ? d.toISOString().slice(0, 10) : '';
+            if (!d || isNaN(d)) return '';
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
           };
 
           const getLogMonthStr = (log) => {
             const d = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
-            return d && !isNaN(d) ? d.toISOString().slice(0, 7) : '';
+            return d && !isNaN(d) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` : '';
           };
 
           const getLogYearStr = (log) => {
             const d = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
             return d && !isNaN(d) ? String(d.getFullYear()) : '';
           };
+
+          const filteredLogs = allLogs.filter(log => {
+            if (!selectedDate) return true;
+            return getLogDateStr(log) === selectedDate;
+          });
 
           const totalVisits = allLogs.length;
           const todayVisits = allLogs.filter(log => getLogDateStr(log) === todayStr).length;
@@ -3985,7 +4045,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
 
           const yesterdayObj = new Date();
           yesterdayObj.setDate(now.getDate() - 1);
-          const yesterdayStr = yesterdayObj.toISOString().slice(0, 10);
+          const yesterdayStr = `${yesterdayObj.getFullYear()}-${String(yesterdayObj.getMonth() + 1).padStart(2, '0')}-${String(yesterdayObj.getDate()).padStart(2, '0')}`;
           const yesterdayVisits = allLogs.filter(log => getLogDateStr(log) === yesterdayStr).length;
           
           let trendPercent = 0;
@@ -4003,7 +4063,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
           for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(now.getDate() - i);
-            const dStr = d.toISOString().slice(0, 10);
+            const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             dailyTrendMap[dStr] = 0;
           }
 
@@ -4042,6 +4102,26 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                 <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
                   {totalVisits} All-Time Visits
                 </span>
+              </div>
+
+              {/* Date Filter Bar */}
+              <div className="flex items-center gap-3 py-2 flex-wrap">
+                <label className={`text-xs font-bold ${iosMuted}`}>Filter by Date:</label>
+                <input 
+                  type="date"
+                  value={selectedDate}
+                  onChange={e => setSelectedDate(e.target.value)}
+                  className={`p-2 rounded-[12px] text-xs outline-none ${iosInputBg}`}
+                />
+                {selectedDate && (
+                  <button 
+                    type="button"
+                    onClick={() => setSelectedDate('')}
+                    className="px-3 py-1.5 rounded-[12px] bg-red-500/20 text-red-400 text-xs font-bold"
+                  >
+                    Clear Filter
+                  </button>
+                )}
               </div>
 
               {/* Time-Based Summary Metric Cards */}
@@ -4180,14 +4260,14 @@ const openImageCropperForFile = (file, onSaveCallback) => {
               {/* Detailed Activity Stream */}
               <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                 <h4 className="font-bold text-[14px] flex items-center gap-2">
-                  <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Detailed Visitor Activity Stream
+                  <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Detailed Visitor Activity Stream {selectedDate && `(Filtered for ${selectedDate})`}
                 </h4>
 
-                {allLogs.length === 0 ? (
-                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs found yet.</p>
+                {filteredLogs.length === 0 ? (
+                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs found for this date.</p>
                 ) : (
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    {allLogs.map(log => (
+                    {filteredLogs.map(log => (
                       <div key={log.id} className={`p-3.5 rounded-[16px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[12.5px] ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
