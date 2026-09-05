@@ -2715,29 +2715,35 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                   />
                 </div>
 
-                <div>
-                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Telegram Chat ID</label>
+             <div>
+                  <label className={`block text-[11px] font-bold mb-1 ${iosMuted}`}>Telegram Chat IDs (Comma separated)</label>
                   <input
                     type="text"
-                    placeholder="e.g. 8891500480"
+                    placeholder="e.g. 8891500480, 123456789"
                     value={currentDraftSafe.telegramChatId || ''}
                     onChange={e => setDraft({ ...currentDraftSafe, telegramChatId: e.target.value })}
                     className={`w-full p-3.5 rounded-[16px] font-mono text-[13px] ${adminThemeStyle.accentText} border ${iosInputBg}`}
                   />
                 </div>
               </div>
-              <button type="button" onClick={async () => {
+             <button type="button" onClick={async () => {
                 try {
-                  const token = currentDraftSafe.telegramBotToken; const chatId = currentDraftSafe.telegramChatId;
-                  if (!token || !chatId) throw new Error('Bot Token and Chat ID are required.');
-                  const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: '✅ H&F Makeup Artist Telegram test notification — connection is working.' }) });
-                  const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) throw new Error(j.description || `HTTP ${r.status}`);
-                  setPopupToast({ title: 'Telegram Test Successful', desc: 'The bot successfully delivered a test message to the configured Chat ID.' });
-                } catch (err) { setPopupToast({ title: 'Telegram Test Failed', desc: err.message + ' Make sure the bot is started in Telegram and the Chat ID is correct.' }); }
+                  const token = currentDraftSafe.telegramBotToken; 
+                  const chatIds = (currentDraftSafe.telegramChatId || '').split(',').map(id => id.trim()).filter(Boolean);
+                  
+                  if (!token || chatIds.length === 0) throw new Error('Bot Token and at least one Chat ID are required.');
+                  
+                  for (const chatId of chatIds) {
+                    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: '✅ H&F Makeup Artist Telegram test notification — connection is working.' }) });
+                    const j = await r.json().catch(() => ({})); if (!r.ok || !j.ok) throw new Error(j.description || `HTTP ${r.status}`);
+                  }
+                  
+                  setPopupToast({ title: 'Telegram Test Successful', desc: 'The bot successfully delivered test messages to all configured Chat IDs.' });
+                } catch (err) { setPopupToast({ title: 'Telegram Test Failed', desc: err.message + ' Make sure the bot is started in Telegram and the Chat IDs are correct.' }); }
               }} className="w-full py-3 rounded-[16px] bg-sky-500/15 text-sky-300 border border-sky-500/30 text-xs font-bold flex items-center justify-center gap-2">
                 <Send className="w-4 h-4" /> Test Telegram Notification
-              </button>
-            </div>
+              </button>            
+               </div>
 
             <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[14px] uppercase flex items-center gap-2">
@@ -2867,7 +2873,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
             <div className="flex justify-between items-center flex-wrap gap-3">
               <div>
                 <h3 className={`font-bold text-[16px] ${adminThemeStyle.accentText}`}>Incoming Customer Bookings Queue</h3>
-                <p className={`text-[13px] ${iosMuted}`}>Filter, search by name/phone/no, select all, or delete multiple records.</p>
+                <p className={`text-[13px] ${iosMuted}`}>Filter, search by name/phone/no, manage dates, and apply custom manual offers on client demand.</p>
               </div>
               <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
                 {filteredBookingsList.length} / {bookingsList.length} Bookings
@@ -2992,6 +2998,12 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                             
                             <h4 className="font-bold text-[16px] mt-1.5 truncate">{b.clientName}</h4>
                             <p className={`text-[12px] font-mono ${iosMuted}`}>📞 {b.clientPhone}</p>
+                            
+                            {/* EVENT DATE DISPLAY FIX */}
+                            <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-amber-400">
+                              <Calendar className="w-3.5 h-3.5" />
+                              <span>Event Date: {b.eventDate || 'Not Provided'}</span>
+                            </div>
                           </div>
                         </div>
 
@@ -3023,11 +3035,12 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                           const guests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
                           const guestGross = Number(b.extraGuestsCost || 0);
                           const guestDiscount = Number(b.guestDiscountSaved || 0);
+                          const manualDisc = Number(b.manualAdminDiscount || 0); // Manual Admin Offer
                           const couponDiscount = Number(b.couponDiscountAmount || 0) || (
-                            b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - guestDiscount) : 0
+                            b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - guestDiscount - manualDisc) : 0
                           );
                           const totalBeforeDiscounts = mainMakeoverTotal + guestGross;
-                          const totalDiscounts = Math.max(0, guestDiscount + couponDiscount);
+                          const totalDiscounts = Math.max(0, guestDiscount + couponDiscount + manualDisc);
                           const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
                           const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
 
@@ -3051,7 +3064,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
 
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-purple-500/10 border-purple-500/20' : 'bg-purple-50 border-purple-200'}`}>
                                 <div className="flex justify-between items-center font-bold text-purple-400">
-                                  <span>2. Additional Family & Guest Makeovers ({guests.length || Number(b.extraGuestsCount || 0)}):</span>
+                                  <span>2. Additional Family & Guest Makeovers ({guests.length}):</span>
                                   <span className="font-mono">{money(guestGross)}</span>
                                 </div>
                                 {guests.length > 0 ? guests.map((g, gIdx) => {
@@ -3068,7 +3081,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                                   );
                                 }) : <span className={`text-[11px] ${iosMuted}`}>No additional family or guest makeovers.</span>}
                                 <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-purple-300">
-                                  <span>Additional Family & Guest Makeovers Total:</span><span className="font-mono">{money(guestGross)}</span>
+                                  <span>Additional Family & Guest Total:</span><span className="font-mono">{money(guestGross)}</span>
                                 </div>
                               </div>
 
@@ -3076,15 +3089,63 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                                 <span>Booking Total Before Discounts:</span><span className="font-mono">{money(totalBeforeDiscounts)}</span>
                               </div>
 
+                              {/* MANUAL ADMIN OFFER / DISCOUNT BOX */}
+                              <div className={`p-3.5 rounded-[16px] border space-y-2 ${isAdminDarkMode ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50 border-amber-200'}`}>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-xs text-amber-400 flex items-center gap-1.5">
+                                    <Tag className="w-3.5 h-3.5" /> Custom Manual Admin Offer (₹ Flat)
+                                  </span>
+                                  {manualDisc > 0 && (
+                                    <span className="font-mono font-bold text-xs text-emerald-400">-{money(manualDisc)}</span>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="number"
+                                    placeholder="Enter discount amount in ₹ (e.g. 500)"
+                                    defaultValue={b.manualAdminDiscount || ''}
+                                    id={`manual_disc_input_${b.id}`}
+                                    className={`flex-1 p-2.5 rounded-[12px] text-xs font-mono font-bold ${iosInputBg}`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const inputVal = Number(document.getElementById(`manual_disc_input_${b.id}`)?.value || 0);
+                                      const currentTotalBefore = mainMakeoverTotal + guestGross;
+                                      const existingDiscounts = guestDiscount + couponDiscount;
+                                      const newTotal = Math.max(0, currentTotalBefore - existingDiscounts - inputVal);
+
+                                      setSavingSection('Applying Offer...');
+                                      try {
+                                        await updateDoc(doc(db, "bookings", b.id), {
+                                          manualAdminDiscount: inputVal,
+                                          totalAmount: newTotal
+                                        });
+                                        setPopupToast({ title: "Custom Offer Applied", desc: `Flat ₹${inputVal} manual discount applied successfully.` });
+                                      } catch (err) {
+                                        alert("Error: " + err.message);
+                                      } finally {
+                                        setSavingSection('');
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-[12px] shadow"
+                                  >
+                                    Apply Offer
+                                  </button>
+                                </div>
+                              </div>
+
                               <div className={`p-3 rounded-[16px] border space-y-1.5 ${isAdminDarkMode ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-emerald-50 border-emerald-200'}`}>
-                                <div className="font-bold text-emerald-400">3. Discounts & Offers</div>
+                                <div className="font-bold text-emerald-400">3. Discounts & Offers Summary</div>
                                 {guestDiscount > 0 && (
-                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Additional Family & Guest Discount:</span><span className="font-mono text-emerald-400">-{money(guestDiscount)}</span></div>
+                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Family & Guest Discount:</span><span className="font-mono text-emerald-400">-{money(guestDiscount)}</span></div>
+                                )}
+                                {manualDisc > 0 && (
+                                  <div className="flex justify-between gap-3"><span className={iosMuted}>• Manual Admin Offer:</span><span className="font-mono text-emerald-400">-{money(manualDisc)}</span></div>
                                 )}
                                 {b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0 && (
                                   <div className="flex justify-between gap-3"><span className={iosMuted}>• Coupon Code ({b.appliedCoupon}):</span><span className="font-mono text-emerald-400">-{money(couponDiscount)}</span></div>
                                 )}
-                                {guestDiscount === 0 && couponDiscount === 0 && <div className={`text-[11px] ${iosMuted}`}>• No discounts applied.</div>}
                                 <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-emerald-400">
                                   <span>Total Discounts:</span><span className="font-mono">-{money(totalDiscounts)}</span>
                                 </div>
@@ -3885,26 +3946,84 @@ const openImageCropperForFile = (file, onSaveCallback) => {
           </div>
         )}
 
-        {/* 13. VISITOR & TRAFFIC LOGS */}
-      {activeFolderId === 'traffic_logs' && (() => {
-          const totalVisits = visitorLogs.length;
-          const todayStr = new Date().toISOString().slice(0, 10);
-          const todayVisits = visitorLogs.filter(log => {
-            const dateObj = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
-            return dateObj && !isNaN(dateObj) ? dateObj.toISOString().slice(0, 10) === todayStr : false;
+      {/* 13. VISITOR & TRAFFIC LOGS & ADVANCED ANALYTICS */}
+        {activeFolderId === 'traffic_logs' && (() => {
+          // Date Filter State inside render scope or local variables
+          const [selectedLogDate, setSelectedLogDate] = React.useState('');
+          const now = new Date();
+          const todayStr = now.toISOString().slice(0, 10);
+          const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const currentYearStr = String(now.getFullYear());
+
+          // Parse and filter logs safely
+          const allLogs = visitorLogs || [];
+          
+          const getLogDateStr = (log) => {
+            const d = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
+            return d && !isNaN(d) ? d.toISOString().slice(0, 10) : '';
+          };
+
+          const getLogMonthStr = (log) => {
+            const d = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
+            return d && !isNaN(d) ? d.toISOString().slice(0, 7) : '';
+          };
+
+          const getLogYearStr = (log) => {
+            const d = log.visitedAt?.toDate ? log.visitedAt.toDate() : (log.visitedAt ? new Date(log.visitedAt) : null);
+            return d && !isNaN(d) ? String(d.getFullYear()) : '';
+          };
+
+          // Metrics Calculations
+          const totalVisits = allLogs.length;
+          const todayVisits = allLogs.filter(log => getLogDateStr(log) === todayStr).length;
+          const monthlyVisits = allLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
+          const yearlyVisits = allLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
+
+          // Live Active Sessions (Last 5 mins)
+          const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
+          const liveSessionsCount = allLogs.filter(log => {
+            const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
+            return t >= fiveMinsAgo;
           }).length;
 
-          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-          const liveSessionsCount = visitorLogs.filter(log => {
-            const timeObj = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
-            return timeObj >= fiveMinutesAgo;
-          }).length;
+          // Trend calculation (Compare today vs yesterday)
+          const yesterdayObj = new Date();
+          yesterdayObj.setDate(now.getDate() - 1);
+          const yesterdayStr = yesterdayObj.toISOString().slice(0, 10);
+          const yesterdayVisits = allLogs.filter(log => getLogDateStr(log) === yesterdayStr).length;
+          
+          let trendPercent = 0;
+          if (yesterdayVisits > 0) {
+            trendPercent = Math.round(((todayVisits - yesterdayVisits) / yesterdayVisits) * 100);
+          } else {
+            trendPercent = todayVisits > 0 ? 100 : 0;
+          }
 
+          // Filtered Logs for Search/Date Picker
+          const searchedLogs = selectedLogDate 
+            ? allLogs.filter(log => getLogDateStr(log) === selectedLogDate)
+            : allLogs;
+
+          // Group by Source & Device for filtered data
           const sourceCounts = {};
           const deviceCounts = {};
           const browserCounts = {};
+          const dailyTrendMap = {};
 
-          visitorLogs.forEach(log => {
+          // Build last 7 days chart data
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(now.getDate() - i);
+            const dStr = d.toISOString().slice(0, 10);
+            dailyTrendMap[dStr] = 0;
+          }
+
+          allLogs.forEach(log => {
+            const dStr = getLogDateStr(log);
+            if (dailyTrendMap[dStr] !== undefined) {
+              dailyTrendMap[dStr]++;
+            }
+
             const src = log.instagramIdOrSource || 'Direct Visit';
             sourceCounts[src] = (sourceCounts[src] || 0) + 1;
 
@@ -3920,63 +4039,136 @@ const openImageCropperForFile = (file, onSaveCallback) => {
             browserCounts[bName] = (browserCounts[bName] || 0) + 1;
           });
 
+          const maxChartVal = Math.max(...Object.values(dailyTrendMap), 5);
+
           return (
             <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
               <div className="flex justify-between items-center flex-wrap gap-2">
                 <div>
                   <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                    <Activity className="w-5 h-5" /> Visitor Logs & Advanced Traffic Analytics
+                    <Activity className="w-5 h-5" /> Visitor Logs & Live Trend Analytics
                   </h3>
-                  <p className={`text-[13px] ${iosMuted}`}>Real-time overview of site visits, live active sessions, traffic sources, and device tiers.</p>
+                  <p className={`text-[13px] ${iosMuted}`}>Real-time traffic metrics with auto-reset daily counter, trend graph & date search.</p>
                 </div>
                 <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
-                  {totalVisits} Total Logged Visits
+                  {totalVisits} All-Time Visits
                 </span>
               </div>
 
-              {/* Summary Metric Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Time-Based Summary Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
                 <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Live Active Sessions</span>
-                  <div className="text-2xl font-black font-mono text-purple-400 flex items-center gap-2">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${iosMuted}`}>Live Active Now</span>
+                  <div className="text-xl font-black font-mono text-purple-400 flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                     {liveSessionsCount}
                   </div>
-                  <p className={`text-[10px] ${iosMuted}`}>Active in last 5 minutes</p>
+                  <p className={`text-[10px] ${iosMuted}`}>Active in last 5 mins</p>
                 </div>
 
                 <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Visits Today</span>
-                  <div className="text-2xl font-black font-mono text-emerald-400">{todayVisits}</div>
-                  <p className={`text-[10px] ${iosMuted}`}>Active traffic for today</p>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${iosMuted}`}>Today (Resets 12 AM)</span>
+                  <div className="text-xl font-black font-mono text-emerald-400">{todayVisits}</div>
+                  <p className={`text-[10px] text-emerald-400/90 font-bold`}>
+                    {trendPercent >= 0 ? `📈 +${trendPercent}% vs yesterday` : `📉 ${trendPercent}% vs yesterday`}
+                  </p>
                 </div>
 
                 <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Top Traffic Source</span>
-                  <div className="text-sm font-bold truncate text-amber-400">
-                    {Object.entries(sourceCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Direct Visit'}
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${iosMuted}`}>This Month</span>
+                  <div className="text-xl font-black font-mono text-cyan-400">{monthlyVisits}</div>
+                  <p className={`text-[10px] ${iosMuted}`}>Current month traffic</p>
+                </div>
+
+                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${iosMuted}`}>This Year</span>
+                  <div className="text-xl font-black font-mono text-amber-400">{yearlyVisits}</div>
+                  <p className={`text-[10px] ${iosMuted}`}>Yearly aggregate</p>
+                </div>
+
+                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${iosMuted}`}>Top Traffic Source</span>
+                  <div className="text-xs font-bold truncate text-pink-400 pt-1">
+                    {Object.entries(sourceCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Direct'}
                   </div>
-                  <p className={`text-[10px] ${iosMuted}`}>Most frequent referral source</p>
-                </div>
-
-                <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                  <span className={`text-[11px] font-bold uppercase tracking-wider ${iosMuted}`}>Primary Device Platform</span>
-                  <div className="text-sm font-bold truncate text-sky-400">
-                    {Object.entries(deviceCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'Desktop / Mobile'}
-                  </div>
-                  <p className={`text-[10px] ${iosMuted}`}>Detected user platform</p>
+                  <p className={`text-[10px] ${iosMuted}`}>Top Instagram / Ref</p>
                 </div>
               </div>
 
-              {/* Traffic Breakdown Visual Tables */}
+              {/* Live Popularity & Trend Bar Graph (Last 7 Days) */}
+              <div className={`p-5 rounded-[22px] border space-y-4 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h4 className="font-bold text-[14px] flex items-center gap-2">
+                    <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Live Popularity & Trend Graph (Last 7 Days)
+                  </h4>
+                  <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-full ${trendPercent >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                    Trend: {trendPercent >= 0 ? `Growing (+${trendPercent}%)` : `Declining (${trendPercent}%)`}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-7 gap-2 items-end h-36 pt-6 pb-2 px-2 bg-black/20 rounded-[16px] border border-white/5">
+                  {Object.entries(dailyTrendMap).map(([dateStr, count], idx) => {
+                    const barHeightPct = Math.max(12, Math.round((count / maxChartVal) * 100));
+                    const isToday = dateStr === todayStr;
+                    const dayLabel = new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+                    return (
+                      <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group relative">
+                        {/* Tooltip */}
+                        <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all bg-black/95 text-white text-[10px] font-mono py-1 px-2 rounded-lg pointer-events-none whitespace-nowrap z-20 border border-white/20 shadow-xl">
+                          {dayLabel}: {count} visits
+                        </div>
+
+                        <span className={`text-[10px] font-mono font-bold ${isToday ? 'text-emerald-400' : iosMuted}`}>{count}</span>
+                        
+                        <div 
+                          className={`w-full rounded-t-[8px] transition-all duration-500 ${isToday ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-gradient-to-t from-purple-600 to-pink-500 hover:opacity-100 opacity-80'}`}
+                          style={{ height: `${barHeightPct}%` }}
+                        />
+                        <span className={`text-[9px] font-mono truncate max-w-full ${isToday ? 'text-emerald-400 font-bold' : iosMuted}`}>
+                          {dateStr.slice(5)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Date Search & Filter Section */}
+              <div className={`p-4 rounded-[20px] border flex flex-col sm:flex-row items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <span className="text-xs font-bold uppercase tracking-wider">🔍 Search Visits by Date:</span>
+                  <input
+                    type="date"
+                    value={selectedLogDate}
+                    onChange={e => setSelectedLogDate(e.target.value)}
+                    className={`p-2.5 rounded-[12px] text-xs font-mono outline-none ${iosInputBg}`}
+                  />
+                  {selectedLogDate && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLogDate('')}
+                      className="px-3 py-2 rounded-[12px] bg-slate-200 text-slate-800 text-xs font-bold"
+                    >
+                      Clear Filter
+                    </button>
+                  )}
+                </div>
+
+                <span className={`text-xs font-mono ${iosMuted}`}>
+                  Showing <strong>{searchedLogs.length}</strong> records {selectedLogDate ? `for ${selectedLogDate}` : '(All-Time)'}
+                </span>
+              </div>
+
+              {/* Traffic Sources & Device Breakdowns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                   <h4 className="font-bold text-[14px] flex items-center gap-2">
                     <Tag className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Traffic Sources (Instagram / Ref Link)
                   </h4>
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {Object.entries(sourceCounts).length === 0 ? (
-                      <p className={`text-xs ${iosMuted}`}>No traffic sources recorded yet.</p>
+                      <p className={`text-xs ${iosMuted}`}>No sources recorded yet.</p>
                     ) : (
                       Object.entries(sourceCounts).map(([src, count], idx) => {
                         const percent = totalVisits > 0 ? Math.round((count / totalVisits) * 100) : 0;
@@ -4000,7 +4192,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                   <h4 className="font-bold text-[14px] flex items-center gap-2">
                     <Smartphone className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Browser & Device Tier Breakdown
                   </h4>
-                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                     {Object.entries(browserCounts).length === 0 ? (
                       <p className={`text-xs ${iosMuted}`}>No browser data recorded yet.</p>
                     ) : (
@@ -4023,17 +4215,17 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                 </div>
               </div>
 
-              {/* Detailed Recent Logs Feed */}
+              {/* Detailed Activity Stream */}
               <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                 <h4 className="font-bold text-[14px] flex items-center gap-2">
-                  <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Recent Visitor Activity Stream
+                  <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Detailed Visitor Activity Stream
                 </h4>
 
-                {visitorLogs.length === 0 ? (
-                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs available.</p>
+                {searchedLogs.length === 0 ? (
+                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs found for the selected date.</p>
                 ) : (
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    {visitorLogs.map(log => (
+                    {searchedLogs.map(log => (
                       <div key={log.id} className={`p-3.5 rounded-[16px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[12.5px] ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
