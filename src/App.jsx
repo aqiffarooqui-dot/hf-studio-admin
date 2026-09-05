@@ -403,6 +403,7 @@ const INITIAL_FOLDERS = [
   { id: 'convenience', label: 'Travel Fees & Zones', icon: Car, category: 'RATES', desc: 'Edit venue travel charges per area' },
   { id: 'theme', label: 'Themes & Typography', icon: Palette, category: 'DESIGN', desc: 'Aesthetic skins, fonts & mode defaults' },
   { id: 'profile', label: 'Studio Identity & Logo', icon: User, category: 'BRANDING', desc: 'Upload Studio Logo, Profile Photo & Contact' },
+{ id: 'admin_activity_logs', label: 'Admin Activity Logs', icon: Activity, category: 'SYSTEM', desc: 'Track all real-time admin actions and modifications', countKey: null },
   { id: 'cache_cleaner', label: 'Safe Temp Cache & Logs Cleanup', icon: RefreshCw, category: 'SYSTEM', desc: 'Clear local staged cache & redundant browser temp data safely' }
 ];
 
@@ -575,6 +576,7 @@ const SAVE_SECTION_BY_FOLDER = {
   bookings: null,
   feedbacks: null,
   traffic_logs: null,
+  admin_activity_logs: null,
   cache_cleaner: null
 };
 
@@ -3948,14 +3950,11 @@ const openImageCropperForFile = (file, onSaveCallback) => {
 
       {/* 13. VISITOR & TRAFFIC LOGS & ADVANCED ANALYTICS */}
         {activeFolderId === 'traffic_logs' && (() => {
-          // Date Filter State inside render scope or local variables
-          const [selectedLogDate, setSelectedLogDate] = React.useState('');
           const now = new Date();
           const todayStr = now.toISOString().slice(0, 10);
           const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
           const currentYearStr = String(now.getFullYear());
 
-          // Parse and filter logs safely
           const allLogs = visitorLogs || [];
           
           const getLogDateStr = (log) => {
@@ -3973,20 +3972,17 @@ const openImageCropperForFile = (file, onSaveCallback) => {
             return d && !isNaN(d) ? String(d.getFullYear()) : '';
           };
 
-          // Metrics Calculations
           const totalVisits = allLogs.length;
           const todayVisits = allLogs.filter(log => getLogDateStr(log) === todayStr).length;
           const monthlyVisits = allLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
           const yearlyVisits = allLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
 
-          // Live Active Sessions (Last 5 mins)
           const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
           const liveSessionsCount = allLogs.filter(log => {
             const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
             return t >= fiveMinsAgo;
           }).length;
 
-          // Trend calculation (Compare today vs yesterday)
           const yesterdayObj = new Date();
           yesterdayObj.setDate(now.getDate() - 1);
           const yesterdayStr = yesterdayObj.toISOString().slice(0, 10);
@@ -3999,18 +3995,11 @@ const openImageCropperForFile = (file, onSaveCallback) => {
             trendPercent = todayVisits > 0 ? 100 : 0;
           }
 
-          // Filtered Logs for Search/Date Picker
-          const searchedLogs = selectedLogDate 
-            ? allLogs.filter(log => getLogDateStr(log) === selectedLogDate)
-            : allLogs;
-
-          // Group by Source & Device for filtered data
           const sourceCounts = {};
           const deviceCounts = {};
           const browserCounts = {};
           const dailyTrendMap = {};
 
-          // Build last 7 days chart data
           for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(now.getDate() - i);
@@ -4048,7 +4037,7 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                   <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
                     <Activity className="w-5 h-5" /> Visitor Logs & Live Trend Analytics
                   </h3>
-                  <p className={`text-[13px] ${iosMuted}`}>Real-time traffic metrics with auto-reset daily counter, trend graph & date search.</p>
+                  <p className={`text-[13px] ${iosMuted}`}>Real-time traffic metrics with auto-reset daily counter, trend graph & activity stream.</p>
                 </div>
                 <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
                   {totalVisits} All-Time Visits
@@ -4114,7 +4103,6 @@ const openImageCropperForFile = (file, onSaveCallback) => {
 
                     return (
                       <div key={idx} className="flex flex-col items-center gap-1.5 h-full justify-end group relative">
-                        {/* Tooltip */}
                         <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all bg-black/95 text-white text-[10px] font-mono py-1 px-2 rounded-lg pointer-events-none whitespace-nowrap z-20 border border-white/20 shadow-xl">
                           {dayLabel}: {count} visits
                         </div>
@@ -4132,32 +4120,6 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                     );
                   })}
                 </div>
-              </div>
-
-              {/* Date Search & Filter Section */}
-              <div className={`p-4 rounded-[20px] border flex flex-col sm:flex-row items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <span className="text-xs font-bold uppercase tracking-wider">🔍 Search Visits by Date:</span>
-                  <input
-                    type="date"
-                    value={selectedLogDate}
-                    onChange={e => setSelectedLogDate(e.target.value)}
-                    className={`p-2.5 rounded-[12px] text-xs font-mono outline-none ${iosInputBg}`}
-                  />
-                  {selectedLogDate && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedLogDate('')}
-                      className="px-3 py-2 rounded-[12px] bg-slate-200 text-slate-800 text-xs font-bold"
-                    >
-                      Clear Filter
-                    </button>
-                  )}
-                </div>
-
-                <span className={`text-xs font-mono ${iosMuted}`}>
-                  Showing <strong>{searchedLogs.length}</strong> records {selectedLogDate ? `for ${selectedLogDate}` : '(All-Time)'}
-                </span>
               </div>
 
               {/* Traffic Sources & Device Breakdowns */}
@@ -4221,11 +4183,11 @@ const openImageCropperForFile = (file, onSaveCallback) => {
                   <Activity className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Detailed Visitor Activity Stream
                 </h4>
 
-                {searchedLogs.length === 0 ? (
-                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs found for the selected date.</p>
+                {allLogs.length === 0 ? (
+                  <p className={`text-[14px] py-8 text-center ${iosMuted}`}>No visitor logs found yet.</p>
                 ) : (
                   <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    {searchedLogs.map(log => (
+                    {allLogs.map(log => (
                       <div key={log.id} className={`p-3.5 rounded-[16px] border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[12.5px] ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                         <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -4558,7 +4520,77 @@ const openImageCropperForFile = (file, onSaveCallback) => {
           </div>
         )}
 
-        {/* 18. STUDIO IDENTITY & LOGO */}
+       {/* 18. ADMIN ACTIVITY LOGS CARD */}
+        {activeFolderId === 'admin_activity_logs' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <Activity className="w-5 h-5" /> Admin Activity & Change Logs
+                </h3>
+                <p className={`text-[13px] ${iosMuted}`}>Real-time audit stream of all configurations, pricing updates, and booking status changes made in this admin panel.</p>
+              </div>
+              <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full shadow-sm`}>
+                {(currentDraftSafe.changeHistory || []).length} Recorded Actions
+              </span>
+            </div>
+
+            <div className={`p-5 rounded-[22px] border space-y-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[14px] flex items-center gap-2">
+                <GitBranch className={`w-4 h-4 ${adminThemeStyle.accentText}`} /> Detailed Audit Stream
+              </h4>
+
+              {(!currentDraftSafe.changeHistory || currentDraftSafe.changeHistory.length === 0) ? (
+                <p className={`text-[14px] py-12 text-center ${iosMuted}`}>No admin activities recorded yet. Save any setting card or manage a booking to see audit logs here.</p>
+              ) : (
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                  {currentDraftSafe.changeHistory.map((entry, idx) => (
+                    <div key={entry.id || idx} className={`p-4 rounded-[18px] border space-y-2 ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`font-mono text-xs font-bold ${adminThemeStyle.accentText} bg-white/10 px-2.5 py-1 rounded-[8px]`}>
+                            {entry.section || 'General Update'}
+                          </span>
+                          <span className={`text-[11px] font-mono ${iosMuted}`}>
+                            {entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'Just now'}
+                          </span>
+                        </div>
+                        {entry.changes?.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRollbackChange(entry)}
+                            className="px-3 py-1 rounded-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold hover:bg-amber-500/30 transition"
+                          >
+                            <RotateCcw className="w-3 h-3 inline mr-1" /> Rollback Section
+                          </button>
+                        )}
+                      </div>
+
+                      <p className="text-[13px] font-semibold text-white/90">
+                        {entry.summary || 'Configuration updated successfully.'}
+                      </p>
+
+                      {entry.changes?.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-white/10 space-y-1">
+                          <span className={`text-[10px] uppercase font-bold tracking-wider ${iosMuted}`}>Modified Path Fields:</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 pt-1">
+                            {entry.changes.map((ch, cIdx) => (
+                              <div key={cIdx} className={`text-[11px] font-mono p-2 rounded-[10px] ${isAdminDarkMode ? 'bg-white/5' : 'bg-slate-100'}`}>
+                                <span className="text-purple-400 font-bold">{ch.path}</span>: <span className="opacity-75">"{String(ch.before ?? '')}"</span> ➡️ <span className="text-emerald-400 font-bold">"{String(ch.after ?? '')}"</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 19. STUDIO IDENTITY & LOGO */}
         {activeFolderId === 'profile' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div>
