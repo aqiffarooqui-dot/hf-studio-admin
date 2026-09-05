@@ -4004,7 +4004,7 @@ const handleLogoUpload = (e) => {
         )}
 
     {/* 13. VISITOR & TRAFFIC LOGS & ADVANCED ANALYTICS */}
-        {activeFolderId === 'traffic_logs' && (() => {
+         {activeFolderId === 'traffic_logs' && (() => {
           const now = new Date();
           const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
           const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -4033,12 +4033,15 @@ const handleLogoUpload = (e) => {
             return getLogDateStr(log) === selectedDate;
           });
 
+          const selectedDateVisits = filteredLogs.length;
+
           const totalVisits = filteredLogs.length;
-          const todayVisits = filteredLogs.filter(log => getLogDateStr(log) === todayStr).length;              const monthlyVisits = filteredLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
+          const todayVisits = filteredLogs.filter(log => getLogDateStr(log) === todayStr).length;              
+          const monthlyVisits = filteredLogs.filter(log => getLogMonthStr(log) === currentMonthStr).length;
           const yearlyVisits = filteredLogs.filter(log => getLogYearStr(log) === currentYearStr).length;
 
-         const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
-          const liveSessionsCount = filteredLogs.filter(log => { // filteredLogs kiya
+          const fiveMinsAgo = Date.now() - 5 * 60 * 1000;
+          const liveSessionsCount = filteredLogs.filter(log => {
             const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt).getTime() : 0);
             return t >= fiveMinsAgo;
           }).length;
@@ -4067,7 +4070,7 @@ const handleLogoUpload = (e) => {
             dailyTrendMap[dStr] = 0;
           }
 
-        allLogs.forEach(log => { 
+          allLogs.forEach(log => { 
             const dStr = getLogDateStr(log);
             if (dailyTrendMap[dStr] !== undefined) {
               dailyTrendMap[dStr]++;
@@ -4162,7 +4165,8 @@ const handleLogoUpload = (e) => {
                   </div>
                   <p className={`text-[10px] ${iosMuted}`}>Top Instagram / Ref</p>
                 </div>
-              {selectedDate && (
+                
+                {selectedDate && (
                   <div className={`p-4 rounded-[20px] border space-y-1 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <span className={`text-[10px] font-bold uppercase tracking-wider text-pink-400`}>Selected Date</span>
                     <div className="text-xl font-black font-mono text-pink-400">{selectedDateVisits}</div>
@@ -4298,6 +4302,7 @@ const handleLogoUpload = (e) => {
             </div>
           );
         })()}
+        
 
         {/* 14. PROMOTIONS & BROADCAST */}
         {activeFolderId === 'promotions' && (
