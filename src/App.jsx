@@ -967,7 +967,7 @@ const handleLogoUpload = (e) => {
 
   useEffect(() => {
     try {
-      const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(100));
+      const q = query(collection(db, "visitor_logs"), orderBy("visitedAt", "desc"), limit(40));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setVisitorLogs(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       });
@@ -1451,7 +1451,7 @@ const handleLogoUpload = (e) => {
 
   return (
     <div style={{ fontFamily: currentFontFamily, fontSize: `${screenZoom}%` }} className={`hf-admin-shell min-h-screen ${iosBg} font-sans pb-32 transition-colors duration-300 relative overflow-x-hidden ${isAdminDarkMode ? "hf-admin-dark" : "hf-admin-light"}`}>
-      <style>{`
+  <style>{`
         .hf-admin-light .text-white { color: #0f172a !important; }
         .hf-admin-light .bg-white\/10 { background-color: rgba(15,23,42,.05) !important; }
         .hf-admin-light .bg-white\/5 { background-color: rgba(15,23,42,.035) !important; }
@@ -1459,6 +1459,20 @@ const handleLogoUpload = (e) => {
         .hf-admin-light .border-white\/20 { border-color: rgba(15,23,42,.14) !important; }
         .hf-admin-light select option { background:#fff !important; color:#0f172a !important; }
         .hf-admin-dark, .hf-admin-light { color-scheme: ${isAdminDarkMode ? 'dark' : 'light'}; }
+        
+        /* Mobile hardware heating fix */
+        @media (max-width: 768px) {
+          * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
+          .hf-admin-dark [class*="backdrop-blur"] {
+            background-color: rgba(18, 18, 22, 0.95) !important;
+          }
+          .hf-admin-light [class*="backdrop-blur"] {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+          }
+        }
       `}</style>
 
       {/* Interactive Image Cropper Modal with Pan & Drag Move + Instant Save */}
@@ -1664,7 +1678,8 @@ const handleLogoUpload = (e) => {
           </div>
         </div>
       )}
-      <div className={`absolute top-0 left-1/3 w-[650px] h-[650px] bg-gradient-to-br ${adminThemeStyle.glowOrb} rounded-full blur-3xl pointer-events-none animate-pulse`} />
+
+   <div className={`hidden sm:block absolute top-0 left-1/3 w-[650px] h-[650px] bg-gradient-to-br ${adminThemeStyle.glowOrb} rounded-full blur-3xl pointer-events-none animate-pulse`} />
 
       <canvas ref={canvasRef} style={{ display: 'none' }} />
 
