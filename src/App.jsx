@@ -1153,7 +1153,7 @@ const handleLogoUpload = (e) => {
     return digits;
   };
 
-  const buildWhatsAppDetailedText = (b) => {
+ const buildWhatsAppDetailedText = (b) => {
     const addr = parseBookingAddressDetails(b);
     const mainPkgPrice = Number(b.basePackagePrice || 0);
     const zoneFee = Number(b.zoneFee || 0);
@@ -1162,8 +1162,9 @@ const handleLogoUpload = (e) => {
     const extraGross = Number(b.extraGuestsCost || 0);
     const gDiscount = Number(b.guestDiscountSaved || 0);
     const cDiscount = Number(b.couponDiscountAmount || 0) || (b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - gDiscount) : 0);
+    const manualDisc = Number(b.manualAdminDiscount || 0);
     const totalBeforeDisc = mainTotal + extraGross;
-    const totalDisc = Math.max(0, gDiscount + cDiscount);
+    const totalDisc = Math.max(0, gDiscount + cDiscount + manualDisc);
     const finalAmt = Number(b.totalAmount ?? Math.max(0, totalBeforeDisc - totalDisc));
     const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
 
@@ -1172,230 +1173,25 @@ const handleLogoUpload = (e) => {
     if (b.status === 'confirmed') { statusEmoji = '✅'; statusLabel = 'CONFIRMED & ACCEPTED'; }
     else if (b.status === 'rejected') { statusEmoji = '❌'; statusLabel = 'DECLINED / CANCELLED'; }
 
-    let txt = `Hi *${b.clientName || 'Client'}*,\n`;
-    txt += `Hi ${b.clientName || 'Client'}, please find the attached booking details:\n\n`;
+    let txt = `✨ *H&F MAKEUP ARTIST* ✨\n`;
+    txt += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    txt += `Hi *${b.clientName || 'Client'}*,\n`;
+    txt += `Here are your official booking details:\n\n`;
+    
     txt += `🔢 *Booking No:* \`${b.bookingNumber || '#HF-RECORD'}\`\n`;
     txt += `📅 *Event Date:* ${b.eventDate || 'Not Provided'}\n`;
-    txt += `💄 *Main Look:* ${b.packageName || 'Makeover'} (${b.kitType || 'Luxury Kit'})\n`;
+    txt += `💄 *Main Package:* ${b.packageName || 'Makeover'} (${b.kitType || 'Luxury Kit'})\n`;
     txt += `📍 *Venue Address:* ${addr.flatHouse !== 'Not Specified' ? addr.flatHouse + ', ' : ''}${addr.streetLocality}, ${addr.townCityState} - ${addr.pincode}\n`;
-    txt += `💰 *Final Amount:* ${money(finalAmt)}\n`;
-    txt += `${statusEmoji} *Current Status:* ${statusLabel}\n\n`;
+    txt += `💰 *Final Payable:* ${money(finalAmt)}\n`;
+    txt += `${statusEmoji} *Status:* ${statusLabel}\n\n`;
+
     if (b.status === 'rejected' && b.rejectionReason) {
       txt += `⚠️ *Reason:* ${b.rejectionReason}\n\n`;
     }
-    txt += `Thank you for choosing H&F Makeup Artist! ✨`;
+
+    txt += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    txt += `Thank you for choosing H&F Makeup Artist! 💖`;
     return txt;
-  };
-
-  const generateMainAppStyleSlipJpgDataUrl = (b) => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { resolve(null); return; }
-
-      const addr = parseBookingAddressDetails(b);
-      const mainPkgPrice = Number(b.basePackagePrice || 0);
-      const zoneFee = Number(b.zoneFee || 0);
-      const mainTotal = mainPkgPrice + zoneFee;
-      const extraGuests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
-      const extraGross = Number(b.extraGuestsCost || 0);
-      const gDiscount = Number(b.guestDiscountSaved || 0);
-      const cDiscount = Number(b.couponDiscountAmount || 0) || (b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - gDiscount) : 0);
-      const totalBeforeDisc = mainTotal + extraGross;
-      const manualDisc = Number(b.manualAdminDiscount || 0);
-      const totalDisc = Math.max(0, gDiscount + cDiscount + manualDisc);
-      const finalAmt = Number(b.totalAmount ?? Math.max(0, totalBeforeDisc - totalDisc));
-      const money = (v) => `₹${Number(v || 0).toLocaleString('en-IN')}`;
-
-      let statusBadgeText = 'PENDING REVIEW';
-      let statusBadgeColor = '#fbbf24'; // amber
-      if (b.status === 'confirmed') { statusBadgeText = 'CONFIRMED & ACCEPTED'; statusBadgeColor = '#10b981'; }
-      else if (b.status === 'rejected') { statusBadgeText = 'DECLINED / CANCELLED'; statusBadgeColor = '#f43f5e'; }
-
-      const cardWidth = 1040;
-      const leftX = 80;
-      const rightX = leftX + cardWidth;
-      const labelX = leftX + 30;
-      const valueX = rightX - 30;
-      const contentMaxWidth = 520;
-
-      const measureDynamicHeight = (text, maxWidth, fontSize) => {
-        ctx.font = `bold ${fontSize}px sans-serif`;
-        const words = String(text || '').split(' ');
-        let lines = [];
-        let curLine = '';
-        for (let i = 0; i < words.length; i++) {
-          const testLine = curLine + words[i] + ' ';
-          if (ctx.measureText(testLine).width > maxWidth && i > 0) {
-            lines.push(curLine.trim());
-            curLine = words[i] + ' ';
-          } else {
-            curLine = testLine;
-          }
-        }
-        if (curLine.trim()) lines.push(curLine.trim());
-        if (lines.length === 0) lines = [''];
-        const lineHeight = fontSize + 6;
-        return { lines, height: Math.max(50, 22 + lines.length * lineHeight) };
-      };
-
-      let estHeight = 420;
-      estHeight += 5 * 56;
-      estHeight += 64 + 54;
-      if (addr.flatHouse !== 'Not Specified') estHeight += measureDynamicHeight(addr.flatHouse, contentMaxWidth, 18).height + 6;
-      estHeight += measureDynamicHeight(addr.streetLocality, contentMaxWidth, 18).height + 6;
-      if (addr.landmark !== 'None') estHeight += measureDynamicHeight(addr.landmark, contentMaxWidth, 18).height + 6;
-      estHeight += 2 * 56;
-
-      estHeight += 64 + 5 * 56;
-      estHeight += 64 + (extraGuests.length > 0 ? extraGuests.length * 3 * 54 : 54) + 54;
-      estHeight += 64 + 4 * 54;
-      if (b.status === 'rejected' && b.rejectionReason) estHeight += 120;
-      estHeight += 155;
-      estHeight += 140;
-
-      canvas.width = 1200;
-      canvas.height = Math.ceil(estHeight);
-
-      const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
-        ctx.textAlign = align; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${family}`; ctx.fillText(String(text ?? ''), x, y);
-      };
-
-      const drawRow = (label, value, y, options = {}) => {
-        const rowHeight = options.height || 50;
-        ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
-        ctx.fillRect(leftX, y, cardWidth, rowHeight);
-        drawText(label, labelX, y + rowHeight / 2 + 6, options.labelSize || 18, 'bold', options.labelColor || '#94a3b8');
-        drawText(value, valueX, y + rowHeight / 2 + 6, options.valueSize || 19, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
-        return y + rowHeight + (options.gap ?? 6);
-      };
-
-      const drawDynamicRow = (label, value, y, options = {}) => {
-        const { lines, height } = measureDynamicHeight(value, contentMaxWidth, options.valueSize || 18);
-        ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
-        ctx.fillRect(leftX, y, cardWidth, height);
-        drawText(label, labelX, y + 30, options.labelSize || 18, 'bold', options.labelColor || '#94a3b8');
-        const lineHeight = (options.valueSize || 18) + 6;
-        lines.forEach((line, lIdx) => {
-          drawText(line, valueX, y + 30 + lIdx * lineHeight, options.valueSize || 18, 'bold', options.valueColor || '#ffffff', 'right');
-        });
-        return y + height + (options.gap ?? 6);
-      };
-
-      const drawSectionTitle = (title, y, accent = '#7c3aed') => {
-        ctx.fillStyle = accent === '#7c3aed' ? 'rgba(192,132,252,0.12)' : 'rgba(56,189,248,0.10)';
-        ctx.fillRect(leftX, y, cardWidth, 52);
-        drawText(title, labelX, y + 34, 19, 'bold', accent);
-        return y + 58;
-      };
-
-      const logoUrlToLoad = currentDraftSafe.studioLogo;
-      const logoImg = new Image();
-      logoImg.crossOrigin = 'anonymous';
-
-      const renderCanvasContent = (logoObj) => {
-        ctx.fillStyle = '#09090b'; ctx.fillRect(0, 0, 1200, canvas.height);
-        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 4; ctx.strokeRect(30, 30, 1140, canvas.height - 60);
-        ctx.strokeStyle = 'rgba(124, 58, 237, 0.25)'; ctx.lineWidth = 1.5; ctx.strokeRect(42, 42, 1116, canvas.height - 84);
-
-        if (logoObj) {
-          try {
-            ctx.save(); ctx.beginPath(); ctx.arc(140, 130, 50, 0, Math.PI * 2, true); ctx.closePath(); ctx.clip();
-            ctx.drawImage(logoObj, 90, 80, 100, 100); ctx.restore();
-            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(140, 130, 50, 0, Math.PI * 2, true); ctx.stroke();
-          } catch (e) {}
-          drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 220, 125, 40, 'bold', '#ffffff');
-          drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 220, 165, 20, 'bold', '#c084fc');
-        } else {
-          drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 125, 44, 'bold', '#ffffff', 'center');
-          drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 165, 20, 'bold', '#c084fc', 'center');
-        }
-
-        ctx.strokeStyle = 'rgba(124, 58, 237, 0.2)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(leftX, 210); ctx.lineTo(rightX, 210); ctx.stroke();
-        
-        // Status badge header
-        ctx.fillStyle = statusBadgeColor;
-        ctx.fillRect(leftX, 230, cardWidth, 48);
-        drawText(`STATUS: ${statusBadgeText}`, 600, 262, 20, 'bold', '#ffffff', 'center');
-
-        let startY = 295;
-        startY = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-PENDING', startY, { valueColor: '#c084fc', mono: true });
-        startY = drawRow('CLIENT NAME', b.clientName || 'Not Provided', startY);
-        startY = drawRow('CONTACT NUMBER', b.clientPhone || 'Not Provided', startY);
-        startY = drawRow('EVENT DATE', b.eventDate || 'Not Provided', startY);
-
-        if (b.status === 'rejected' && b.rejectionReason) {
-          startY = drawRow('DECLINE REASON', b.rejectionReason, startY, { valueColor: '#f43f5e' });
-        }
-
-        startY += 6;
-        startY = drawSectionTitle('📍 VENUE DESTINATION & STRUCTURED ADDRESS', startY, '#38bdf8');
-        startY = drawRow('Address Type:', `[ ${addr.addressType} ]`, startY, { valueColor: '#38bdf8' });
-        if (addr.flatHouse !== 'Not Specified') startY = drawDynamicRow('Flat / House No., Building:', addr.flatHouse, startY);
-        startY = drawDynamicRow('Street, Sector, Locality:', addr.streetLocality, startY);
-        if (addr.landmark !== 'None') startY = drawDynamicRow('Landmark:', addr.landmark, startY);
-        startY = drawRow('Town / City & State:', addr.townCityState, startY);
-        startY = drawRow('Postal PIN Code:', addr.pincode, startY, { valueColor: '#c084fc', mono: true });
-
-        startY += 6;
-        startY = drawSectionTitle('1. MAIN MAKEOVER PACKAGE', startY, '#38bdf8');
-        startY = drawRow('• Vanity:', b.kitType || 'Luxury Kit', startY);
-        startY = drawRow('• Package:', b.packageName || 'Makeover', startY);
-        startY = drawRow('• Package Price:', money(mainPkgPrice), startY, { mono: true });
-        startY = drawRow(`• Convenience Fee (${b.zoneName || 'Local'}):`, money(zoneFee), startY, { mono: true });
-        startY = drawRow('Main Makeover Package Total:', money(mainTotal), startY, { labelColor: '#38bdf8', valueColor: '#38bdf8', mono: true });
-
-        startY += 6;
-        startY = drawSectionTitle(`2. ADDITIONAL FAMILY & GUEST MAKEOVERS (${extraGuests.length})`, startY, '#c084fc');
-        if (extraGuests.length > 0) {
-          extraGuests.forEach((g, gIdx) => {
-            const vanityName = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'International Luxury Vanity Kit' : 'Premium HD Kit');
-            const gPkgName = currentDraftSafe.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
-            const gPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
-            startY = drawRow(`Makeover #${gIdx + 1} • Vanity:`, vanityName, startY, { labelSize: 16, valueSize: 17 });
-            startY = drawRow('• Package:', gPkgName, startY, { labelSize: 16, valueSize: 17 });
-            startY = drawRow('• Price:', money(gPrice), startY, { labelSize: 16, mono: true });
-          });
-        } else {
-          startY = drawRow('• No extra family guests selected', '₹0', startY, { valueColor: '#71717a', mono: true });
-        }
-        startY = drawRow('Additional Family & Guest Total:', money(extraGross), startY, { labelColor: '#c084fc', valueColor: '#c084fc', mono: true });
-
-        startY += 6;
-        startY = drawSectionTitle('3. DISCOUNTS & OFFERS', startY, '#4ade80');
-        if (gDiscount > 0) startY = drawRow('• Additional Family & Guest Discount:', `-${money(gDiscount)}`, startY, { valueColor: '#4ade80', mono: true });
-        if (b.appliedCoupon && b.appliedCoupon !== 'None' && cDiscount > 0) startY = drawRow(`• Coupon Code (${b.appliedCoupon}):`, `-${money(cDiscount)}`, startY, { valueColor: '#4ade80', mono: true });
-        if (manualDisc > 0) startY = drawRow('• Custom Offer Applied:', `-${money(manualDisc)}`, startY, { valueColor: '#4ade80', mono: true });
-        if (gDiscount === 0 && cDiscount === 0 && manualDisc === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#71717a', mono: true });
-        startY = drawRow('Total Discounts:', `-${money(totalDisc)}`, startY, { labelColor: '#4ade80', valueColor: '#4ade80', mono: true });
-
-        startY += 14;
-        ctx.fillStyle = 'rgba(192,132,252,0.18)'; ctx.fillRect(leftX, startY, cardWidth, 105);
-        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.strokeRect(leftX, startY, cardWidth, 105);
-
-        drawText('FINAL AMOUNT PAYABLE', 600, startY + 36, 20, 'bold', '#e2e8f0', 'center');
-        drawText(money(finalAmt), 600, startY + 84, 44, 'bold', '#ffffff', 'center', 'serif');
-
-        const footerY = canvas.height - 65;
-        drawText(`Studio Base Location: ${currentDraftSafe.baseLocation} • Instagram: @${getCleanInstagramHandle(currentDraftSafe.instagramHandle)}`, 600, footerY, 16, 'normal', '#94a3b8', 'center');
-        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 28, 17, 'italic', '#c084fc', 'center');
-
-        try {
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-          resolve(dataUrl);
-        } catch (e) {
-          resolve(null);
-        }
-      };
-
-      if (logoUrlToLoad) {
-        logoImg.onload = () => renderCanvasContent(logoImg);
-        logoImg.onerror = () => renderCanvasContent(null);
-        logoImg.src = logoUrlToLoad;
-      } else {
-        renderCanvasContent(null);
-      }
-    });
   };
 
   const handleExecuteWhatsAppDispatch = async () => {
@@ -1412,7 +1208,6 @@ const handleLogoUpload = (e) => {
       setSavingSection('');
 
       if (slipDataUrl) {
-        // Download image locally so user can attach easily in WhatsApp
         const link = document.createElement('a');
         link.href = slipDataUrl;
         link.download = `Booking_Slip_${b.bookingNumber || 'HF'}.jpg`;
@@ -1422,12 +1217,8 @@ const handleLogoUpload = (e) => {
       }
     }
 
-    // Open WhatsApp with text if selected
     if (textPayload) {
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(textPayload)}`, '_blank', 'noopener,noreferrer');
-    } else if (waSendSlip) {
-      // If only slip was selected, open chat with simple greeting
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(`Hi *${b.clientName || 'Client'}*, please find your attached booking slip.`)}`, '_blank', 'noopener,noreferrer');
+      window.location.href = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(textPayload)}`;
     }
 
     setWhatsappModalBooking(null);
@@ -2073,7 +1864,7 @@ const handleLogoUpload = (e) => {
           </div>
         </div>
 
-        <div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-black/5 shadow-sm text-slate-700'}`}>
+<div className={`flex items-center gap-3 px-4 py-2 rounded-[16px] border text-xs font-medium w-full sm:w-auto justify-center ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-black/5 shadow-sm text-slate-700'}`}>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span>Next Booking: <strong className={adminThemeStyle.accentText}>{nextConfirmedBooking ? `${nextConfirmedBooking.clientName} (${nextConfirmedBooking.eventDate})` : 'None Confirmed'}</strong></span>
@@ -2082,6 +1873,11 @@ const handleLogoUpload = (e) => {
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
             <span>Pending: <strong className="text-amber-500">{pendingBookingsCount}</strong></span>
+          </div>
+          <span className="text-slate-300 dark:text-slate-600">•</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-ping shrink-0" />
+            <span>Live Visitors: <strong className="text-purple-400 font-mono">{(visitorLogs || []).filter(log => { const t = log.visitedAt?.toDate ? log.visitedAt.toDate().getTime() : (log.visitedAt ? new Date(log.visitedAt) : null); return t >= (Date.now() - 5 * 60 * 1000); }).length}</strong></span>
           </div>
         </div>
 
