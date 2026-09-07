@@ -1336,17 +1336,26 @@ const handleLogoUpload = (e) => {
     setPopupToast({ title: "Package Added", desc: `Package "${titleName}" added! Save packages master to apply.` });
   };
 
-  const handleGenerateSlipJpgOnDemand = async (b) => {
+ const handleGenerateSlipJpgDataUrl = async (b) => {
     setSavingSection('Generating Slip JPG...');
-    const slipDataUrl = await generateMainAppStyleSlipJpgDataUrl(b);
-    setSavingSection('');
-    if (!slipDataUrl) { alert('Could not generate slip.'); return; }
-    const link = document.createElement('a');
-    link.href = slipDataUrl;
-    link.download = `Booking_Receipt_${b.bookingNumber || 'HF'}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    try {
+      const slipDataUrl = await generateMainAppStyleSlipJpgDataUrl(b);
+      setSavingSection('');
+      if (!slipDataUrl) { 
+        alert('Could not generate slip image.'); 
+        return; 
+      }
+      const link = document.createElement('a');
+      link.href = slipDataUrl;
+      link.download = `Booking_Receipt_${b.bookingNumber || 'HF'}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setPopupToast({ title: "Slip Downloaded", desc: "Booking receipt image downloaded successfully." });
+    } catch (err) {
+      setSavingSection('');
+      alert('Error generating slip: ' + err.message);
+    }
   };
 
   const filteredBookingsList = bookingsList.filter(b => {
@@ -2924,6 +2933,74 @@ const handleLogoUpload = (e) => {
                                 <div className="flex justify-between gap-3"><span className={iosMuted}>• Package:</span><span className="font-medium text-right">{b.packageName || 'Bridal Makeup'}</span></div>
                                 <div className="flex justify-between gap-3"><span className={iosMuted}>• Package Price:</span><span className="font-mono">{money(mainPackagePrice)}</span></div>
                                 <div className="flex justify-between gap-3"><span className={iosMuted}>• Travel Fee ({b.zoneName || 'Venue Location'}):</span><span className="font-mono">{money(zoneFee)}</span></div>
+
+<div className={`p-3 rounded-[14px] border space-y-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+  <div className="text-[11px] font-bold uppercase text-purple-400">Edit Travel Fee & Zone:</div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <select 
+      defaultValue={b.zoneKey || 'delhi_near'}
+      id={`edit_zone_${b.id}`}
+      onChange={(e) => {
+        const selectedKey = e.target.value;
+        const selectedZoneObj = currentDraftSafe.convenienceZones?.[selectedKey];
+        if (selectedZoneObj) {
+          const newFee = Number(selectedZoneObj.fee || 0);
+          document.getElementById(`edit_zone_fee_${b.id}`).value = newFee;
+        }
+      }}
+      className={`p-2.5 rounded-[10px] text-xs font-bold ${iosInputBg}`}
+    >
+      {Object.entries(currentDraftSafe.convenienceZones || {}).map(([zKey, zVal]) => (
+        <option key={zKey} value={zKey} className="bg-[#18181b] text-white">
+          {zVal.name} (₹{zVal.fee})
+        </option>
+      ))}
+    </select>
+
+    <input 
+      type="number"
+      defaultValue={b.zoneFee || 350}
+      id={`edit_zone_fee_${b.id}`}
+      placeholder="Travel Fee ₹"
+      className={`p-2.5 rounded-[10px] text-xs font-mono font-bold ${iosInputBg}`}
+    />
+  </div>
+
+  <button 
+    type="button"
+    onClick={async () => {
+      const zKey = document.getElementById(`edit_zone_${b.id}`).value;
+      const zObj = currentDraftSafe.convenienceZones?.[zKey];
+      const newFee = Number(document.getElementById(`edit_zone_fee_${b.id}`).value || 0);
+      const pkgPrice = Number(b.basePackagePrice || 0);
+      const extraGross = Number(b.extraGuestsCost || 0);
+      const gDiscount = Number(b.guestDiscountSaved || 0);
+      const cDiscount = Number(b.couponDiscountAmount || 0);
+      const manualDisc = Number(b.manualAdminDiscount || 0);
+      
+      const newTotal = Math.max(0, (pkgPrice + newFee + extraGross) - (gDiscount + cDiscount + manualDisc));
+
+      setSavingSection('Updating Booking...');
+      try {
+        await updateDoc(doc(db, "bookings", b.id), {
+          zoneKey: zKey,
+          zoneName: zObj ? zObj.name : b.zoneName,
+          zoneFee: newFee,
+          totalAmount: newTotal
+        });
+        setPopupToast({ title: "Booking Updated", desc: "Travel fee & total amount updated successfully." });
+      } catch (err) {
+        alert("Update failed: " + err.message);
+      } finally {
+        setSavingSection('');
+      }
+    }}
+    className="w-full py-2 rounded-[10px] bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow"
+  >
+    Save Travel Fee & Recalculate Total
+  </button>
+</div>
+
                                 <div className="flex justify-between pt-1.5 mt-1 border-t border-slate-500/20 font-bold text-sky-300">
                                   <span>Main Makeover Package Total:</span><span className="font-mono">{money(mainMakeoverTotal)}</span>
                                 </div>
