@@ -3906,17 +3906,6 @@ const handleLogoUpload = (e) => {
           </div>
         )}
 
-            <button
-              type="button"
-              disabled={savingSection === 'Master Toggles'}
-              onClick={() => handleSaveSpecificCard('Master Toggles')}
-              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
-            >
-              <Save className="w-4 h-4" />
-              <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
-            </button>
-          </div>
-        )}
 
     {/* 13. VISITOR & TRAFFIC LOGS & ADVANCED ANALYTICS */}
          {activeFolderId === 'traffic_logs' && (() => {
