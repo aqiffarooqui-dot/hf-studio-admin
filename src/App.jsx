@@ -392,7 +392,7 @@ const INITIAL_FOLDERS = [
   { id: 'general', label: 'General & Security Settings', icon: Settings, category: 'SECURITY', desc: 'Biometric, Face ID, Fingerprint Scan Registration & Recovery' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, category: 'SCHEDULE', desc: 'Color-coded monthly schedule matrix' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, category: 'COMMUNITY', desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
-  { id: 'reviews_manager', label: 'Manage & Add Client Reviews', icon: MessageSquare, category: 'COMMUNITY', desc: 'Add new review, delete old ones, toggle popup enable/disable', countKey: 'comments' },
+ { id: 'reviews_manager', label: 'Manage & Add Client Reviews', icon: MessageSquare, category: 'COMMUNITY', desc: 'Add new review, delete old ones', countKey: 'comments' },
   { id: 'gallery', label: 'Transformations & Media', icon: Film, category: 'MEDIA', desc: 'Upload client video reels, GIFs & photos' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, category: 'CONTROL', desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, category: 'MARKETING', desc: 'Edit bottom offer pill & auto-hide rules' },
@@ -3855,7 +3855,7 @@ const handleLogoUpload = (e) => {
                 { key: 'showReviewPopup', label: 'Enable Floating Review Popup', desc: 'Customer app par bottom mein speech-bubble review popup chalu/band karne ke liye' },
                 { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
               ].map(toggle => {
-                const isEnabled = currentDraftSafe?.toggles?.[toggle.key] !== false;
+             const isEnabled = currentDraftSafe?.toggles?.[toggle.key] !== false;
                 return (
                   <div key={toggle.key} className={`p-4 rounded-[18px] border flex items-center justify-between gap-3 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="space-y-0.5">
@@ -3881,10 +3881,10 @@ const handleLogoUpload = (e) => {
               })}
             </div>
 
-            {/* 👉 YAHAN YE NAYA MANUAL BOOKING COUNT INPUT ADD KRNA HAI */}
+            {/* 👉 Yeh naya input yahan aayega */}
             <div className={`p-4 rounded-[18px] border space-y-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
               <h4 className="font-bold text-[13px] text-pink-400">Manual Booking Count Override</h4>
-              <p className={`text-[11px] ${iosMuted}`}>Agar real-time count ki jagah custom number dikhana ho (jaise "500+"), toh yahan likhein. Khali chhodne par real count dikhega.</p>
+              <p className={`text-[11px] ${iosMuted}`}>Agar real-time count ki jagah custom number dikhana ho (jaise "500+"), toh yahan likhein.</p>
               <input 
                 type="text"
                 placeholder="e.g. 500+"
