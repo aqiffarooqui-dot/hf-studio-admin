@@ -4700,7 +4700,7 @@ const handleLogoUpload = (e) => {
           </div>
         )}
 
-{/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
+    {/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
         {activeFolderId === 'reviews_manager' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -4731,7 +4731,8 @@ const handleLogoUpload = (e) => {
                 return;
               }
               try {
-                const newDocRef = doc(collection(db, "studio_comments"));
+                // ❌ Yahan studio_comments tha
+                const newDocRef = doc(collection(db, "feedbacks"));
                 await setDoc(newDocRef, {
                   clientName,
                   message,
@@ -4801,7 +4802,8 @@ const handleLogoUpload = (e) => {
                             type: 'single',
                             message: `Are you sure you want to delete review by "${item.clientName}"?`,
                             onConfirm: async () => {
-                              await deleteDoc(doc(db, "studio_comments", item.id));
+                              // ❌ Yahan bhi studio_comments tha
+                              await deleteDoc(doc(db, "feedbacks", item.id));
                               setPopupToast({ title: "Review Deleted", desc: "Removed successfully." });
                             }
                           });
@@ -4818,8 +4820,3 @@ const handleLogoUpload = (e) => {
             </div>
           </div>
         )}
-
-      </div>
-    </div>
-  );
-}
