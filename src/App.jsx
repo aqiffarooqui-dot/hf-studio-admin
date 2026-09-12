@@ -392,6 +392,7 @@ const INITIAL_FOLDERS = [
   { id: 'general', label: 'General & Security Settings', icon: Settings, category: 'SECURITY', desc: 'Biometric, Face ID, Fingerprint Scan Registration & Recovery' },
   { id: 'calendar_view', label: 'Availability Calendar', icon: Calendar, category: 'SCHEDULE', desc: 'Color-coded monthly schedule matrix' },
   { id: 'feedbacks', label: 'Client Feedback & Suggestions', icon: MessageSquare, category: 'COMMUNITY', desc: 'View client reviews, ratings & feedback', countKey: 'feedbacks' },
+  { id: 'reviews_manager', label: 'Manage & Add Client Reviews', icon: MessageSquare, category: 'COMMUNITY', desc: 'Add new review, delete old ones, toggle popup enable/disable', countKey: 'comments' },
   { id: 'gallery', label: 'Transformations & Media', icon: Film, category: 'MEDIA', desc: 'Upload client video reels, GIFs & photos' },
   { id: 'app_maintenance', label: 'Maintenance Mode', icon: Wrench, category: 'CONTROL', desc: 'Politely lock customer app during upgrades' },
   { id: 'floating', label: 'Floating Promo Banner', icon: Gift, category: 'MARKETING', desc: 'Edit bottom offer pill & auto-hide rules' },
@@ -3850,6 +3851,8 @@ const handleLogoUpload = (e) => {
                 { key: 'enableFloatingBanner', label: 'Bottom Floating Offer Widget', desc: 'Show/hide bottom right floating promo pill' },
                 { key: 'enableGallery', label: 'Transformations Video Gallery Tab', desc: 'Show/hide signature video & photo lookbook' },
                 { key: 'enableBrands', label: 'Vanity Brands Kit Tab', desc: 'Show/hide authentic cosmetics brand list' },
+                { key: 'showBookingCounter', label: 'Show Total Bookings Counter', desc: 'App header par bookings count dikhane ya chupane ke liye' },
+                { key: 'showReviewPopup', label: 'Enable Floating Review Popup', desc: 'Customer app par bottom mein speech-bubble review popup chalu/band karne ke liye' },
                 { key: 'enableEstimator', label: 'Estimator / Calculator Tab', desc: 'Show/hide custom booking price estimator' }
               ].map(toggle => {
                 const isEnabled = currentDraftSafe?.toggles?.[toggle.key] !== false;
@@ -4682,6 +4685,134 @@ const handleLogoUpload = (e) => {
             </button>
           </div>
         )}
+
+{/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
+        {activeFolderId === 'reviews_manager' && (() => {
+          const [adminCommentsList, setAdminCommentsList] = useState([]);
+          const [newClientName, setNewClientName] = useState('');
+          const [newClientMessage, setNewClientMessage] = useState('');
+          const [newRating, setNewRating] = useState(5);
+
+          useEffect(() => {
+            const unsub = onSnapshot(collection(db, "studio_comments"), (snapshot) => {
+              setAdminCommentsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+            });
+            return () => unsub();
+          }, []);
+
+          const handleAddReview = async (e) => {
+            e.preventDefault();
+            if (!newClientName || !newClientMessage) {
+              alert('Please enter client name and review message.');
+              return;
+            }
+            try {
+              await setDoc(doc(collection(db, "studio_comments")), {
+                clientName: newClientName,
+                message: newClientMessage,
+                rating: Number(newRating),
+                submittedAt: new Date()
+              });
+              setNewClientName('');
+              setNewClientMessage('');
+              setPopupToast({ title: "Review Added", desc: "New client review published successfully." });
+            } catch (err) {
+              alert("Error adding review: " + err.message);
+            }
+          };
+
+          return (
+            <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <div>
+                  <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                    <MessageSquare className="w-5 h-5" /> Manage & Add Client Reviews
+                  </h3>
+                  <p className={`text-[13px] ${iosMuted}`}>Publish new manual reviews or delete existing ones instantly.</p>
+                </div>
+                <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full`}>
+                  {adminCommentsList.length} Live Reviews
+                </span>
+              </div>
+
+              {/* Add New Review Form */}
+              <form onSubmit={handleAddReview} className={`p-5 rounded-[22px] border space-y-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+                <h4 className="font-bold text-sm text-pink-400">➕ Add New Client Review</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input 
+                    type="text" 
+                    placeholder="Client Name (e.g. Priya Sharma)" 
+                    value={newClientName} 
+                    onChange={e => setNewClientName(e.target.value)} 
+                    className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                  />
+                  <select 
+                    value={newRating} 
+                    onChange={e => setNewRating(e.target.value)} 
+                    className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                  >
+                    <option value={5} className="bg-[#18181b] text-white">⭐⭐⭐⭐⭐ 5 Stars</option>
+                    <option value={4} className="bg-[#18181b] text-white">⭐⭐⭐⭐ 4 Stars</option>
+                    <option value={3} className="bg-[#18181b] text-white">⭐⭐⭐ 3 Stars</option>
+                  </select>
+                </div>
+                <textarea 
+                  rows={2} 
+                  placeholder="Review message (e.g. Amazing bridal makeup, loved the HD glass look!)" 
+                  value={newClientMessage} 
+                  onChange={e => setNewClientMessage(e.target.value)} 
+                  className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
+                />
+                <button type="submit" className={`px-5 py-3 ${adminThemeStyle.btnPrimary} text-xs font-bold shadow`}>
+                  Publish Review Live
+                </button>
+              </form>
+
+              {/* Existing Reviews List with Delete Option */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-sm">Existing Client Reviews</h4>
+                {adminCommentsList.length === 0 ? (
+                  <p className={`text-[13px] py-6 text-center ${iosMuted}`}>No reviews found.</p>
+                ) : (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                    {adminCommentsList.map(item => (
+                      <div key={item.id} className={`p-4 rounded-[18px] border flex items-start justify-between gap-3 ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-sm text-white">{item.clientName}</span>
+                            <div className="flex text-amber-400 text-xs">
+                              {Array.from({ length: item.rating || 5 }).map((_, i) => (
+                                <Star key={i} className="w-3 h-3 fill-amber-400" />
+                              ))}
+                            </div>
+                          </div>
+                          <p className={`text-xs italic ${isAdminDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>"{item.message}"</p>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setDeleteConfirmModal({
+                              type: 'single',
+                              message: `Are you sure you want to delete review by "${item.clientName}"?`,
+                              onConfirm: async () => {
+                                await deleteDoc(doc(db, "studio_comments", item.id));
+                                setPopupToast({ title: "Review Deleted", desc: "Removed successfully." });
+                              }
+                            });
+                          }}
+                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg shrink-0"
+                          title="Delete Review"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
       </div>
     </div>
