@@ -4712,133 +4712,123 @@ const handleLogoUpload = (e) => {
         )}
 
 {/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
-        {activeFolderId === 'reviews_manager' && (() => {
-          const [adminCommentsList, setAdminCommentsList] = useState([]);
-          const [newClientName, setNewClientName] = useState('');
-          const [newClientMessage, setNewClientMessage] = useState('');
-          const [newRating, setNewRating] = useState(5);
-
-          useEffect(() => {
-            const unsub = onSnapshot(collection(db, "studio_comments"), (snapshot) => {
-              setAdminCommentsList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-            });
-            return () => unsub();
-          }, []);
-
-          const handleAddReview = async (e) => {
-            e.preventDefault();
-            if (!newClientName || !newClientMessage) {
-              alert('Please enter client name and review message.');
-              return;
-            }
-            try {
-              const newDocRef = doc(collection(db, "studio_comments"));
-              await setDoc(newDocRef, {
-                clientName: newClientName,
-                message: newClientMessage,
-                rating: Number(newRating),
-                submittedAt: Date.now()
-              });
-              setNewClientName('');
-              setNewClientMessage('');
-              setPopupToast({ title: "Review Added", desc: "New client review published successfully." });
-            } catch (err) {
-              alert("Error adding review: " + err.message);
-            }
-          };
-
-          return (
-            <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
-              <div className="flex justify-between items-center flex-wrap gap-2">
-                <div>
-                  <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
-                    <MessageSquare className="w-5 h-5" /> Manage & Add Client Reviews
-                  </h3>
-                  <p className={`text-[13px] ${iosMuted}`}>Publish new manual reviews or delete existing ones instantly.</p>
-                </div>
-                <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full`}>
-                  {adminCommentsList.length} Live Reviews
-                </span>
+        {activeFolderId === 'reviews_manager' && (
+          <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
+            <div className="flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <h3 className={`font-bold text-[18px] flex items-center gap-2 ${adminThemeStyle.accentText}`}>
+                  <MessageSquare className="w-5 h-5" /> Manage & Add Client Reviews
+                </h3>
+                <p className={`text-[13px] ${iosMuted}`}>Publish new manual reviews or delete existing ones instantly.</p>
               </div>
-
-              {/* Add New Review Form */}
-              <form onSubmit={handleAddReview} className={`p-5 rounded-[22px] border space-y-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-                <h4 className="font-bold text-sm text-pink-400">➕ Add New Client Review</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input 
-                    type="text" 
-                    placeholder="Client Name (e.g. Priya Sharma)" 
-                    value={newClientName} 
-                    onChange={e => setNewClientName(e.target.value)} 
-                    className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
-                  />
-                  <select 
-                    value={newRating} 
-                    onChange={e => setNewRating(e.target.value)} 
-                    className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
-                  >
-                    <option value={5} className="bg-[#18181b] text-white">⭐⭐⭐⭐⭐ 5 Stars</option>
-                    <option value={4} className="bg-[#18181b] text-white">⭐⭐⭐⭐ 4 Stars</option>
-                    <option value={3} className="bg-[#18181b] text-white">⭐⭐⭐ 3 Stars</option>
-                  </select>
-                </div>
-                <textarea 
-                  rows={2} 
-                  placeholder="Review message (e.g. Amazing bridal makeup, loved the HD glass look!)" 
-                  value={newClientMessage} 
-                  onChange={e => setNewClientMessage(e.target.value)} 
-                  className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
-                />
-                <button type="submit" className={`px-5 py-3 ${adminThemeStyle.btnPrimary} text-xs font-bold shadow`}>
-                  Publish Review Live
-                </button>
-              </form>
-
-              {/* Existing Reviews List with Delete Option */}
-              <div className="space-y-3">
-                <h4 className="font-bold text-sm">Existing Client Reviews</h4>
-                {adminCommentsList.length === 0 ? (
-                  <p className={`text-[13px] py-6 text-center ${iosMuted}`}>No reviews found.</p>
-                ) : (
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                    {adminCommentsList.map(item => (
-                      <div key={item.id} className={`p-4 rounded-[18px] border flex items-start justify-between gap-3 ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-sm text-white">{item.clientName}</span>
-                            <div className="flex text-amber-400 text-xs">
-                              {Array.from({ length: item.rating || 5 }).map((_, i) => (
-                                <Star key={i} className="w-3 h-3 fill-amber-400" />
-                              ))}
-                            </div>
-                          </div>
-                          <p className={`text-xs italic ${isAdminDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>"{item.message}"</p>
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setDeleteConfirmModal({
-                              type: 'single',
-                              message: `Are you sure you want to delete review by "${item.clientName}"?`,
-                              onConfirm: async () => {
-                                await deleteDoc(doc(db, "studio_comments", item.id));
-                                setPopupToast({ title: "Review Deleted", desc: "Removed successfully." });
-                              }
-                            });
-                          }}
-                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg shrink-0"
-                          title="Delete Review"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full`}>
+                Live Reviews Management
+              </span>
             </div>
-          );
-        })()}
+
+            {/* Add New Review Form */}
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const nameInput = document.getElementById('newReviewClientName');
+              const msgInput = document.getElementById('newReviewClientMsg');
+              const ratingInput = document.getElementById('newReviewRating');
+              
+              const clientName = nameInput?.value;
+              const message = msgInput?.value;
+              const rating = Number(ratingInput?.value || 5);
+
+              if (!clientName || !message) {
+                alert('Please enter client name and review message.');
+                return;
+              }
+              try {
+                const newDocRef = doc(collection(db, "studio_comments"));
+                await setDoc(newDocRef, {
+                  clientName,
+                  message,
+                  rating,
+                  submittedAt: Date.now()
+                });
+                nameInput.value = '';
+                msgInput.value = '';
+                setPopupToast({ title: "Review Added", desc: "New client review published successfully." });
+              } catch (err) {
+                alert("Error adding review: " + err.message);
+              }
+            }} className={`p-5 rounded-[22px] border space-y-3.5 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-sm text-pink-400">➕ Add New Client Review</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input 
+                  type="text" 
+                  id="newReviewClientName"
+                  placeholder="Client Name (e.g. Priya Sharma)" 
+                  className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                />
+                <select 
+                  id="newReviewRating"
+                  defaultValue={5}
+                  className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                >
+                  <option value={5} className="bg-[#18181b] text-white">⭐⭐⭐⭐⭐ 5 Stars</option>
+                  <option value={4} className="bg-[#18181b] text-white">⭐⭐⭐⭐ 4 Stars</option>
+                  <option value={3} className="bg-[#18181b] text-white">⭐⭐⭐ 3 Stars</option>
+                </select>
+              </div>
+              <textarea 
+                rows={2} 
+                id="newReviewClientMsg"
+                placeholder="Review message (e.g. Amazing bridal makeup, loved the HD glass look!)" 
+                className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
+              />
+              <button type="submit" className={`px-5 py-3 ${adminThemeStyle.btnPrimary} text-xs font-bold shadow`}>
+                Publish Review Live
+              </button>
+            </form>
+
+            {/* Existing Reviews List */}
+            <div className="space-y-3">
+              <h4 className="font-bold text-sm">Existing Client Reviews</h4>
+              {feedbacksList.length === 0 ? (
+                <p className={`text-[13px] py-6 text-center ${iosMuted}`}>No reviews found.</p>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                  {feedbacksList.map(item => (
+                    <div key={item.id} className={`p-4 rounded-[18px] border flex items-start justify-between gap-3 ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-white">{item.clientName}</span>
+                          <div className="flex text-amber-400 text-xs">
+                            {Array.from({ length: item.rating || 5 }).map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-amber-400" />
+                            ))}
+                          </div>
+                        </div>
+                        <p className={`text-xs italic ${isAdminDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>"{item.message}"</p>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setDeleteConfirmModal({
+                            type: 'single',
+                            message: `Are you sure you want to delete review by "${item.clientName}"?`,
+                            onConfirm: async () => {
+                              await deleteDoc(doc(db, "studio_comments", item.id));
+                              setPopupToast({ title: "Review Deleted", desc: "Removed successfully." });
+                            }
+                          });
+                        }}
+                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg shrink-0"
+                        title="Delete Review"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
