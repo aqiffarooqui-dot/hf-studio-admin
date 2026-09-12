@@ -3881,6 +3881,31 @@ const handleLogoUpload = (e) => {
               })}
             </div>
 
+            {/* 👉 YAHAN YE NAYA MANUAL BOOKING COUNT INPUT ADD KRNA HAI */}
+            <div className={`p-4 rounded-[18px] border space-y-2 ${isAdminDarkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
+              <h4 className="font-bold text-[13px] text-pink-400">Manual Booking Count Override</h4>
+              <p className={`text-[11px] ${iosMuted}`}>Agar real-time count ki jagah custom number dikhana ho (jaise "500+"), toh yahan likhein. Khali chhodne par real count dikhega.</p>
+              <input 
+                type="text"
+                placeholder="e.g. 500+"
+                value={currentDraftSafe.manualBookingCount || ""}
+                onChange={e => setDraft({ ...currentDraftSafe, manualBookingCount: e.target.value })}
+                className={`w-full p-3 rounded-[14px] text-xs font-mono font-bold ${iosInputBg}`}
+              />
+            </div>
+
+            <button
+              type="button"
+              disabled={savingSection === 'Master Toggles'}
+              onClick={() => handleSaveSpecificCard('Master Toggles')}
+              className={`w-full py-4 ${adminThemeStyle.btnPrimary} flex items-center justify-center gap-2`}
+            >
+              <Save className="w-4 h-4" />
+              <span>{savingSection === 'Master Toggles' ? 'Saving...' : 'Save Master Toggles Live'}</span>
+            </button>
+          </div>
+        )}
+
             <button
               type="button"
               disabled={savingSection === 'Master Toggles'}
@@ -4686,7 +4711,7 @@ const handleLogoUpload = (e) => {
           </div>
         )}
 
-{/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
+{/* 👉 FIXED MANAGE & ADD CLIENT REVIEWS SECTION */}
         {activeFolderId === 'reviews_manager' && (() => {
           const [adminCommentsList, setAdminCommentsList] = useState([]);
           const [newClientName, setNewClientName] = useState('');
@@ -4707,11 +4732,12 @@ const handleLogoUpload = (e) => {
               return;
             }
             try {
-              await setDoc(doc(collection(db, "studio_comments")), {
+              const newDocRef = doc(collection(db, "studio_comments"));
+              await setDoc(newDocRef, {
                 clientName: newClientName,
                 message: newClientMessage,
                 rating: Number(newRating),
-                submittedAt: new Date()
+                submittedAt: Date.now()
               });
               setNewClientName('');
               setNewClientMessage('');
