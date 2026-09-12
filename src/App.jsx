@@ -4711,7 +4711,7 @@ const handleLogoUpload = (e) => {
           </div>
         )}
 
-{/* 👉 FIXED MANAGE & ADD CLIENT REVIEWS SECTION */}
+{/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
         {activeFolderId === 'reviews_manager' && (() => {
           const [adminCommentsList, setAdminCommentsList] = useState([]);
           const [newClientName, setNewClientName] = useState('');
