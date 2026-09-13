@@ -408,6 +408,15 @@ const INITIAL_FOLDERS = [
   { id: 'cache_cleaner', label: 'Safe Temp Cache & Logs Cleanup', icon: RefreshCw, category: 'SYSTEM', desc: 'Clear local staged cache & redundant browser temp data safely' }
 ];
 
+// 👉 Admin Image Resolver Helper (Upload mechanism ko bina chhede images dikhane ke liye)
+const resolveAdminMediaUrl = (urlOrKey, mediaMap) => {
+  if (typeof urlOrKey === 'string' && urlOrKey.startsWith('media://')) {
+    const key = urlOrKey.slice(8);
+    return mediaMap[key] || '';
+  }
+  return urlOrKey || '';
+};
+
 const sanitizeForFirestore = (obj) => {
   if (obj === null || obj === undefined) return null;
   if (typeof obj !== 'object') return obj;
@@ -2132,9 +2141,11 @@ const handleLogoUpload = (e) => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3.5">
                       <div className="w-20 h-20 rounded-[16px] overflow-hidden bg-neutral-200 border shrink-0 shadow">
-                        <img src={pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
+                        <img src={typeof pkgImg === 'string' && pkgImg.startsWith('media://') ? (mediaAssets[pkgImg.slice(8)] || '') : pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
+                      </div>
+
                       </div>
                       <div className="flex-1 w-full space-y-2">
                         <input
@@ -4612,7 +4623,7 @@ const handleLogoUpload = (e) => {
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] bg-white p-1 flex items-center justify-center overflow-hidden shrink-0 shadow border">
                   {currentDraftSafe.studioLogo ? (
-                    <img src={currentDraftSafe.studioLogo} alt="Logo" className="w-full h-full object-contain" />
+                    <img src={typeof currentDraftSafe.studioLogo === 'string' && currentDraftSafe.studioLogo.startsWith('media://') ? (mediaAssets[currentDraftSafe.studioLogo.slice(8)] || '') : currentDraftSafe.studioLogo} alt="Logo" className="w-full h-full object-contain" />
                   ) : (
                     <Crown className="w-7 h-7 text-slate-400" />
                   )}
@@ -4642,9 +4653,12 @@ const handleLogoUpload = (e) => {
                 <span className={`text-[11px] font-mono ${iosMuted}`}>Avatar Card</span>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="w-16 h-16 rounded-[16px] overflow-hidden bg-neutral-200 border-2 border-white/20 shrink-0 shadow">
-                  <img src={currentDraftSafe.profileImage || DEFAULT_CONFIG.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={(() => {
+                    const pImg = currentDraftSafe.profileImage || DEFAULT_CONFIG.profileImage;
+                    return typeof pImg === 'string' && pImg.startsWith('media://') ? (mediaAssets[pImg.slice(8)] || '') : pImg;
+                  })()} alt="Profile" className="w-full h-full object-cover" />
                 </div>
 
                 <div className="flex-1 w-full space-y-2">
