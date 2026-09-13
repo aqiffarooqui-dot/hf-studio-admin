@@ -625,6 +625,7 @@ export default function App() {
   const [draft, setDraft] = useState(DEFAULT_CONFIG);
   const [bookingsList, setBookingsList] = useState([]);
   const [feedbacksList, setFeedbacksList] = useState([]);
+  const [adminCommentsList, setAdminCommentsList] = useState([]);
   const [visitorLogs, setVisitorLogs] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [mediaAssets, setMediaAssets] = useState({});
@@ -926,24 +927,17 @@ const handleLogoUpload = (e) => {
     };
   }, []);
 
+ // 👉 1. Real-time listener taaki "studio_comments" ke saare reviews admin mein dikhein
   useEffect(() => {
     try {
-      const unsubscribe = onSnapshot(collection(db, "studio_comments"), (snapshot) => {
-        const map = {};
-        snapshot.docs.forEach(d => { map[d.id] = d.data()?.dataUrl || ''; });
-        setMediaAssets(map);
-        setDraft(prev => {
-          const next = JSON.parse(JSON.stringify(prev || DEFAULT_CONFIG));
-          const resolve = (v) => typeof v === 'string' && v.startsWith('media://') ? (map[v.slice(8)] || v) : v;
-          next.studioLogo = resolve(next.studioLogo);
-          next.profileImage = resolve(next.profileImage);
-          Object.entries(next.kitImages || {}).forEach(([kit, imgs]) => Object.entries(imgs || {}).forEach(([pkg, url]) => { next.kitImages[kit][pkg] = resolve(url); }));
-          (next.galleryPhotos || []).forEach(item => { if (item?.url) item.url = resolve(item.url); });
-          return next;
-        });
+      const unsubComments = onSnapshot(collection(db, "studio_comments"), (snapshot) => {
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setAdminCommentsList(list);
       });
-      return () => unsubscribe();
-    } catch (e) { console.warn('Media listener unavailable:', e); }
+      return () => unsubComments?.();
+    } catch (e) {
+      console.warn("Comments sync error:", e);
+    }
   }, []);
 
   useEffect(() => {
@@ -4700,7 +4694,7 @@ const handleLogoUpload = (e) => {
           </div>
         )}
 
-    {/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
+  {/* 👉 MANAGE & ADD CLIENT REVIEWS SECTION */}
         {activeFolderId === 'reviews_manager' && (
           <div className={`p-6 sm:p-8 space-y-6 ${iosGroupCard}`}>
             <div className="flex justify-between items-center flex-wrap gap-2">
@@ -4711,7 +4705,7 @@ const handleLogoUpload = (e) => {
                 <p className={`text-[13px] ${iosMuted}`}>Publish new manual reviews or delete existing ones instantly.</p>
               </div>
               <span className={`text-[13px] font-mono font-bold ${adminThemeStyle.badgeBg} px-3.5 py-1.5 rounded-full`}>
-                Live Reviews Management
+                {adminCommentsList.length} Live Reviews
               </span>
             </div>
 
@@ -4731,14 +4725,15 @@ const handleLogoUpload = (e) => {
                 return;
               }
               try {
-                // ❌ Yahan studio_comments tha
-                const newDocRef = doc(collection(db, "feedbacks"));
-                await setDoc(newDocRef, {
-                  clientName,
-                  message,
-                  rating,
-                  submittedAt: Date.now()
+                // 💡 Yahan collection "studio_comments" use ki hai taaki customer app se match kare
+                await addDoc(collection(db, "studio_comments"), {
+                  clientName: clientName.trim(),
+                  message: message.trim(),
+                  rating: rating,
+                  isApproved: true,
+                  submittedAt: serverTimestamp()
                 });
+                
                 nameInput.value = '';
                 msgInput.value = '';
                 setPopupToast({ title: "Review Added", desc: "New client review published successfully." });
@@ -4753,6 +4748,7 @@ const handleLogoUpload = (e) => {
                   id="newReviewClientName"
                   placeholder="Client Name (e.g. Priya Sharma)" 
                   className={`p-3 rounded-[14px] text-xs font-bold ${iosInputBg}`}
+                  required
                 />
                 <select 
                   id="newReviewRating"
@@ -4769,24 +4765,25 @@ const handleLogoUpload = (e) => {
                 id="newReviewClientMsg"
                 placeholder="Review message (e.g. Amazing bridal makeup, loved the HD glass look!)" 
                 className={`w-full p-3 rounded-[14px] text-xs ${iosInputBg}`}
+                required
               />
               <button type="submit" className={`px-5 py-3 ${adminThemeStyle.btnPrimary} text-xs font-bold shadow`}>
                 Publish Review Live
               </button>
             </form>
 
-      {/* Existing Reviews List */}
+            {/* Existing Reviews List */}
             <div className="space-y-3">
-              <h4 className="font-bold text-sm">Existing Client Reviews</h4>
+              <h4 className="font-bold text-sm">Existing Client Reviews ({adminCommentsList.length})</h4>
               {adminCommentsList.length === 0 ? (
-                <p className={`text-[13px] py-6 text-center ${iosMuted}`}>No reviews found.</p>
+                <p className={`text-[13px] py-6 text-center ${iosMuted}`}>No reviews found in studio_comments.</p>
               ) : (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                   {adminCommentsList.map(item => (
                     <div key={item.id} className={`p-4 rounded-[18px] border flex items-start justify-between gap-3 ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-white">{item.clientName}</span>
+                          <span className="font-bold text-sm">{item.clientName}</span>
                           <div className="flex text-amber-400 text-xs">
                             {Array.from({ length: item.rating || 5 }).map((_, i) => (
                               <Star key={i} className="w-3 h-3 fill-amber-400" />
