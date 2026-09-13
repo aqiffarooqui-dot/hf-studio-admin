@@ -4852,3 +4852,7 @@ const handleLogoUpload = (e) => {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
