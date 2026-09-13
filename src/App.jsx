@@ -4775,14 +4775,14 @@ const handleLogoUpload = (e) => {
               </button>
             </form>
 
-            {/* Existing Reviews List */}
+      {/* Existing Reviews List */}
             <div className="space-y-3">
               <h4 className="font-bold text-sm">Existing Client Reviews</h4>
-              {feedbacksList.length === 0 ? (
+              {adminCommentsList.length === 0 ? (
                 <p className={`text-[13px] py-6 text-center ${iosMuted}`}>No reviews found.</p>
               ) : (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                  {feedbacksList.map(item => (
+                  {adminCommentsList.map(item => (
                     <div key={item.id} className={`p-4 rounded-[18px] border flex items-start justify-between gap-3 ${isAdminDarkMode ? 'bg-black/30 border-white/10' : 'bg-white border-slate-200 shadow-sm'}`}>
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -4802,8 +4802,7 @@ const handleLogoUpload = (e) => {
                             type: 'single',
                             message: `Are you sure you want to delete review by "${item.clientName}"?`,
                             onConfirm: async () => {
-                              // ❌ Yahan bhi studio_comments tha
-                              await deleteDoc(doc(db, "feedbacks", item.id));
+                              await deleteDoc(doc(db, "studio_comments", item.id));
                               setPopupToast({ title: "Review Deleted", desc: "Removed successfully." });
                             }
                           });
