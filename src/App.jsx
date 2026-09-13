@@ -487,7 +487,6 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       const valueX = rightX - 30;
       const contentMaxWidth = 540;
 
-      // Safe address parser fallback inside function
       const flatHouse = (b.flatHouseNo || b.houseNo || b.flatNo || b.buildingName || '').trim();
       let streetLocality = (b.streetLocality || b.street || b.locality || b.area || b.venueAddress || b.address || '').trim();
       const landmark = (b.landmark || b.nearLandmark || '').trim();
@@ -556,14 +555,14 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       const totalDiscounts = Math.max(0, gDiscount + couponDiscount + manualDisc);
       const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
 
-      let estHeight = 320; 
+      let estHeight = 340; 
       estHeight += 4 * 54; 
       estHeight += 60 + 5 * 54; 
       estHeight += 60 + 5 * 54; 
       estHeight += 60 + (guests.length > 0 ? guests.length * 3 * 52 : 52) + 52; 
       estHeight += 60 + 54 * 4; 
       estHeight += 130; 
-      estHeight += 120; 
+      estHeight += 140; // Footer spacing
 
       canvas.width = 1200;
       canvas.height = Math.ceil(estHeight);
@@ -681,22 +680,20 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         drawText('FINAL AMOUNT PAYABLE', 600, startY + 34, 18, 'bold', '#e2e8f0', 'center');
         drawText(`₹${finalAmount.toLocaleString('en-IN')}`, 600, startY + 80, 42, 'bold', '#ffffff', 'center', 'serif');
 
-        const footerY = canvas.height - 50;
+        // 👉 PERFECTLY CENTERED FOOTER ALIGNMENT
+        const footerY = canvas.height - 75;
         drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || 'New Delhi'} • Instagram: @${(currentDraftSafe.instagramHandle || '').replace('@','')}`, 600, footerY, 15, 'normal', '#94a3b8', 'center');
-        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 24, 16, 'italic', '#c084fc', 'center');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 30, 16, 'italic', '#c084fc', 'center');
 
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
 
-// 100% Robust Logo Resolution (Firebase mediaAssets + LocalStorage Cache Fallback)
       let rawLogo = currentDraftSafe.studioLogo || '';
       let logoUrlToLoad = rawLogo;
-      
       if (typeof rawLogo === 'string' && rawLogo.startsWith('media://')) {
         const mediaKey = rawLogo.slice(8);
         logoUrlToLoad = currentMediaAssets[mediaKey] || '';
       }
-      
       if (!logoUrlToLoad || logoUrlToLoad === '') {
         try {
           logoUrlToLoad = localStorage.getItem('hf_cached_logo') || '';
