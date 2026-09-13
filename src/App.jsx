@@ -471,6 +471,78 @@ const compressImageFile = (file, maxWidth = 1000, quality = 0.85, maxBytes = 280
   });
 };
 
+const generateMainAppStyleSlipJpgDataUrl = (b) => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 800;
+    canvas.height = 1100;
+    const ctx = canvas.getContext('2d');
+
+    // Background Card Styling
+    ctx.fillStyle = '#090a0f';
+    ctx.fillRect(0, 0, 800, 1100);
+
+    ctx.fillStyle = '#18181b';
+    ctx.roundRect(50, 50, 700, 1000, 32);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(168,85,247,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Header Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('H&F MAKEUP ARTIST', 400, 120);
+
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = '16px sans-serif';
+    ctx.fillText('Official Booking Slip & Receipt', 400, 150);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(100, 190);
+    ctx.lineTo(700, 190);
+    ctx.stroke();
+
+    // Details Rows
+    ctx.textAlign = 'left';
+    const drawRow = (label, val, y, isAccent = false) => {
+      ctx.fillStyle = '#a1a1aa';
+      ctx.font = '15px sans-serif';
+      ctx.fillText(label, 100, y);
+      ctx.fillStyle = isAccent ? '#c084fc' : '#ffffff';
+      ctx.font = 'bold 16px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(String(val || 'N/A'), 700, y);
+      ctx.textAlign = 'left';
+    };
+
+    const addr = parseBookingAddressDetails(b);
+    const mainPkgPrice = Number(b.basePackagePrice || 0);
+    const zoneFee = Number(b.zoneFee || 0);
+    const finalAmt = Number(b.totalAmount ?? (mainPkgPrice + zoneFee));
+
+    drawRow('Booking Number:', b.bookingNumber || '#HF-RECORD', 240, true);
+    drawRow('Client Name:', b.clientName, 300);
+    drawRow('Client Phone:', b.clientPhone, 360);
+    drawRow('Event Date:', b.eventDate, 420);
+    drawRow('Package:', `${b.packageName || 'Makeover'} (${b.kitType || 'Luxury'})`, 480);
+    drawRow('Venue Address:', `${addr.flatHouse !== 'Not Specified' ? addr.flatHouse + ', ' : ''}${addr.streetLocality}`, 540);
+    drawRow('City & Pincode:', `${addr.townCityState} - ${addr.pincode}`, 600);
+    drawRow('Status:', (b.status || 'pending').toUpperCase(), 660, true);
+    drawRow('Total Payable:', `₹${finalAmt.toLocaleString('en-IN')}`, 750, true);
+
+    ctx.fillStyle = '#71717a';
+    ctx.font = '14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Thank you for choosing H&F Makeup Artist! 💖', 400, 980);
+
+    resolve(canvas.toDataURL('image/jpeg', 0.90));
+  });
+};
+
 const logAdminAction = async (sectionName, summaryText, beforeVal, afterVal, currentDraft, saveBackendFn) => {
   try {
     const changeEntry = {
@@ -3203,14 +3275,14 @@ const handleLogoUpload = (e) => {
                           </button>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateSlipJpgOnDemand(b)}
-                          className={`w-full py-2.5 ${isAdminDarkMode ? 'bg-white/10 hover:bg-white/15 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-800'} font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1.5 transition active:scale-95 border border-white/10`}
-                        >
-                          <Download className="w-3.5 h-3.5" />
-                          <span>Download Status Slip (.JPG)</span>
-                        </button>
+                       <button
+                       type="button"
+                       onClick={() => handleGenerateSlipJpgDataUrl(b)}
+                        className={`w-full py-2.5 ${isAdminDarkMode ? 'bg-white/10 hover:bg-white/15 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-800'} font-bold text-[11px] rounded-[14px] flex items-center justify-center gap-1.5 transition active:scale-95 border border-white/10`}
+>
+                     <Download className="w-3.5 h-3.5" />
+                    <span>Download Status Slip (.JPG)</span>
+                     </button>
                       </div>
                     </div>
                   );
