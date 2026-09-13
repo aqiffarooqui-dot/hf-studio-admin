@@ -474,72 +474,190 @@ const compressImageFile = (file, maxWidth = 1000, quality = 0.85, maxBytes = 280
 const generateMainAppStyleSlipJpgDataUrl = (b) => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 1100;
     const ctx = canvas.getContext('2d');
 
-    // Background Card Styling
-    ctx.fillStyle = '#090a0f';
-    ctx.fillRect(0, 0, 800, 1100);
+    const padding = 60;
+    const cardWidth = 1080;
+    const leftX = padding;
+    const rightX = leftX + cardWidth;
+    const labelX = leftX + 30;
+    const valueX = rightX - 30;
+    const contentMaxWidth = 540;
 
-    ctx.fillStyle = '#18181b';
-    ctx.roundRect(50, 50, 700, 1000, 32);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(168,85,247,0.3)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Header Title
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('H&F MAKEUP ARTIST', 400, 120);
-
-    ctx.fillStyle = '#a1a1aa';
-    ctx.font = '16px sans-serif';
-    ctx.fillText('Official Booking Slip & Receipt', 400, 150);
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(100, 190);
-    ctx.lineTo(700, 190);
-    ctx.stroke();
-
-    // Details Rows
-    ctx.textAlign = 'left';
-    const drawRow = (label, val, y, isAccent = false) => {
-      ctx.fillStyle = '#a1a1aa';
-      ctx.font = '15px sans-serif';
-      ctx.fillText(label, 100, y);
-      ctx.fillStyle = isAccent ? '#c084fc' : '#ffffff';
-      ctx.font = 'bold 16px sans-serif';
-      ctx.textAlign = 'right';
-      ctx.fillText(String(val || 'N/A'), 700, y);
-      ctx.textAlign = 'left';
+    const measureDynamicHeight = (text, maxWidth, fontSize) => {
+      ctx.font = `bold ${fontSize}px sans-serif`;
+      const words = String(text || '').split(' ');
+      let lines = [];
+      let curLine = '';
+      for (let i = 0; i < words.length; i++) {
+        const testLine = curLine + words[i] + ' ';
+        if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+          lines.push(curLine.trim());
+          curLine = words[i] + ' ';
+        } else {
+          curLine = testLine;
+        }
+      }
+      if (curLine.trim()) lines.push(curLine.trim());
+      if (lines.length === 0) lines = [''];
+      const lineHeight = fontSize + 6;
+      return { lines, height: Math.max(45, 20 + lines.length * lineHeight) };
     };
 
     const addr = parseBookingAddressDetails(b);
     const mainPkgPrice = Number(b.basePackagePrice || 0);
     const zoneFee = Number(b.zoneFee || 0);
-    const finalAmt = Number(b.totalAmount ?? (mainPkgPrice + zoneFee));
+    const mainMakeoverTotal = mainPkgPrice + zoneFee;
+    const guests = Array.isArray(b.extraGuestsList) ? b.extraGuestsList : [];
+    const guestGross = Number(b.extraGuestsCost || 0);
+    const gDiscount = Number(b.guestDiscountSaved || 0);
+    const manualDisc = Number(b.manualAdminDiscount || 0);
+    const couponDiscount = Number(b.couponDiscountAmount || 0) || (
+      b.appliedCoupon && b.appliedCoupon !== 'None' ? Math.max(0, Number(b.discountAmount || 0) - gDiscount - manualDisc) : 0
+    );
+    const totalBeforeDiscounts = mainMakeoverTotal + guestGross;
+    const totalDiscounts = Math.max(0, gDiscount + couponDiscount + manualDisc);
+    const finalAmount = Number(b.totalAmount ?? Math.max(0, totalBeforeDiscounts - totalDiscounts));
 
-    drawRow('Booking Number:', b.bookingNumber || '#HF-RECORD', 240, true);
-    drawRow('Client Name:', b.clientName, 300);
-    drawRow('Client Phone:', b.clientPhone, 360);
-    drawRow('Event Date:', b.eventDate, 420);
-    drawRow('Package:', `${b.packageName || 'Makeover'} (${b.kitType || 'Luxury'})`, 480);
-    drawRow('Venue Address:', `${addr.flatHouse !== 'Not Specified' ? addr.flatHouse + ', ' : ''}${addr.streetLocality}`, 540);
-    drawRow('City & Pincode:', `${addr.townCityState} - ${addr.pincode}`, 600);
-    drawRow('Status:', (b.status || 'pending').toUpperCase(), 660, true);
-    drawRow('Total Payable:', `₹${finalAmt.toLocaleString('en-IN')}`, 750, true);
+    // Dynamic Height Calculation
+    let estHeight = 320; 
+    estHeight += 4 * 54; 
+    estHeight += 60 + 5 * 54; 
+    estHeight += 60 + 5 * 54; 
+    estHeight += 60 + (guests.length > 0 ? guests.length * 3 * 52 : 52) + 52; 
+    estHeight += 60 + 54 * 4; 
+    estHeight += 130; 
+    estHeight += 120; 
 
-    ctx.fillStyle = '#71717a';
-    ctx.font = '14px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Thank you for choosing H&F Makeup Artist! 💖', 400, 980);
+    canvas.width = 1200;
+    canvas.height = Math.ceil(estHeight);
 
-    resolve(canvas.toDataURL('image/jpeg', 0.90));
+    const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
+      ctx.textAlign = align; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${family}`; ctx.fillText(String(text ?? ''), x, y);
+    };
+
+    const drawRow = (label, value, y, options = {}) => {
+      const rowHeight = options.height || 48;
+      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+      ctx.fillRect(leftX, y, cardWidth, rowHeight);
+      drawText(label, labelX, y + rowHeight / 2 + 6, options.labelSize || 17, 'bold', options.labelColor || '#94a3b8');
+      drawText(value, valueX, y + rowHeight / 2 + 6, options.valueSize || 18, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
+      return y + rowHeight + (options.gap ?? 4);
+    };
+
+    const drawDynamicRow = (label, value, y, options = {}) => {
+      const { lines, height } = measureDynamicHeight(value, contentMaxWidth, options.valueSize || 17);
+      ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+      ctx.fillRect(leftX, y, cardWidth, height);
+      drawText(label, labelX, y + 28, options.labelSize || 17, 'bold', options.labelColor || '#94a3b8');
+      const lineHeight = (options.valueSize || 17) + 6;
+      lines.forEach((line, lIdx) => {
+        drawText(line, valueX, y + 28 + lIdx * lineHeight, options.valueSize || 17, 'bold', options.valueColor || '#ffffff', 'right');
+      });
+      return y + height + (options.gap ?? 4);
+    };
+
+    const drawSectionTitle = (title, y, accent = '#c084fc') => {
+      ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.12)' : 'rgba(56,189,248,0.10)';
+      ctx.fillRect(leftX, y, cardWidth, 48);
+      drawText(title, labelX, y + 31, 18, 'bold', accent);
+      return y + 54;
+    };
+
+    const drawContent = (logoImageObj) => {
+      ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, 1200, canvas.height);
+      ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 3.5; ctx.strokeRect(30, 30, 1140, canvas.height - 60);
+      ctx.strokeStyle = 'rgba(168,85,247,0.3)'; ctx.lineWidth = 1.5; ctx.strokeRect(40, 40, 1120, canvas.height - 80);
+
+      if (logoImageObj) {
+        try {
+          ctx.save(); ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.closePath(); ctx.clip();
+          ctx.drawImage(logoImageObj, 85, 75, 90, 90); ctx.restore();
+          ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.stroke();
+        } catch (e) {}
+        drawText(draft.studioName || 'H&F MAKEUP ARTIST', 205, 115, 36, 'bold', '#ffffff');
+        drawText(draft.artistTagline || 'Beauty, Styled Your Way', 205, 150, 18, 'bold', '#c084fc');
+      } else {
+        drawText(draft.studioName || 'H&F MAKEUP ARTIST', 600, 115, 40, 'bold', '#ffffff', 'center');
+        drawText(draft.artistTagline || 'Beauty, Styled Your Way', 600, 150, 18, 'bold', '#c084fc', 'center');
+      }
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(leftX, 195); ctx.lineTo(rightX, 195); ctx.stroke();
+      
+      let statusLabel = '⏳ PENDING REVIEW';
+      let statusColor = '#fbbf24';
+      if (b.status === 'confirmed') { statusLabel = '✅ CONFIRMED & ACCEPTED'; statusColor = '#4ade80'; }
+      else if (b.status === 'rejected') { statusLabel = '❌ DECLINED / CANCELLED'; statusColor = '#f87171'; }
+      
+      drawText(statusLabel, 600, 240, 22, 'bold', statusColor, 'center');
+
+      let startY = 270;
+      startY = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-RECORD', startY, { valueColor: '#c084fc', mono: true });
+      startY = drawRow('CLIENT NAME', b.clientName, startY);
+      startY = drawRow('CONTACT PHONE', b.clientPhone, startY);
+      startY = drawRow('EVENT DATE', b.eventDate, startY);
+      
+      startY += 4;
+      startY = drawSectionTitle('📍 VENUE DESTINATION & ADDRESS', startY, '#38bdf8');
+      startY = drawRow('Address Type:', `[ ${addr.addressType} ]`, startY, { valueColor: '#38bdf8' });
+      if (addr.flatHouse && addr.flatHouse !== 'Not Specified') startY = drawDynamicRow('Flat / House No., Building:', addr.flatHouse, startY);
+      startY = drawDynamicRow('Street, Sector, Locality:', addr.streetLocality, startY);
+      if (addr.landmark && addr.landmark !== 'None') startY = drawDynamicRow('Landmark:', addr.landmark, startY);
+      startY = drawRow('Town / City & State:', addr.townCityState, startY);
+      startY = drawRow('Postal PIN Code:', addr.pincode, startY, { valueColor: '#c084fc', mono: true });
+
+      startY += 4;
+      startY = drawSectionTitle('1. MAIN MAKEOVER PACKAGE', startY, '#38bdf8');
+      startY = drawRow('• Vanity Tier:', b.kitType || 'Luxury Vanity Kit', startY);
+      startY = drawRow('• Package:', b.packageName || 'Makeover', startY);
+      startY = drawRow('• Package Price:', `₹${mainPkgPrice.toLocaleString('en-IN')}`, startY, { mono: true });
+      startY = drawRow(`• Travel Fee (${b.zoneName || 'Standard'}):`, `₹${zoneFee.toLocaleString('en-IN')}`, startY, { mono: true });
+      startY = drawRow('Main Makeover Package Total:', `₹${mainMakeoverTotal.toLocaleString('en-IN')}`, startY, { labelColor: '#38bdf8', valueColor: '#38bdf8', mono: true });
+
+      startY += 4;
+      startY = drawSectionTitle(`2. ADDITIONAL FAMILY & GUEST MAKEOVERS (${guests.length})`, startY, '#c084fc');
+      if (guests.length > 0) {
+        guests.forEach((g, gIdx) => {
+          const guestVanity = draft.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'Luxury Kit' : 'HD Kit');
+          const guestPackage = draft.kitText?.[g.kit]?.[g.packageKey]?.name || g.packageKey || 'Makeover';
+          const guestPrice = Number(draft.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
+          startY = drawRow(`Makeover #${gIdx + 1} • Vanity:`, guestVanity, startY, { labelSize: 16, valueSize: 17 });
+          startY = drawRow('• Package Look:', guestPackage, startY, { labelSize: 16, valueSize: 17 });
+          startY = drawRow('• Investment:', `₹${guestPrice.toLocaleString('en-IN')}`, startY, { labelSize: 16, valueColor: '#4ade80', mono: true });
+        });
+      } else {
+        startY = drawRow('• No extra family guests selected', '₹0', startY, { valueColor: '#71717a', mono: true });
+      }
+      startY = drawRow('Additional Family & Guest Total:', `₹${guestGross.toLocaleString('en-IN')}`, startY, { labelColor: '#c084fc', valueColor: '#c084fc', mono: true });
+
+      startY += 4;
+      startY = drawSectionTitle('3. DISCOUNTS & OFFERS', startY, '#4ade80');
+      if (gDiscount > 0) startY = drawRow('• Family & Guest Discount:', `-₹${gDiscount.toLocaleString('en-IN')}`, startY, { valueColor: '#4ade80', mono: true });
+      if (manualDisc > 0) startY = drawRow('• Custom Manual Admin Offer:', `-₹${manualDisc.toLocaleString('en-IN')}`, startY, { valueColor: '#4ade80', mono: true });
+      if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0) startY = drawRow(`• Promo Coupon (${b.appliedCoupon}):`, `-₹${couponDiscount.toLocaleString('en-IN')}`, startY, { valueColor: '#4ade80', mono: true });
+      if (totalDiscounts === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#71717a', mono: true });
+      startY = drawRow('Total Discounts:', `-₹${totalDiscounts.toLocaleString('en-IN')}`, startY, { labelColor: '#4ade80', valueColor: '#4ade80', mono: true });
+
+      startY += 10;
+      ctx.fillStyle = 'rgba(168,85,247,0.2)'; ctx.fillRect(leftX, startY, cardWidth, 100);
+      ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.strokeRect(leftX, startY, cardWidth, 100);
+
+      drawText('FINAL AMOUNT PAYABLE', 600, startY + 34, 18, 'bold', '#e2e8f0', 'center');
+      drawText(`₹${finalAmount.toLocaleString('en-IN')}`, 600, startY + 80, 42, 'bold', '#ffffff', 'center', 'serif');
+
+      const footerY = canvas.height - 50;
+      drawText(`Studio Base Location: ${draft.baseLocation || 'New Delhi'} • Instagram: @${(draft.instagramHandle || '').replace('@','')}`, 600, footerY, 15, 'normal', '#94a3b8', 'center');
+      drawText(draft.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 24, 16, 'italic', '#c084fc', 'center');
+
+      resolve(canvas.toDataURL('image/jpeg', 0.95));
+    };
+
+    let logoUrlToLoad = resolveAdminMediaUrl(draft.studioLogo, mediaAssets);
+    const logoImg = new Image();
+    logoImg.crossOrigin = "anonymous";
+    logoImg.src = logoUrlToLoad;
+    logoImg.onload = () => drawContent(logoImg);
+    logoImg.onerror = () => drawContent(null);
   });
 };
 
