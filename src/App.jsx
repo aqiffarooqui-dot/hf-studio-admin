@@ -928,7 +928,7 @@ const handleLogoUpload = (e) => {
 
   useEffect(() => {
     try {
-      const unsubscribe = onSnapshot(collection(db, MEDIA_COLLECTION), (snapshot) => {
+      const unsubscribe = onSnapshot(collection(db, "studio_comments"), (snapshot) => {
         const map = {};
         snapshot.docs.forEach(d => { map[d.id] = d.data()?.dataUrl || ''; });
         setMediaAssets(map);
