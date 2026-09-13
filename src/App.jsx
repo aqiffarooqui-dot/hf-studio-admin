@@ -2077,7 +2077,7 @@ const handleLogoUpload = (e) => {
           </div>
         )}
 
-        {/* 1. PACKAGES & RATES MANAGER */}
+      {/* 1. PACKAGES & RATES MANAGER */}
         {activeFolderId === 'packages_master' && (
           <div className={`p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6 ${iosGroupCard}`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -2118,7 +2118,7 @@ const handleLogoUpload = (e) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {Object.keys(currentDraftSafe.kitText?.[editingKitTab] || {}).map(k => {
                 const pkgText = currentDraftSafe.kitText[editingKitTab][k] || { name: k, desc: '' };
                 const pkgImg = currentDraftSafe.kitImages?.[editingKitTab]?.[k] || '';
@@ -2141,12 +2141,11 @@ const handleLogoUpload = (e) => {
                       </div>
                     </div>
 
-                <div className="flex items-center gap-3.5">
+                    <div className="flex items-center gap-3.5">
                       <div className="w-20 h-20 rounded-[16px] overflow-hidden bg-neutral-200 border shrink-0 shadow">
                         <img src={typeof pkgImg === 'string' && pkgImg.startsWith('media://') ? (mediaAssets[pkgImg.slice(8)] || '') : pkgImg} alt={pkgText.name} className="w-full h-full object-cover" />
                       </div>
 
-                      </div>
                       <div className="flex-1 w-full space-y-2">
                         <input
                           type="text"
