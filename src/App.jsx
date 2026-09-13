@@ -476,7 +476,9 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      const currentDraftSafe = typeof draft !== 'undefined' ? draft : DEFAULT_CONFIG;
+      const currentDraftSafe = typeof draft !== 'undefined' ? draft : (typeof DEFAULT_CONFIG !== 'undefined' ? DEFAULT_CONFIG : {});
+      const currentMediaAssets = typeof mediaAssets !== 'undefined' ? mediaAssets : {};
+
       const padding = 60;
       const cardWidth = 1080;
       const leftX = padding;
@@ -484,6 +486,41 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       const labelX = leftX + 30;
       const valueX = rightX - 30;
       const contentMaxWidth = 540;
+
+      // Safe address parser fallback inside function
+      const flatHouse = (b.flatHouseNo || b.houseNo || b.flatNo || b.buildingName || '').trim();
+      let streetLocality = (b.streetLocality || b.street || b.locality || b.area || b.venueAddress || b.address || '').trim();
+      const landmark = (b.landmark || b.nearLandmark || '').trim();
+      let city = (b.city || b.town || b.district || '').trim();
+      let state = (b.state || b.region || b.province || '').trim();
+      let pincode = (b.pincode || b.pinCode || b.postalCode || b.zipCode || '').trim();
+      const addressType = (b.addressType || b.venueType || 'Home').trim();
+
+      if (!pincode) {
+        const pinMatch = streetLocality.match(/\b\d{6}\b/);
+        if (pinMatch) pincode = pinMatch[0];
+      }
+      if (!city && b.zoneName) {
+        if (b.zoneName.toLowerCase().includes('delhi')) city = 'New Delhi';
+        else if (b.zoneName.toLowerCase().includes('noida')) city = 'Noida';
+        else if (b.zoneName.toLowerCase().includes('gurugram')) city = 'Gurugram';
+        else if (b.zoneName.toLowerCase().includes('amroha')) city = 'Amroha';
+        else city = b.zoneName;
+      }
+      if (!state) {
+        if (city.toLowerCase().includes('delhi')) state = 'Delhi';
+        else if (city.toLowerCase().includes('noida') || city.toLowerCase().includes('amroha')) state = 'Uttar Pradesh';
+        else if (city.toLowerCase().includes('gurugram')) state = 'Haryana';
+      }
+
+      const addr = {
+        flatHouse: flatHouse || 'Not Specified',
+        streetLocality: streetLocality || 'Not Provided',
+        landmark: landmark || 'None',
+        townCityState: (city || state) ? `${city}${city && state ? ', ' : ''}${state}` : 'Delhi / NCR',
+        pincode: pincode || 'Not Provided',
+        addressType: addressType.toUpperCase() === 'WORK' ? 'Work / Office' : 'Home'
+      };
 
       const measureDynamicHeight = (text, maxWidth, fontSize) => {
         ctx.font = `bold ${fontSize}px sans-serif`;
@@ -505,7 +542,6 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         return { lines, height: Math.max(45, 20 + lines.length * lineHeight) };
       };
 
-      const addr = parseBookingAddressDetails(b);
       const mainPkgPrice = Number(b.basePackagePrice || 0);
       const zoneFee = Number(b.zoneFee || 0);
       const mainMakeoverTotal = mainPkgPrice + zoneFee;
@@ -652,7 +688,12 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
 
-      let logoUrlToLoad = resolveAdminMediaUrl(currentDraftSafe.studioLogo, mediaAssets);
+      let rawLogo = currentDraftSafe.studioLogo || '';
+      let logoUrlToLoad = rawLogo;
+      if (typeof rawLogo === 'string' && rawLogo.startsWith('media://')) {
+        logoUrlToLoad = currentMediaAssets[rawLogo.slice(8)] || '';
+      }
+
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       logoImg.src = logoUrlToLoad;
