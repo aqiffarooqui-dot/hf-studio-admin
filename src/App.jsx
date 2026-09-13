@@ -476,7 +476,7 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
-      const currentDraftSafe = draft || DEFAULT_CONFIG;
+      const currentDraftSafe = typeof draft !== 'undefined' ? draft : DEFAULT_CONFIG;
       const padding = 60;
       const cardWidth = 1080;
       const leftX = padding;
