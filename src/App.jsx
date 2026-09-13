@@ -562,7 +562,7 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       estHeight += 60 + (guests.length > 0 ? guests.length * 3 * 52 : 52) + 52; 
       estHeight += 60 + 54 * 4; 
       estHeight += 130; 
-      estHeight += 140; // Footer spacing
+      estHeight += 140; 
 
       canvas.width = 1200;
       canvas.height = Math.ceil(estHeight);
@@ -604,18 +604,49 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 3.5; ctx.strokeRect(30, 30, 1140, canvas.height - 60);
         ctx.strokeStyle = 'rgba(168,85,247,0.3)'; ctx.lineWidth = 1.5; ctx.strokeRect(40, 40, 1120, canvas.height - 80);
 
+        // 👉 SUBTLE DIAGONAL WATERMARK IN BACKGROUND
+        ctx.save();
+        ctx.translate(600, canvas.height / 2);
+        ctx.rotate(-Math.PI / 6);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(192, 132, 252, 0.038)';
+        ctx.font = 'bold 95px sans-serif';
+        ctx.fillText('H&F MAKEUP ARTIST', 0, 0);
+        ctx.restore();
+
+        // 👉 LOGO RENDERING WITH GUARANTEED LUXURY MONOGRAM FALLBACK
+        const drawFallbackLogoBadge = () => {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(130, 120, 45, 0, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.fillStyle = '#1e1b4b';
+          ctx.fill();
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          
+          ctx.fillStyle = '#f472b6';
+          ctx.font = 'bold 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('H&F', 130, 128);
+          ctx.restore();
+        };
+
         if (logoImageObj) {
           try {
             ctx.save(); ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.closePath(); ctx.clip();
             ctx.drawImage(logoImageObj, 85, 75, 90, 90); ctx.restore();
             ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.stroke();
-          } catch (e) {}
-          drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 205, 115, 36, 'bold', '#ffffff');
-          drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 205, 150, 18, 'bold', '#c084fc');
+          } catch (e) {
+            drawFallbackLogoBadge();
+          }
         } else {
-          drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 600, 115, 40, 'bold', '#ffffff', 'center');
-          drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, 150, 18, 'bold', '#c084fc', 'center');
+          drawFallbackLogoBadge();
         }
+
+        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 205, 115, 36, 'bold', '#ffffff');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 205, 150, 18, 'bold', '#c084fc');
 
         ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(leftX, 195); ctx.lineTo(rightX, 195); ctx.stroke();
         
@@ -680,7 +711,6 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         drawText('FINAL AMOUNT PAYABLE', 600, startY + 34, 18, 'bold', '#e2e8f0', 'center');
         drawText(`₹${finalAmount.toLocaleString('en-IN')}`, 600, startY + 80, 42, 'bold', '#ffffff', 'center', 'serif');
 
-        // 👉 PERFECTLY CENTERED FOOTER ALIGNMENT
         const footerY = canvas.height - 75;
         drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || 'New Delhi'} • Instagram: @${(currentDraftSafe.instagramHandle || '').replace('@','')}`, 600, footerY, 15, 'normal', '#94a3b8', 'center');
         drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 30, 16, 'italic', '#c084fc', 'center');
@@ -713,6 +743,7 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       }
     });
   };
+
 
 const logAdminAction = async (sectionName, summaryText, beforeVal, afterVal, currentDraft, saveBackendFn) => {
   try {
