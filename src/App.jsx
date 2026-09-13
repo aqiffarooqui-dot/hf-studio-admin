@@ -567,66 +567,69 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
       canvas.width = 1200;
       canvas.height = Math.ceil(estHeight);
 
-      const drawText = (text, x, y, size, weight = 'normal', color = '#ffffff', align = 'left', family = 'sans-serif') => {
+      const drawText = (text, x, y, size, weight = 'normal', color = '#0f172a', align = 'left', family = 'sans-serif') => {
         ctx.textAlign = align; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${family}`; ctx.fillText(String(text ?? ''), x, y);
       };
 
       const drawRow = (label, value, y, options = {}) => {
         const rowHeight = options.height || 48;
-        ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+        ctx.fillStyle = options.bg || 'rgba(241,245,249,0.7)';
         ctx.fillRect(leftX, y, cardWidth, rowHeight);
-        drawText(label, labelX, y + rowHeight / 2 + 6, options.labelSize || 17, 'bold', options.labelColor || '#94a3b8');
-        drawText(value, valueX, y + rowHeight / 2 + 6, options.valueSize || 18, 'bold', options.valueColor || '#ffffff', 'right', options.mono ? 'monospace' : 'sans-serif');
+        drawText(label, labelX, y + rowHeight / 2 + 6, options.labelSize || 17, 'bold', options.labelColor || '#475569');
+        drawText(value, valueX, y + rowHeight / 2 + 6, options.valueSize || 18, 'bold', options.valueColor || '#0f172a', 'right', options.mono ? 'monospace' : 'sans-serif');
         return y + rowHeight + (options.gap ?? 4);
       };
 
       const drawDynamicRow = (label, value, y, options = {}) => {
         const { lines, height } = measureDynamicHeight(value, contentMaxWidth, options.valueSize || 17);
-        ctx.fillStyle = options.bg || 'rgba(255,255,255,0.035)';
+        ctx.fillStyle = options.bg || 'rgba(241,245,249,0.7)';
         ctx.fillRect(leftX, y, cardWidth, height);
-        drawText(label, labelX, y + 28, options.labelSize || 17, 'bold', options.labelColor || '#94a3b8');
+        drawText(label, labelX, y + 28, options.labelSize || 17, 'bold', options.labelColor || '#475569');
         const lineHeight = (options.valueSize || 17) + 6;
         lines.forEach((line, lIdx) => {
-          drawText(line, valueX, y + 28 + lIdx * lineHeight, options.valueSize || 17, 'bold', options.valueColor || '#ffffff', 'right');
+          drawText(line, valueX, y + 28 + lIdx * lineHeight, options.valueSize || 17, 'bold', options.valueColor || '#0f172a', 'right');
         });
         return y + height + (options.gap ?? 4);
       };
 
-      const drawSectionTitle = (title, y, accent = '#c084fc') => {
-        ctx.fillStyle = accent === '#c084fc' ? 'rgba(192,132,252,0.12)' : 'rgba(56,189,248,0.10)';
+      const drawSectionTitle = (title, y, accent = '#7c3aed') => {
+        ctx.fillStyle = accent === '#7c3aed' ? 'rgba(124,58,237,0.08)' : 'rgba(2,132,199,0.08)';
         ctx.fillRect(leftX, y, cardWidth, 48);
         drawText(title, labelX, y + 31, 18, 'bold', accent);
         return y + 54;
       };
 
       const drawContent = (logoImageObj) => {
-        ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, 1200, canvas.height);
-        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 3.5; ctx.strokeRect(30, 30, 1140, canvas.height - 60);
-        ctx.strokeStyle = 'rgba(168,85,247,0.3)'; ctx.lineWidth = 1.5; ctx.strokeRect(40, 40, 1120, canvas.height - 80);
+        // 👉 PURE WHITE BACKGROUND THEME
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 1200, canvas.height);
+        
+        // Outer Sleek Border
+        ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 3; ctx.strokeRect(30, 30, 1140, canvas.height - 60);
+        ctx.strokeStyle = 'rgba(124,58,237,0.2)'; ctx.lineWidth = 1; ctx.strokeRect(40, 40, 1120, canvas.height - 80);
 
         // 👉 SUBTLE DIAGONAL WATERMARK IN BACKGROUND
         ctx.save();
         ctx.translate(600, canvas.height / 2);
         ctx.rotate(-Math.PI / 6);
         ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(192, 132, 252, 0.038)';
+        ctx.fillStyle = 'rgba(124, 58, 237, 0.045)';
         ctx.font = 'bold 95px sans-serif';
         ctx.fillText('H&F MAKEUP ARTIST', 0, 0);
         ctx.restore();
 
-        // 👉 LOGO RENDERING WITH GUARANTEED LUXURY MONOGRAM FALLBACK
+        // 👉 LOGO RENDERING WITH MONOGRAM FALLBACK
         const drawFallbackLogoBadge = () => {
           ctx.save();
           ctx.beginPath();
           ctx.arc(130, 120, 45, 0, Math.PI * 2, true);
           ctx.closePath();
-          ctx.fillStyle = '#1e1b4b';
+          ctx.fillStyle = '#f3e8ff';
           ctx.fill();
-          ctx.strokeStyle = '#c084fc';
-          ctx.lineWidth = 3;
+          ctx.strokeStyle = '#7c3aed';
+          ctx.lineWidth = 2.5;
           ctx.stroke();
           
-          ctx.fillStyle = '#f472b6';
+          ctx.fillStyle = '#7c3aed';
           ctx.font = 'bold 24px sans-serif';
           ctx.textAlign = 'center';
           ctx.fillText('H&F', 130, 128);
@@ -637,7 +640,7 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
           try {
             ctx.save(); ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.closePath(); ctx.clip();
             ctx.drawImage(logoImageObj, 85, 75, 90, 90); ctx.restore();
-            ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.stroke();
+            ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(130, 120, 45, 0, Math.PI * 2, true); ctx.stroke();
           } catch (e) {
             drawFallbackLogoBadge();
           }
@@ -645,43 +648,43 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
           drawFallbackLogoBadge();
         }
 
-        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 205, 115, 36, 'bold', '#ffffff');
-        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 205, 150, 18, 'bold', '#c084fc');
+        drawText(currentDraftSafe.studioName || 'H&F MAKEUP ARTIST', 205, 115, 36, 'bold', '#0f172a');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 205, 150, 18, 'bold', '#7c3aed');
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(leftX, 195); ctx.lineTo(rightX, 195); ctx.stroke();
+        ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(leftX, 195); ctx.lineTo(rightX, 195); ctx.stroke();
         
         let statusLabel = '⏳ PENDING REVIEW';
-        let statusColor = '#fbbf24';
-        if (b.status === 'confirmed') { statusLabel = '✅ CONFIRMED & ACCEPTED'; statusColor = '#4ade80'; }
-        else if (b.status === 'rejected') { statusLabel = '❌ DECLINED / CANCELLED'; statusColor = '#f87171'; }
+        let statusColor = '#d97706';
+        if (b.status === 'confirmed') { statusLabel = '✅ CONFIRMED & ACCEPTED'; statusColor = '#16a34a'; }
+        else if (b.status === 'rejected') { statusLabel = '❌ DECLINED / CANCELLED'; statusColor = '#dc2626'; }
         
         drawText(statusLabel, 600, 240, 22, 'bold', statusColor, 'center');
 
         let startY = 270;
-        startY = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-RECORD', startY, { valueColor: '#c084fc', mono: true });
+        startY = drawRow('BOOKING NUMBER', b.bookingNumber || '#HF-RECORD', startY, { valueColor: '#7c3aed', mono: true });
         startY = drawRow('CLIENT NAME', b.clientName, startY);
         startY = drawRow('CONTACT PHONE', b.clientPhone, startY);
         startY = drawRow('EVENT DATE', b.eventDate, startY);
         
         startY += 4;
-        startY = drawSectionTitle('📍 VENUE DESTINATION & ADDRESS', startY, '#38bdf8');
-        startY = drawRow('Address Type:', `[ ${addr.addressType} ]`, startY, { valueColor: '#38bdf8' });
+        startY = drawSectionTitle('📍 VENUE DESTINATION & ADDRESS', startY, '#0284c7');
+        startY = drawRow('Address Type:', `[ ${addr.addressType} ]`, startY, { valueColor: '#0284c7' });
         if (addr.flatHouse && addr.flatHouse !== 'Not Specified') startY = drawDynamicRow('Flat / House No., Building:', addr.flatHouse, startY);
         startY = drawDynamicRow('Street, Sector, Locality:', addr.streetLocality, startY);
         if (addr.landmark && addr.landmark !== 'None') startY = drawDynamicRow('Landmark:', addr.landmark, startY);
         startY = drawRow('Town / City & State:', addr.townCityState, startY);
-        startY = drawRow('Postal PIN Code:', addr.pincode, startY, { valueColor: '#c084fc', mono: true });
+        startY = drawRow('Postal PIN Code:', addr.pincode, startY, { valueColor: '#7c3aed', mono: true });
 
         startY += 4;
-        startY = drawSectionTitle('1. MAIN MAKEOVER PACKAGE', startY, '#38bdf8');
+        startY = drawSectionTitle('1. MAIN MAKEOVER PACKAGE', startY, '#0284c7');
         startY = drawRow('• Vanity Tier:', b.kitType || 'Luxury Vanity Kit', startY);
         startY = drawRow('• Package:', b.packageName || 'Makeover', startY);
         startY = drawRow('• Package Price:', `₹${mainPkgPrice.toLocaleString('en-IN')}`, startY, { mono: true });
         startY = drawRow(`• Travel Fee (${b.zoneName || 'Standard'}):`, `₹${zoneFee.toLocaleString('en-IN')}`, startY, { mono: true });
-        startY = drawRow('Main Makeover Package Total:', `₹${mainMakeoverTotal.toLocaleString('en-IN')}`, startY, { labelColor: '#38bdf8', valueColor: '#38bdf8', mono: true });
+        startY = drawRow('Main Makeover Package Total:', `₹${mainMakeoverTotal.toLocaleString('en-IN')}`, startY, { labelColor: '#0284c7', valueColor: '#0284c7', mono: true });
 
         startY += 4;
-        startY = drawSectionTitle(`2. ADDITIONAL FAMILY & GUEST MAKEOVERS (${guests.length})`, startY, '#c084fc');
+        startY = drawSectionTitle(`2. ADDITIONAL FAMILY & GUEST MAKEOVERS (${guests.length})`, startY, '#7c3aed');
         if (guests.length > 0) {
           guests.forEach((g, gIdx) => {
             const guestVanity = currentDraftSafe.pricingByKit?.[g.kit]?.name || (g.kit === 'international' ? 'Luxury Kit' : 'HD Kit');
@@ -689,35 +692,36 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
             const guestPrice = Number(currentDraftSafe.pricingByKit?.[g.kit]?.[g.packageKey] || 0);
             startY = drawRow(`Makeover #${gIdx + 1} • Vanity:`, guestVanity, startY, { labelSize: 16, valueSize: 17 });
             startY = drawRow('• Package Look:', guestPackage, startY, { labelSize: 16, valueSize: 17 });
-            startY = drawRow('• Investment:', `₹${guestPrice.toLocaleString('en-IN')}`, startY, { labelSize: 16, valueColor: '#4ade80', mono: true });
+            startY = drawRow('• Investment:', `₹${guestPrice.toLocaleString('en-IN')}`, startY, { labelSize: 16, valueColor: '#16a34a', mono: true });
           });
         } else {
-          startY = drawRow('• No extra family guests selected', '₹0', startY, { valueColor: '#71717a', mono: true });
+          startY = drawRow('• No extra family guests selected', '₹0', startY, { valueColor: '#64748b', mono: true });
         }
-        startY = drawRow('Additional Family & Guest Total:', `₹${guestGross.toLocaleString('en-IN')}`, startY, { labelColor: '#c084fc', valueColor: '#c084fc', mono: true });
+        startY = drawRow('Additional Family & Guest Total:', `₹${guestGross.toLocaleString('en-IN')}`, startY, { labelColor: '#7c3aed', valueColor: '#7c3aed', mono: true });
 
         startY += 4;
-        startY = drawSectionTitle('3. DISCOUNTS & OFFERS', startY, '#4ade80');
-        if (gDiscount > 0) startY = drawRow('• Family & Guest Discount:', `-₹${gDiscount.toLocaleString('en-IN')}`, startY, { valueColor: '#4ade80', mono: true });
-        if (manualDisc > 0) startY = drawRow('• Custom Manual Admin Offer:', `-₹${manualDisc.toLocaleString('en-IN')}`, startY, { valueColor: '#4ade80', mono: true });
-        if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0) startY = drawRow(`• Promo Coupon (${b.appliedCoupon}):`, `-₹${couponDiscount.toLocaleString('en-IN')}`, startY, { valueColor: '#4ade80', mono: true });
-        if (totalDiscounts === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#71717a', mono: true });
-        startY = drawRow('Total Discounts:', `-₹${totalDiscounts.toLocaleString('en-IN')}`, startY, { labelColor: '#4ade80', valueColor: '#4ade80', mono: true });
+        startY = drawSectionTitle('3. DISCOUNTS & OFFERS', startY, '#16a34a');
+        if (gDiscount > 0) startY = drawRow('• Family & Guest Discount:', `-₹${gDiscount.toLocaleString('en-IN')}`, startY, { valueColor: '#16a34a', mono: true });
+        if (manualDisc > 0) startY = drawRow('• Custom Manual Admin Offer:', `-₹${manualDisc.toLocaleString('en-IN')}`, startY, { valueColor: '#16a34a', mono: true });
+        if (b.appliedCoupon && b.appliedCoupon !== 'None' && couponDiscount > 0) startY = drawRow(`• Promo Coupon (${b.appliedCoupon}):`, `-₹${couponDiscount.toLocaleString('en-IN')}`, startY, { valueColor: '#16a34a', mono: true });
+        if (totalDiscounts === 0) startY = drawRow('• No discounts applied', '₹0', startY, { valueColor: '#64748b', mono: true });
+        startY = drawRow('Total Discounts:', `-₹${totalDiscounts.toLocaleString('en-IN')}`, startY, { labelColor: '#16a34a', valueColor: '#16a34a', mono: true });
 
         startY += 10;
-        ctx.fillStyle = 'rgba(168,85,247,0.2)'; ctx.fillRect(leftX, startY, cardWidth, 100);
-        ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 2; ctx.strokeRect(leftX, startY, cardWidth, 100);
+        ctx.fillStyle = '#f3e8ff'; ctx.fillRect(leftX, startY, cardWidth, 100);
+        ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2; ctx.strokeRect(leftX, startY, cardWidth, 100);
 
-        drawText('FINAL AMOUNT PAYABLE', 600, startY + 34, 18, 'bold', '#e2e8f0', 'center');
-        drawText(`₹${finalAmount.toLocaleString('en-IN')}`, 600, startY + 80, 42, 'bold', '#ffffff', 'center', 'serif');
+        drawText('FINAL AMOUNT PAYABLE', 600, startY + 34, 18, 'bold', '#475569', 'center');
+        drawText(`₹${finalAmount.toLocaleString('en-IN')}`, 600, startY + 80, 42, 'bold', '#7c3aed', 'center', 'serif');
 
         const footerY = canvas.height - 75;
-        drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || 'New Delhi'} • Instagram: @${(currentDraftSafe.instagramHandle || '').replace('@','')}`, 600, footerY, 15, 'normal', '#94a3b8', 'center');
-        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 30, 16, 'italic', '#c084fc', 'center');
+        drawText(`Studio Base Location: ${currentDraftSafe.baseLocation || 'New Delhi'} • Instagram: @${(currentDraftSafe.instagramHandle || '').replace('@','')}`, 600, footerY, 15, 'normal', '#64748b', 'center');
+        drawText(currentDraftSafe.artistTagline || 'Beauty, Styled Your Way', 600, footerY + 30, 16, 'italic', '#7c3aed', 'center');
 
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
 
+      // Logo URL Resolution with localStorage and mediaAssets fallback
       let rawLogo = currentDraftSafe.studioLogo || '';
       let logoUrlToLoad = rawLogo;
       if (typeof rawLogo === 'string' && rawLogo.startsWith('media://')) {
