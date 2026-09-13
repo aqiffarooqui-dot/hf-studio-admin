@@ -11,7 +11,7 @@ import {
   Home, Building2, Navigation, Compass, MapPinned, ZoomOut
 } from 'lucide-react';
 import { fetchLiveConfig, updateLiveConfig as firebaseUpdateLiveConfig, db, subscribeToLiveConfig } from './firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc, addDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, limit, setDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const DEFAULT_REJECTION_REASONS = [
   {
