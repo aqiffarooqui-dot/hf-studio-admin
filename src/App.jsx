@@ -688,7 +688,7 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
 
-  // 100% Robust Logo Resolution (Firebase mediaAssets + LocalStorage Cache Fallback)
+// 100% Robust Logo Resolution (Firebase mediaAssets + LocalStorage Cache Fallback)
       let rawLogo = currentDraftSafe.studioLogo || '';
       let logoUrlToLoad = rawLogo;
       
@@ -697,7 +697,6 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         logoUrlToLoad = currentMediaAssets[mediaKey] || '';
       }
       
-      // Agar state mein nahi mila, toh localStorage cache se uthao taaki logo miss na ho
       if (!logoUrlToLoad || logoUrlToLoad === '') {
         try {
           logoUrlToLoad = localStorage.getItem('hf_cached_logo') || '';
@@ -709,13 +708,12 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         logoImg.crossOrigin = "anonymous";
         logoImg.onload = () => drawContent(logoImg);
         logoImg.onerror = () => {
-          // Agar crossOrigin ya URL mein koi issue aaya, toh bina logo ke slip draw kar do taaki crash na ho
-          console.warn("Logo load error on canvas, rendering slip without logo.");
           drawContent(null);
         };
         logoImg.src = logoUrlToLoad;
       } else {
         drawContent(null);
+      }
     });
   };
 
