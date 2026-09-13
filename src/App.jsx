@@ -688,17 +688,34 @@ const generateMainAppStyleSlipJpgDataUrl = (b) => {
         resolve(canvas.toDataURL('image/jpeg', 0.95));
       };
 
+  // 100% Robust Logo Resolution (Firebase mediaAssets + LocalStorage Cache Fallback)
       let rawLogo = currentDraftSafe.studioLogo || '';
       let logoUrlToLoad = rawLogo;
+      
       if (typeof rawLogo === 'string' && rawLogo.startsWith('media://')) {
-        logoUrlToLoad = currentMediaAssets[rawLogo.slice(8)] || '';
+        const mediaKey = rawLogo.slice(8);
+        logoUrlToLoad = currentMediaAssets[mediaKey] || '';
+      }
+      
+      // Agar state mein nahi mila, toh localStorage cache se uthao taaki logo miss na ho
+      if (!logoUrlToLoad || logoUrlToLoad === '') {
+        try {
+          logoUrlToLoad = localStorage.getItem('hf_cached_logo') || '';
+        } catch (e) {}
       }
 
-      const logoImg = new Image();
-      logoImg.crossOrigin = "anonymous";
-      logoImg.src = logoUrlToLoad;
-      logoImg.onload = () => drawContent(logoImg);
-      logoImg.onerror = () => drawContent(null);
+      if (logoUrlToLoad) {
+        const logoImg = new Image();
+        logoImg.crossOrigin = "anonymous";
+        logoImg.onload = () => drawContent(logoImg);
+        logoImg.onerror = () => {
+          // Agar crossOrigin ya URL mein koi issue aaya, toh bina logo ke slip draw kar do taaki crash na ho
+          console.warn("Logo load error on canvas, rendering slip without logo.");
+          drawContent(null);
+        };
+        logoImg.src = logoUrlToLoad;
+      } else {
+        drawContent(null);
     });
   };
 
